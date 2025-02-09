@@ -1,6 +1,6 @@
 // ------------ UVP5_pilot_module ---------------------
-version =	 "7.40";
-date =	 "2020/010/17";
+version =	 "8.27";
+date =	 "2024/09/25";
 
 // Create XML file
 // UVP5sn
@@ -14,6 +14,9 @@ date =	 "2020/010/17";
 // Correction start_val et stop_val par défaut
 // Allongement starting time
 // Capacite drives cas HD/STD
+// Amélioration des messages
+// Total space lors du Delete
+// Renommage des menus          START
 
 
 args = getArgument();
@@ -157,10 +160,10 @@ if (File.exists(pathconfig+"\\uvp5_configuration_data.txt")) {
 		if (startsWith(dat[0],"hd_cap_mo"))		mem_hd_full = parseFloat(dat[1]);
 	}// for
 }// if
-else { showMessage(pathconfig+"\\uvp5_configuration_data.txt does not exists. \nSome tools may not work !\n \nThis message is normal if you are piloting the UVP in this project for the first time.\nDo not forget to run the tool ''GET ACQUISITION and INI files from UVP5'' to download the file from the UVP5.");	}
+else { showMessage(pathconfig+"\\uvp5_configuration_data.txt does not exists. \nSome tools may not work !\n \nThis message is normal if you are piloting the UVP in this project for the first time.\nDo not forget to run the tool ''GET ACQUISITION and INI files from the UVP5 PC-CAMERA'' to download the file from the UVP5.");	}
 if (work_option == "UVP5 connected, complete tool list") {	
 	// ----------------- Verification --------------------
-	aa = getBoolean("- Check that UVP5 is powered (Deck Unit or Battery shunt).\n \n- Check that MOTOCROSS is closed. \n \nPRESS YES to continue. \nPRESS CANCEL to abort.");
+	aa = getBoolean("- POWER ON the UVP from the Deck Unit or the power shunt NOW.\n \n- Check that MOTOCROSS.exe or TERATERM.exe are both closed. \n \nPRESS YES when the UVP5 power is ON. \nPRESS CANCEL to abort.");
 	port_status = "nok";
 	edit_config = false;
 	while (port_status == "nok") {
@@ -178,7 +181,7 @@ if (work_option == "UVP5 connected, complete tool list") {
 			if (indexOf(ports,"COM") != 0) {
 				// ------------ NO PORT ---------------------
 				print("No com port available !");
-				aa = getBoolean("NO available com port ! \n \n-Check COM PORTS \n-Close other Terminal application (MOTOCROSS) \n-Check computer configuration \nPRESS CANCEL to abort and RESTART ImageJ. \nPRESS YES to try again after freeing port ! ");	
+				aa = getBoolean("There is NO available com port on the computer ! \n \n-Check COM PORTS \n-Close other Terminal application (MOTOCROSS.exe or TERATERM.exe) \n-Check computer configuration \nPRESS CANCEL to abort and RESTART ImageJ. \nPRESS YES to try again after freeing port ! ");	
 			} // if
 			else {		port_status = "ok";	toto = "ok";	} // else
 		}//
@@ -193,7 +196,7 @@ if (work_option == "UVP5 connected, complete tool list") {
 			// ------------------- Si port défini n'éxiste pas -----------
 			aa = 1;
 			if (com == "failed") {
-				aa= getBoolean("COM"+comport+" cannot be opened. \n \nIt may already be open \n \nCheck that COM port is not open by another application (MOTOCROSS) and PRESS YES to try again \nPRESS NO to change COM port in configuration file \nPRESS CANCEL to exit PILOT module and restart ImageJ to recover com port !");
+				aa= getBoolean("the COM"+comport+" cannot be opened. \n \nIt may already be open \n \nCheck that COM port is not open by another application (MOTOCROSS.exe or RTERATERM.exe) and PRESS YES to try again \nPRESS NO to change COM port in configuration file \nPRESS CANCEL to exit PILOT module and restart ImageJ to recover com port !");
 			}
 			if (aa==0 || edit_config == true) {
 				// ------------ Edit Confgiguration ----------------------------	
@@ -276,7 +279,7 @@ if (work_option == "UVP5 connected, complete tool list") {
 			if (time == 29) {
 				// ---------------- FERMETURE ------------------------------------
 				Ext.close();
-				getBoolean("COM"+comport+" could not be opened. \nPRESS CANCEL to ABORT and check PC configuration. ");
+				getBoolean("The COM"+comport+" could not be opened. \nPRESS CANCEL to ABORT and check PC configuration. ");
 			}	
 			time++;
 		}// while
@@ -318,9 +321,9 @@ if (work_option == "UVP5 connected, complete tool list") {
 			
 			if (opts == "c110") {				
 				// ---------------------- Arrêt urgence ACQUISITION -------------------------------------------
-				choix = getBoolean("CAMERA is in ACQUISITION mode. \n \nPress YES when you want to try to STOP it ? \n \nPRESS NO to keep uvp5 in acquisition. ");
+				choix = getBoolean("The UVP5 PC-CAMERA is in ACQUISITION mode. \n \nPress YES when you want to try to STOP acquisition ? \n \nPRESS NO to keep uvp5 in acquisition mode. ");
 				if (choix == 1) {
-					op = "EMERGENCY STOP";
+					op = "MANUAL STOP of the ACQUISITION (ex Emergency stop)";
 				}// choix
 			} // c110
 			// -------------- Si pas de message VERIFIER SI CAMERA ON ------------------
@@ -372,13 +375,13 @@ if (work_option == "UVP5 connected, complete tool list") {
 				res = 0;
 				if (stby == "passed") {
 					com = "passed";
-					res = getBoolean("CAMERA is ON \n \nPRESS YES to shut down Camera \n \nPRESS NO to keep it powered ");
+					res = getBoolean("The UVP5 PC-CAMERA is ON \n \nPRESS YES to shut down Camera \n \nPRESS NO to keep it powered ");
 					opts = "cam_on";
 				}
 				else { print("> CAMERA seems to be OFF");				}// else
 				if (res == 1) {
 					// ----------------------- ARRET CAMERA -----------------------------------------
-					op = "TURN OFF UVP5 camera";
+					op = "STOP the UVP5 PC-CAMERA";
 					opts = "ok";
 				}// fs shuting down camera
 			} // si pas de reponse sur le com
@@ -500,7 +503,7 @@ while (check == 0) {
 			a[0]=  "EXIT PILOT MODULE (COM port will be closed)";			// +OK	
 			a[2] = "EDIT Pilot board Configuration file";				// OK
 			a[3]= 	"EDIT ProfileurVideo ini file"; 				//
-			a[4]=	"EDIT ACQUISITION files";				//
+			a[4]=	"EDIT the ACQUISITION files in the PROJECT";				//
 		} // if
 		else {	a_use = newArray(1);
 			a_use[0]=  "EXIT PILOT MODULE (COM port will be closed)";	
@@ -515,28 +518,28 @@ while (check == 0) {
 			a[0]=  "EXIT PILOT MODULE";			// +OK	
 			a[1]= 	"--------------------------------------------------------------------";
 		
-			a[3]=	"TEST & MONITOR COM PORT";				// +OK	
+			a[3]=	"MONITOR the COMMUNICATION PORT";				// +OK	
 	//		a[4]= 	"VISUALIZE PROFILE from COM PORT DATA";
 		
-			a[5]=	"Synchronize UVP5 time with Computer time";		// +OK	
+			a[5]=	"SYNCHRONISE the UVP5 TIME with the COMPUTER TIME";		// +OK	
 		
-			a[7]=	"DOWNLOAD DATA from UVP5";				// OK
-			a[8]=	"DELETE DATA in UVP5";
+			a[7]=	"DOWNLOAD the DATA from the UVP5 PC-CAMERA";				// OK
+			a[8]=	"DELETE the DATA in the UVP5 PC-CAMERA";
 			
-			a[10]= 	"TURN ON UVP5 light (test / alignment)";
+			a[10]= 	"TURN ON the UVP5 LIGHTS for TEST and ALIGNMENT";
 
-			a[12]=	"READ / PROGRAM sequences";				// +OK
+			a[12]=	"PROGRAM the UVP5 for DATA ACQUISITION";				// +OK
 		
-			a[14]=	"GET ACQUISITION and INI files from UVP5";		// +OK
-			a[15]=	"EDIT ACQUISITION files";				//
+			a[14]=	"GET ACQUISITION and INI files from the UVP5 PC-CAMERA";		// +OK
+			a[15]=	"EDIT the ACQUISITION files in the PROJECT";				//
 //			a[16]= 	"EDIT ProfileurVideo ini file"; 				//
-			a[17]=	"SEND ACQUISITION and INI files to UVP5";		// OK
+			a[17]=	"SEND the ACQUISITION and INI files to the UVP5 PC-CAMERA";		// OK
 			
-			a[19]=	"START ACQUISITION (manual)";		// OK
-			a[20]=	"TURN ON UVP5 camera";					// +OK			
-			a[21]=	"TURN OFF UVP5 camera";					// OK
+			a[19]=	"START DATA ACQUISITION (manual)";		// OK
+			a[20]=	"START the UVP5 PC-CAMERA";					// +OK			
+			a[21]=	"STOP the UVP5 PC-CAMERA";					// OK
 	
-			a[23]=	"EMERGENCY STOP";					// OK	
+			a[23]=	"MANUAL STOP of the ACQUISITION (ex Emergency stop)";					// OK	
 			a[24]=	"WAKE UP sleeping UVP5";				// OK	
 			a[25]= 	"RUN UVP5";						// OK		// OK
 		
@@ -555,27 +558,27 @@ while (check == 0) {
 			a_use[0]=  "EXIT PILOT MODULE";			// +OK	
 			a_use[1]= 	"--------------------------------------------------------------------";
 		
-			a_use[3]=	"TEST & MONITOR COM PORT";				// +OK	
+			a_use[3]=	"MONITOR the COMMUNICATION PORT";				// +OK	
 //			a_use[4]= 	"VISUALIZE PROFILE from COM PORT DATA";
 		
-			a_use[5]=	"Synchronize UVP5 time with Computer time";		// +OK	
+			a_use[5]=	"SYNCHRONISE the UVP5 TIME with the COMPUTER TIME";		// +OK	
 		
-			a_use[7]=	"DOWNLOAD DATA from UVP5";				// OK
-			a_use[8]=	"DELETE DATA in UVP5";
+			a_use[7]=	"DOWNLOAD the DATA from the UVP5 PC-CAMERA";				// OK
+			a_use[8]=	"DELETE the DATA in the UVP5 PC-CAMERA";
 			
-			a_use[10]= 	"TURN ON UVP5 light (test / alignment)";		// OK
+			a_use[10]= 	"TURN ON the UVP5 LIGHTS for TEST and ALIGNMENT";		// OK
 
-			a_use[12]=	"READ / PROGRAM sequences";				// +OK
+			a_use[12]=	"PROGRAM the UVP5 for DATA ACQUISITION";				// +OK
 			
-			a_use[14]=	"START ACQUISITION (manual)";		// OK
+			a_use[14]=	"START DATA ACQUISITION (manual)";		// OK
 			
-			a_use[16]=	"GET ACQUISITION and INI files from UVP5";
+			a_use[16]=	"GET ACQUISITION and INI files from the UVP5 PC-CAMERA";
 	
-			a_use[18]=	"EMERGENCY STOP";					// OK	
+			a_use[18]=	"MANUAL STOP of the ACQUISITION (ex Emergency stop)";					// OK	
 			a_use[19]=	"WAKE UP sleeping UVP5";				// OK
 			
 			if (opts == "cam_on") {
-				a_use[21]=	"TURN OFF UVP5 camera";					// OK	
+				a_use[21]=	"STOP the UVP5 PC-CAMERA";					// OK	
 			}
 	
 			a_use[23]=	"SWITCH mode (advanced/user)";
@@ -584,11 +587,11 @@ while (check == 0) {
 
 		}// else
 	}// else
-	if (op != "EMERGENCY STOP" && op != "TURN OFF UVP5 camera" && op != "WAKE UP sleeping UVP5") {
+	if (op != "MANUAL STOP of the ACQUISITION (ex Emergency stop)" && op != "STOP the UVP5 PC-CAMERA" && op != "WAKE UP sleeping UVP5") {
 		Dialog.create("UVP5 PILOT MODULE            version : "+version+"             "+date);
 		Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 		Dialog.addMessage("Piloting module for UVP5 systems ");
-		Dialog.addMessage("Any other Terminal application may also be utilized (motocross.exe) ");
+		Dialog.addMessage("Any other Terminal application may also be utilized (Motocross.exe or Teraterm.exe) ");
 		Dialog.addMessage("Developped by MARC PICHERAL, Laboratoire d'Océanographie de Villefranche sur mer");	
 		Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 		Dialog.addMessage("COM"+comport+" SELECTED");
@@ -612,7 +615,7 @@ while (check == 0) {
 	print("-----------------------------------------------------------------------------------------------------------------");
 
 	// ----------------- SORTIE --------------------------------	
-	if (op == "EXIT PILOT MODULE" || op == "EXIT PILOT MODULE (COM port will be closed)") {	showMessage("PILOT MODULE being CLOSED \n \nDO NOT FORGET to TURN OFF UVP5 if necessary ");	check = 1;	} // if
+	if (op == "EXIT PILOT MODULE" || op == "EXIT PILOT MODULE (COM port will be closed)") {	showMessage("PILOT MODULE being CLOSED \n \nTURN OFF the UVP5 POWER from the Deck Unit or remove the POWER SHUNT NOW ");	check = 1;	} // if
 	else {
 		if (op == " ") showMessage("Select another menu !");
 		else if (op != "EDIT Pilot board Configuration file")		{	
@@ -628,18 +631,18 @@ while (check == 0) {
 				if (time == 29) {
 					// ---------------- FERMETURE ------------------------------------
 					Ext.close();
-					getBoolean("COM"+comport+" could not be opened. Check Configuration !\n \nCHECK that COM is not open in other application. \n \nPRESS CANCEL to ABORT ");
+					getBoolean("The COM"+comport+" could not be opened. Check Configuration !\n \nCHECK that COM is not open in other application. \n \nPRESS CANCEL to ABORT ");
 				}
 			}// while
 		}// else		
 		
-		//-------------------- "Synchronize UVP5 time with Computer time" ---------------------------------------------------------------------
+		//-------------------- "SYNCHRONISE the UVP5 TIME with the COMPUTER TIME" ---------------------------------------------------------------------
 		//-------------------- "CONFIGURE UVP5" ---------------------------------------------------------------------
 		choix1 = 0;	choix2 = 0;
-		if (op == "Event.log maintenance" || op == "Synchronize UVP5 time with Computer time" || op == "TURN ON UVP5 light (test / alignment)" || op == "Set GAIN for ANALOG output" || op =="SEND configuration to pilot board" || op == "READ / PROGRAM sequences" || op== "GET ACQUISITION and INI files from UVP5") {
+		if (op == "Event.log maintenance" || op == "SYNCHRONISE the UVP5 TIME with the COMPUTER TIME" || op == "TURN ON the UVP5 LIGHTS for TEST and ALIGNMENT" || op == "Set GAIN for ANALOG output" || op =="SEND configuration to pilot board" || op == "PROGRAM the UVP5 for DATA ACQUISITION" || op== "GET ACQUISITION and INI files from the UVP5 PC-CAMERA") {
 			choix1 = 1;
 		}
-		if (op == "DOWNLOAD DATA from UVP5" || op == "DELETE DATA in UVP5" || op == "START Camera for calibration" || op == "TURN ON UVP5 camera" || op == "TURN OFF UVP5 camera" || op == "SEND ACQUISITION and INI files to UVP5" ) {
+		if (op == "DOWNLOAD the DATA from the UVP5 PC-CAMERA" || op == "DELETE the DATA in the UVP5 PC-CAMERA" || op == "START Camera for calibration" || op == "START the UVP5 PC-CAMERA" || op == "STOP the UVP5 PC-CAMERA" || op == "SEND the ACQUISITION and INI files to the UVP5 PC-CAMERA" ) {
 			choix2 = 1;
 		}
 		if (op == "SWITCH mode (advanced/user)") {
@@ -674,17 +677,18 @@ while (check == 0) {
 				// ----------- Temps de réponse en secondes --------------------------------------
 				delay = delay * 50/1000;
 				print("> Responding time = "+delay+ " sec.");
-				if (delay > 3.5 )	showMessage("WARNING","UVP5 responding time seems to be > 3.5 sec.\n \nRefer to UVP5 manual to perform an event.log maintenance as soon as possible");
+				if (delay > 3.5 && delay <= 6)	{	showMessage("WARNING","UVP5 responding time is > 3.5 sec.\n \nRefer to UVP5 manual to perform the RENAME event.log procedure as soon as possible");	}
+				else if (delay > 6 )		{	showMessage("WARNING","UVP5 responding time is 6 sec or more.\n \nRefer to UVP5 manual to perform the RENAME event.log procedure NOW !!!!! ");		}
 			}// while
 			// ------------------- TOOLS REQUIRING TO START CAMERA -------------------------------------
 			stop_cam = 1;
-			if (op == "DOWNLOAD DATA from UVP5" || op == "DELETE DATA in UVP5" || op == "START Camera for calibration" || op == "TURN ON UVP5 camera" || op == "TURN OFF UVP5 camera" || op == "GET ACQUISITION and INI files from UVP5" || op == "SEND ACQUISITION and INI files to UVP5") {
+			if (op == "DOWNLOAD the DATA from the UVP5 PC-CAMERA" || op == "DELETE the DATA in the UVP5 PC-CAMERA" || op == "START Camera for calibration" || op == "START the UVP5 PC-CAMERA" || op == "STOP the UVP5 PC-CAMERA" || op == "GET ACQUISITION and INI files from the UVP5 PC-CAMERA" || op == "SEND the ACQUISITION and INI files to the UVP5 PC-CAMERA") {
 				// ------------- TEST WATCHDOG ----------------------------
 				stby = "failed";
 				essai = 0;
 				sent_message = "S013WATCHDOG!";
 				ret_message = "WATCHDOG_";
-				print("=>  CHECKING CAMERA STATUS");		
+				print("=>  CHECKING PC-CAMERA STATUS");		
 				while (essai < 2) {
 					Ext.write(sent_message);	print("sent: "+sent_message);	
 					// -------------------- WATCHDOG OK ------------------------------------------------
@@ -725,19 +729,19 @@ while (check == 0) {
 				if (stby == "passed") {	
 					stop_cam = 0; 
 					test = "passed";
-					showMessage("CAMERA is ON ");	
+					showMessage("The UVP5 PC-CAMERA is ON ");	
 				} // if
-				else if (op != "TURN OFF UVP5 camera") {
-					// -------------- START CAMERA ------------------------------------------------------
-					// showMessage("STARTING CAMERA \n \nBE PATIENT !");
+				else if (op != "STOP the UVP5 PC-CAMERA") {
+					// -------------- START PC-CAMERA ------------------------------------------------------
+					// showMessage("STARTING PC-CAMERA \n \nBE PATIENT !");
 					sent_message = "U017START_HD_CAM!";
 					ret_message = "V016CAM_STARTED!";
 					test = "failed";
 					Ext.write(sent_message);
-					print("=>  STARTING CAMERA");			print("sent: "+sent_message);
+					print("=>  STARTING PC-CAMERA");			print("sent: "+sent_message);
 					Ext.close();
-					for (t=1;t<starting_time;t++) { showProgress(t/starting_time);	time_index = starting_time - t;	showStatus("CAMERA BEING STARTED : "+time_index+ " sec.");	wait(1000);	}//for
-					print("=> CHECKING if UVP5 CAMERA application is running");
+					for (t=1;t<starting_time;t++) { showProgress(t/starting_time);	time_index = starting_time - t;	showStatus("PC-CAMERA BEING STARTED : "+time_index+ " sec.");	wait(1000);	}//for
+					print("=> CHECKING if UVP5 PC-CAMERA application is running");
 					Ext.open(text1,PilotBR,text2);
 					// -------------------- START ------------------------------------------------
 					time = 0;	counter = 2400;
@@ -750,7 +754,7 @@ while (check == 0) {
 							//	if (indexOf(ff,"V092")>=0) {	message = runMacro("uvp5_show_status_messages.txt",ff);	showStatus(message);	}
 							if (indexOf(ff,ret_message)>=0) {time = 100000; test = "passed"; h = 100000000;		print("ret: "+sent_message);		} // if
 						} // for
-						time++;		wait(25);		progress = time/counter;	showProgress(progress);		showStatus("Checking if cam. app. is running");
+						time++;		wait(25);		progress = time/counter;	showProgress(progress);		showStatus("Checking if PC-CAMERA app. is running");
 					} // while
 					//	showMessage(sent_message+"  "+test);
 					// ------------- TEST WATCHDOG ----------------------------
@@ -758,7 +762,7 @@ while (check == 0) {
 					essai = 1;
 					sent_message = "S013WATCHDOG!";
 					ret_message = "WATCHDOG_";
-					print("=>  CHECKING CAMERA STATUS");		
+					print("=>  CHECKING PC-CAMERA STATUS");		
 					while (essai < 5) {
 						Ext.write(sent_message);	print("sent: "+sent_message);	
 						// -------------------- WATCHDOG OK ------------------------------------------------
@@ -793,7 +797,7 @@ while (check == 0) {
 									print("-----------------------------------------------------------------------------------------------------------------");
 								} // if
 							} // for
-							time++;		wait(50);
+							time++;		wait(250);
 						} // while
 						essai++;	progress = essai/5;		showProgress(progress);		// showStatus("Testing that camera is ON");
 					}// while
@@ -801,16 +805,16 @@ while (check == 0) {
 					if (test == "passed" ) stop_cam = 0;					
 				} // else
 				while (stop_cam == 0) {
-					// ------------------ CAMERA ON ----------------------------------
-					print("CAMERA STARTED & RESPONDING");
+					// ------------------ PC-CAMERA ON ----------------------------------
+					print("PC-CAMERA STARTED & RESPONDING");
 					// ------------------ Options ------------------------------------
-					if (test == "passed" && op == "TURN ON UVP5 camera") {
-						// -------------------- op == "TURN ON UVP5 camera" ------------------
-						showStatus("UVP5 CAMERA powered NOW ");
-						stop_cam = getBoolean("CAMERA STARTED. \n \nYou can now acces camera folders by network. \n \nKEEP this window OPEN and PRESS YES when you want to STOP CAMERA (do not forget !)\n \nDO NOT PRESS CANCEL (camera will stay ON)!");
+					if (test == "passed" && op == "START the UVP5 PC-CAMERA") {
+						// -------------------- op == "START the UVP5 PC-CAMERA" ------------------
+						showStatus("UVP5 PC-CAMERA powered NOW ");
+						stop_cam = getBoolean("The UVP5 PC-CAMERA STARTED. \n \nYou can now acces the remote folders by the Windows network. \n \nKEEP this window OPEN and PRESS YES when you want to STOP PC-CAMERA (do not forget !)\n \nDO NOT PRESS CANCEL (camera will stay ON)!");
 					}
 					else if (op == "START Camera for calibration") {
-						showStatus("UVP5 CAMERA powered NOW ");
+						showStatus("UVP5 PC-CAMERA powered NOW ");
 						// -------------------- ENVOI HEURE PC --------------------------------------------
 						dateheuremmss =	runMacro("uvp5_get_time");
 						YYYY = substring(dateheuremmss,0,4);
@@ -994,10 +998,10 @@ while (check == 0) {
 						print("sent: "+sent_message);
 						Ext.write(sent_message);
 					} // else if
-					else if (op == "TURN OFF UVP5 camera") {
-						stop_cam = getBoolean("ARE YOU SURE that you WANT to STOP CAMERA ?  \n \nPRESS YES to PROCEED \n \nPRESS NO to abort ");
+					else if (op == "STOP the UVP5 PC-CAMERA") {
+						stop_cam = getBoolean("ARE YOU SURE that you WANT to STOP the UVP5 PC-CAMERA ?  \n \nPRESS YES to PROCEED \n \nPRESS NO to abort ");
 					} // else if
-					else if (op == "DELETE DATA in UVP5") {
+					else if (op == "DELETE the DATA in the UVP5 PC-CAMERA") {
 						delete = 0;
 						while (delete == 0) {
 							// ------------------ Liste des profiles ---------------------
@@ -1088,7 +1092,7 @@ while (check == 0) {
 						essai = 1;
 						sent_message = "S013WATCHDOG!";
 						ret_message = "WATCHDOG_";
-						print("=>  CHECKING CAMERA MEMORY AFTER DELETE ");		
+						print("=>  CHECKING PC-CAMERA MEMORY AFTER DELETE ");		
 						while (essai < 5) {
 							Ext.write(sent_message);	
 							print("sent: "+sent_message);	
@@ -1114,17 +1118,30 @@ while (check == 0) {
 										mem_fd_full = maxOf(mem_fd_full,mem_fd);
 										mem_hd_full = maxOf(mem_hd_full,mem_hd);
 										print("-----------------------------------------------------------------------------------------------------------------");
-										if (mem_fd == mem_fd_full) {	print("FD MAXIMUM space (free now) = "+mem_fd_full+" Mo");	}
-										else {	mem_fd_r = round(100*mem_fd/mem_fd_full);
-											print("FD free space = "+mem_fd+" Mo (" +mem_fd_r+ " %)");
-										}											
-										if (mem_hd == mem_hd_full) {	print("HD MAXIMUM space (free now) = "+mem_hd_full+" Mo");	}
-										else {
-											if (mem_hd_full == 0 ) {	mem_hd_r = NaN;	}
-											else {				mem_hd_r = round(100*mem_hd/mem_hd_full);	}
-											print("HD free space = "+mem_hd+" Mo (" +mem_hd_r+ " %)");
+										if (uvp_type == "std") {
+											if (mem_fd == mem_fd_full) {	
+												print("FD MAXIMUM space (free now) = "+mem_fd_full+" Mo");	
+											}
+											else {	mem_fd_r = round(100*mem_fd/mem_fd_full);
+												print("FD free space = "+mem_fd+" Mo (" +mem_fd_r+ " %)");
+											}											
+											if (mem_hd == mem_hd_full) {	print("HD MAXIMUM space (free now) = "+mem_hd_full+" Mo");	}
+											else {
+												if (mem_hd_full == 0 ) {	mem_hd_r = NaN;	}
+												else {				mem_hd_r = round(100*mem_hd/mem_hd_full);	}
+												print("HD free space = "+mem_hd+" Mo (" +mem_hd_r+ " %)");
+											}
+										}
+										else	{
+											if (mem_fd == mem_fd_full) {	
+												print("UVP5hd MAXIMUM space (free now) = "+mem_fd_full+" Mo");	
+											}
+											else {	mem_fd_r = round(100*mem_fd/mem_fd_full);
+												print("UVP5hd free space = "+mem_fd+" Mo (" +mem_fd_r+ " %)");
+											}
 										}
 										print("-----------------------------------------------------------------------------------------------------------------");
+																			
 										h =  ff_v.length;
 										// ------------- FICHIER ---------------------
 										if (isOpen("Log")) {	
@@ -1174,8 +1191,8 @@ while (check == 0) {
 						}// while
 						stop_cam = 1;
 					} // else if delete
-					// ----------------------- "DOWNLOAD DATA from UVP5" ---------------------------------
-					else if (op == "DOWNLOAD DATA from UVP5") {
+					// ----------------------- "DOWNLOAD the DATA from the UVP5 PC-CAMERA" ---------------------------------
+					else if (op == "DOWNLOAD the DATA from the UVP5 PC-CAMERA") {
 						// --------------- Test remote folders -----------------
 						check_folder = true;
 						while (check_folder == true) {
@@ -1195,12 +1212,12 @@ while (check == 0) {
 								loop_test++;
 							}
 							if (fd == false && hd == false) {
-								res2 = getBoolean(fd_path +"\n and/or \n "+hd_path+"\ncould not be checked.\n \nCheck that remote UVP5 folders are connected \n \nCheck that you have the writing permission. \n \nPRESS OK to proceed \n \nPRESS NO to cancel download.\nDO NOT press CANCEL !!!");
+								res2 = getBoolean(fd_path +"\n and/or \n "+hd_path+"\ncould not be checked.\n \nCheck that the remote UVP5 PC-CAMERA folders are connected \n \nCheck that you have the writing permission. \n \nPRESS OK to proceed \n \nPRESS NO to cancel download.\nDO NOT press CANCEL !!!");
 							}// if
 							if (res2 == 1 || res2 == 0) check_folder = false;
 						} // while
 						if (res2 == 1) { 
-							res = getBoolean("Profiles from : \n \n"+hd_path+"\n or/and \n"+fd_path+"\n \nwill be COPIED into : "+pathraw+"\n \nUse the dedicated tool to remove profiles from UVP5. \n \nPRESS OK to proceed. \n \nPRESS NO to abort. \nDO NOT press CANCEL !!!");
+							res = getBoolean("The sequences from : \n \n"+hd_path+"\n or/and \n"+fd_path+"\n \nwill be COPIED into : "+pathraw+"\n \nUse then the dedicated tool to remove them from the UVP5 PC-CAMERA. \n \nPRESS OK to proceed. \n \nPRESS NO to abort. \nDO NOT press CANCEL !!!");
 							if (res == 1) {
 								// ------------------- COPIE des fichiers ----------------------------
 								arg_copie = "\\"+hd_path+" \\"+fd_path+" "+pathraw+" skip";
@@ -1216,15 +1233,15 @@ while (check == 0) {
 						} //if copie
 						stop_cam = 1;
 					} // 
-					// ----------------------- "SEND ACQUISITION and INI files to UVP5" ---------------------
-					else if (op == "SEND ACQUISITION and INI files to UVP5") {
+					// ----------------------- "SEND the ACQUISITION and INI files to the UVP5 PC-CAMERA" ---------------------
+					else if (op == "SEND the ACQUISITION and INI files to the UVP5 PC-CAMERA") {
 						res = getBoolean("ALL Configurations files from "+pathconfig+" \n \nwill replace files in \n \n"+modfile_path+" \n \nPRESS YES to procees \n \nPRESS NO to abort");
 						if (res == 1) {
 							print("Source= "+pathconfig);
 							print("Destination= "+modfile_path);
 							if (isOpen("Log")) {	selectWindow("Log");	run("Text...",textlog);	wait(100);	run("Close");		} // if
 							// ------------------- COPIE des fichiers ----------------------------
-							res2 = getBoolean("Check that remote UVP5 folders are connected \n \nCheck that you have the writing permission. \n \nPRESS OK to proceed \n \nPRESS NO to cancel");
+							res2 = getBoolean("Check that the remote UVP5 PC-CAMERA folders are connected \n \nCheck that you have the writing permission. \n \nPRESS OK to proceed \n \nPRESS NO to cancel");
 							arg_copie = pathconfig+" "+pathconfig+" \\"+modfile_path+" ini";
 							if (res2 == 1) {
 								copie = runMacro("uvp5_copy_files.txt",arg_copie);
@@ -1238,8 +1255,8 @@ while (check == 0) {
 						}
 						stop_cam = 1;
 					}
-					// ------------------------- "GET ACQUISITION and INI files from UVP5" -------------------					
-					else if (op == "GET ACQUISITION and INI files from UVP5") {
+					// ------------------------- "GET ACQUISITION and INI files from the UVP5 PC-CAMERA" -------------------					
+					else if (op == "GET ACQUISITION and INI files from the UVP5 PC-CAMERA") {
 						res = getBoolean("ALL Configurations files from "+modfile_path+" \n \nwill replace files in \n \n"+pathconfig+" \n \nPRESS YES to procees \n \nPRESS NO to abort");
 						if (res == 1) {
 							print("Source= "+modfile_path);
@@ -1251,7 +1268,7 @@ while (check == 0) {
 								run("Close");		
 							} // if
 							// ------------------- COPIE des fichiers ----------------------------
-							showMessage("Check that remote UVP5 folders are connected and PRESS OK.");
+							showMessage("Check that the remote UVP5 (modfile) folders are connected and PRESS OK.");
 							arg_copie = modfile_path+" "+modfile_path+" "+pathconfig+" ini";
 							copie = runMacro("uvp5_copy_files.txt",arg_copie);
 							
@@ -1281,10 +1298,10 @@ while (check == 0) {
 					} // else if edit modfiles		
 
 				} // while
-				// ----------------------- ARRET CAMERA -----------------------------------------
-				print("=>  CAMERA being stopped NOW");
-				// showMessage("CAMERA being stopped NOW");
-				// -------------------- SHUTING DOWN CAMERA --------------------------------
+				// ----------------------- ARRET PC-CAMERA -----------------------------------------
+				print("=>  PC-CAMERA being stopped NOW");
+				// showMessage("PC-CAMERA being stopped NOW");
+				// -------------------- SHUTING DOWN PC-CAMERA --------------------------------
 				sent_message = "S013EXITSOFT!";
 				ret_message = "C016EX";
 				stby = "failed";
@@ -1298,7 +1315,7 @@ while (check == 0) {
 						ff = Ext.read();
 						// -------------- Affichage messages UVP5 -------------------------
 						long = minOf(lengthOf(ff),20);	status_message = substring(ff,0,16);	showStatus(status_message);	
-						if (indexOf(ff,ret_message)>=0 ) {time = 100000;	essai = 5; stby = "passed";	print("> CAMERA APPLICATION STOPPED");	}
+						if (indexOf(ff,ret_message)>=0 ) {time = 100000;	essai = 5; stby = "passed";	print("> PC-CAMERA APPLICATION STOPPED");	}
 						time++;
 						wait(50);
 					} // while
@@ -1312,7 +1329,7 @@ while (check == 0) {
 				while (essai < 2) {
 					print("sent: "+sent_message);
 					Ext.write(sent_message);
-					// -------------------- STOP CAMERA ------------------------------------------------
+					// -------------------- STOP PC-CAMERA ------------------------------------------------
 					time = 0;
 					stop_time = 30;
 					if (uvp_sn_txt == "000" ) stop_time = 40;
@@ -1322,16 +1339,16 @@ while (check == 0) {
 						if (indexOf(ff,"V092")>=0 || indexOf(ff,"C110")>=0) {	message = runMacro("uvp5_show_status_messages.txt",ff);	showStatus(message);	}
 						else {	long = minOf(lengthOf(ff),20);	status_message = substring(ff,0,long);	showStatus(status_message);	}
 						if (startsWith(ff,ret_message1) == 1 || startsWith(ff,ret_message2) == 1 ) {time = 100000;	essai = 5; stby = "passed";	}
-						time++;		wait(50);		progress = time/1500;		showProgress(progress);	showStatus("SHUTING DOWN CAMERA");
+						time++;		wait(50);		progress = time/1500;		showProgress(progress);	showStatus("SHUTING DOWN PC-CAMERA");
 					} // while
 					essai++;
 				}// while
-				// showMessage("CAMERA OFF");
-				print("CAMERA OFF");
-			} // TOOLS with CAMERA ON 
+				// showMessage("PC-CAMERA OFF");
+				print("PC-CAMERA OFF");
+			} // TOOLS with PC-CAMERA ON 
 			
 			// ------------------- LIGHT TEST -------------------------------------------------------------------------------------
-			if (op == "TURN ON UVP5 light (test / alignment)") {
+			if (op == "TURN ON the UVP5 LIGHTS for TEST and ALIGNMENT") {
 				// -------------------- POWER ON LIGHT ---------------------------------------------------
 				sent_message = 	"U024SET_OUTPUT_00000001!";	//	light
 				ret_message = 	"V027SET_OUTPUT_00000001_OK!";
@@ -1427,7 +1444,7 @@ while (check == 0) {
 						} // while
 					}// while
 					if (c_recept == "nok") { 
-						aa = getBoolean("Pilot module could not get correct response from UVP5. \n \nPress YES to try again.\nPress No to abort maintenance.");
+						aa = getBoolean("The Pilot module could not get correct response from UVP5. \n \nPress YES to try again.\nPress No to abort maintenance.");
 						if (aa == 0) c_recept = "abort";
 					} // if
 				} // while
@@ -1575,8 +1592,8 @@ while (check == 0) {
 				}// while
 				
 			}//
-			//-------------------- "READ / PROGRAM sequences" ---------------------------------------------------------------------
-			else if (op == "READ / PROGRAM sequences") {
+			//-------------------- "PROGRAM the UVP5 for DATA ACQUISITION" ---------------------------------------------------------------------
+			else if (op == "PROGRAM the UVP5 for DATA ACQUISITION") {
 				// -------------------- Lecture des séquences en mémoire ----------------------------------------
 				stby = "failed";
 				// V051GET_0000_0001_000000_D_0000000015_D_0000006000!
@@ -1627,7 +1644,7 @@ while (check == 0) {
 				}
 				if (stby == "passed") {		print("ALL UVP SEQUENCE messages received");	}
 				else {				print("Pilot could not read sequence messages from UVP5 pilot board.");	
-					aa = getBoolean("It maybe time now to delete the event.log file. \n \nCheck UVP5 Manual for procedure ! \nPress YES to continue.");
+					aa = getBoolean("It maybe time now to delete the event.log file. \n \nCheck the UVP5 Manual for the DELETE procedure ! \nPress YES to continue.");
 				}
 
 				// ------------- Nettoyage des vecteurs -------------------------------------------
@@ -1648,7 +1665,7 @@ while (check == 0) {
 				Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 				Dialog.show();
 				seq_op = Dialog.getChoice();
-				if (seq_op == "TIME (multiple) sequences") {		showMessage("NOT YET PROGRAMMED !");	}// 				
+				if (seq_op == "TIME (multiple) sequences") {		showMessage("The TIME (multiple) sequences is NOT YET PROGRAMMED !");	}// 				
 				if (seq_op != "TIME (multiple) sequences" && seq_op != "DO NOT MODIFY") {
 					// -------------- Effacement des séquences SAUF la première -----------------
 					for (l=1;l<n_seq;l++) {
@@ -1802,7 +1819,7 @@ while (check == 0) {
 						}
 						else if (start_crit == "Time" || start_crit == "Time") {
 							// ---------------------- Programmation TIME ----------------------------------------
-							aa = getBoolean("TIME selected : \n \nUVP will go to SLEEP mode from now to STARTING TIME. \n \nIt maybe difficult to wake it up. \n \nYOU can also activate the SURVEY mode. \n \nPRESS YES to program \n \nPRESS NO to abort.");
+							aa = getBoolean("TIME selected : \n \nThe UVP will go to SLEEP mode from now to STARTING TIME. \n \nIt maybe difficult to wake it up. \n \nYOU can also activate the SURVEY mode. \n \nPRESS YES to program \n \nPRESS NO to abort.");
 							if (aa == 1) {
 								start_crit = "Time";
 								start_crit = "Time";
@@ -1880,7 +1897,7 @@ while (check == 0) {
 					}// while
 					if (stby == "failed") {showMessage("PROGRAMING FAILED");}
 					else {	
-						showMessage("SEQUENCE PROGRAMMED \nUpturn flag being set now !");		
+						showMessage("SEQUENCE PROGRAMMED \nThe Upturn flag and depth range are being set now !");		
 						long = lengthOf(DeltaP_Upturn_Flag);
 						if (long == 1) zzzz = "000"+DeltaP_Upturn_Flag;
 						if (long == 2) zzzz = "00"+DeltaP_Upturn_Flag;
@@ -1990,7 +2007,7 @@ while (check == 0) {
 							run("Text...",text);	
 							wait(100);
 							run("Close");
-							showMessage("UPTURN FLAG SET to "+upturn+" at "+DeltaP_Upturn_Flag+" m ");
+							showMessage("The UPTURN FLAG and DEPTH RANGE are SET to "+upturn+" at "+DeltaP_Upturn_Flag+" m ");
 							// ------------- Relecture du fichier LOG ----------------------
 							open(log_file);
 							wait(100);
@@ -1998,7 +2015,7 @@ while (check == 0) {
 							run("Close");
 							print(data);
 						}
-						if (stby == "failed") showMessage("UPTURN FLAG setting FAILED.");
+						if (stby == "failed") showMessage("The UPTURN FLAG setting FAILED.");
 						if (start_crit == "Time"){
 							// ----------------- SURVEY ------------------------------------------
 							stby = "failed";						
@@ -2056,7 +2073,7 @@ while (check == 0) {
 					max_part = round(img_vol*(5000/0.25 - CNA)/CNA_s);
 					// ------------- Arrondi --------------------------------------------------	
 					CNA_s = toString(CNA_s);
-					cna_test = getBoolean("Calculated gain : "+CNA_s+"\nAssociated particle maximum concentration : "+max_part+"\nHigher concentrations will only saturate the output at 5 Volts. \n \nPress YES to send to UVP5 \nPress NO to change maximum concentration");
+					cna_test = getBoolean("The calculated gain (integer) is : "+CNA_s+"\nThe corresponding maximum concentration is : "+max_part+"\nHigher concentrations will only saturate the output at 5 Volts. \n \nPress YES to send to UVP5 \nPress NO to change maximum concentration");
 				} // while				
 				CNA = toString(CNA);
 				// ------------- Enregistrement du LOG --------------------------------
@@ -2084,7 +2101,7 @@ while (check == 0) {
 					run("Text...",text);	
 					wait(100);
 					run("Close");					
-					showMessage("SEABIRD XML configuration file \n \n''uvp5_"+uvp_sn_txt+"SBE_configuration_file_"+dateheure+".XML'' \n \nsaved in : \n"+pathconfig);
+					showMessage("The SEABIRD XML configuration file \n \n''uvp5_"+uvp_sn_txt+"SBE_configuration_file_"+dateheure+".XML'' \n \nis saved in : \n"+pathconfig);
 				}// if
 				
 				// ------------- Ecriture du nouveau fichier de configuration -------------
@@ -2163,7 +2180,7 @@ while (check == 0) {
 				}// while
 			}// if analog output
 
-			else if (op =="Synchronize UVP5 time with Computer time") {
+			else if (op =="SYNCHRONISE the UVP5 TIME with the COMPUTER TIME") {
 				// -------------------- Lecture HEURE PC ------------------------------------------
 				dateheuremmss =	runMacro("uvp5_get_time");
 				YYYY = substring(dateheuremmss,0,4);
@@ -2212,7 +2229,7 @@ while (check == 0) {
 					if (test == "failed"){	print("ret: "+ff);	}
 					essai++;		progress = essai/5;			showProgress(progress);
 				}// while
-				res = getBoolean("TIME ALREADY SET to : \n \n"+YYYY+"/"+MM+"/"+DD+" "+HH+":"+mm+":"+SS+"\n \nPRESS YES if OK \n \nPRESS NO to set time manually.");
+				res = getBoolean("The TIME is SET to : \n \n"+YYYY+"/"+MM+"/"+DD+" "+HH+":"+mm+":"+SS+"\n \nPRESS YES if OK \n \nPRESS NO to set time manually.");
 				if (res == 0) {
 					Dialog.create("UVP5 TIME Synchronisation MODULE   ");
 					Dialog.addMessage("---------------------------------------------------------------------------      ");
@@ -2278,7 +2295,7 @@ while (check == 0) {
 				message = message+"modfile_path= "+modfile_path+"\n";
 				config_data = split(config_ret," ");
 				message = message+"\n \nRESTART UVP5 and PILOT module if any Baud rate changed   \n \n";	
-				res = getBoolean(message+"Settings will be sent to UVP5. \n \nCheck that they are compatible with the programmed sequence. \n \nPRESS YES TO CONTINUE \n \nPRESS NO to ABORT and check configurations");
+				res = getBoolean(message+"The settings will be sent to the UVP5. \n \nCheck that they are compatible with the programmed sequence. \n \nPRESS YES TO CONTINUE \n \nPRESS NO to ABORT and check configurations");
 				if (res == 1) {
 				// ------------------- CREATION des MESSAGES ---------------------				
 				config_sent_messages = newArray(8);
@@ -2416,8 +2433,8 @@ while (check == 0) {
 			showProgress(progress);
 			}// while
 		} // 
-		//-------------------- "TEST & MONITOR COM PORT" ---------------------------------------------------------------------
-		else if (op =="TEST & MONITOR COM PORT") {
+		//-------------------- "MONITOR the COMMUNICATION PORT" ---------------------------------------------------------------------
+		else if (op =="MONITOR the COMMUNICATION PORT") {
 			// ----------- Arrêt bouton droit souris -----------------------
 			stop_button = false;	
 			print("=> CLIC ON IMAGEJ TO ACTIVATE AND PRESS SPACE BAR to STOP");
@@ -2498,7 +2515,7 @@ while (check == 0) {
 			modfile_path = config_data[18];
 		} // else if
 		// -------------------------- EDIT ACQUISITION FILES -----------------------------------------------
-		else if (op == "EDIT ACQUISITION files" ) {
+		else if (op == "EDIT the ACQUISITION files in the PROJECT" ) {
 			if (isOpen("Log")) {	
 				dateheure =	runMacro("Zooscan_get_time_5");
 				selectWindow("Log");
@@ -2517,7 +2534,7 @@ while (check == 0) {
 		else if (op == "EDIT ProfileurVideo ini file") {	ret = runMacro("uvp5_edit_profileur_ini_file.txt",pathconfig+" edit "+uvp_sn_txt+" "+chem);	}
 		// ------------------- "RUN UVP5" ----------------------------------------------------------------------------------
 		else if ( op == "RUN UVP5" ){
-			res = getBoolean("DO YOU really want to RUN UVP ? \n \nAre you sure that UVP5 is in STBY mode ? \n \nPRESS YES to proceed \n \nPRESS NO to abort.");
+			res = getBoolean("DO YOU really want to RUN UVP ? \n \nAre you sure that the UVP5 is in STBY mode ? \n \nPRESS YES to proceed \n \nPRESS NO to abort.");
 			if (res == 1) {
 				sent_message = 	"U012RUN_UVP!";
 				ret_message = 	"V015RUN_UVP_OK!";
@@ -2582,11 +2599,11 @@ while (check == 0) {
 				print("> UVP awake now ");
 				print("> UVP in STANDBY MODE ! ");
 			}
-			else {showMessage("UVP5 could not exit sleep mode \n \nCLOSE IMAGEJ and try using MOTOCROSS !");	print("> UVP still sleeping "); 	port_status = "ok";	}
+			else {showMessage("UVP5 could not exit sleep mode \n \nCLOSE IMAGEJ and try using MOTOCROSS.exe or TERATERM.exe !");	print("> UVP still sleeping "); 	port_status = "ok";	}
 		}
 
-		//-------------------- "EMERGENCY STOP" ---------------------------------------------------------------------
-		else if (op == "EMERGENCY STOP") {
+		//-------------------- "MANUAL STOP of the ACQUISITION (ex Emergency stop)" ---------------------------------------------------------------------
+		else if (op == "MANUAL STOP of the ACQUISITION (ex Emergency stop)") {
 			// ------------- Vérification réception C110 -------------------------
 			com = "failed";
 			time = 0;
@@ -2602,7 +2619,7 @@ while (check == 0) {
 				time++;
 				wait(50);
 			} // while
-			if (com == "failed") showMessage("CAMERA NOT SENDING ''C110...'' messages. Press YES to end !");
+			if (com == "failed") showMessage("PC-CAMERA NOT SENDING ''C110...'' messages. Press YES to end !");
 			else {
 				// ------------- Procédure ARRET ------------------------------------
 				stby = "failed";
@@ -2630,13 +2647,13 @@ while (check == 0) {
 					essai++;	progress = essai/5;			showProgress(progress);
 				}// while
 				if (stby == "passed") { print("> Acquisition stopped. Camera & lights OFF."); showMessage("Acquisition stopped ");	}//if
-				else { showMessage("CAMERA could NOT be stopped ");	}
+				else { showMessage("PC-CAMERA could NOT be stopped ");	}
 			} //else
 		}
 		
-		//-------------------- "START ACQUISITION (manual)" ---------------------------------------------------------------------
-		else if (op =="START ACQUISITION (manual)") {
-			res = getBoolean("UVP5 camera and lights will be started to acquire data or check lights on deck. \n \nUVP5 should be powered on its battery via the power shunt or using the 5m long power extend.\n \nPress YES to CONTINUE \n \nPRESS NO to ABORT");
+		//-------------------- "START DATA ACQUISITION (manual)" ---------------------------------------------------------------------
+		else if (op =="START DATA ACQUISITION (manual)") {
+			res = getBoolean("The UVP5 camera and lights will be started to acquire data or check lights on deck. \n \nUVP5 should be powered on its battery via the POWER SHUNT (preferable) or using the 5m long power extend.\n \nPress YES to CONTINUE \n \nPRESS NO to ABORT");
 			if (res == 1) {
 				// -------------------- MODFILE list ----------------------
 				config_list = getFileList(pathconfig);
@@ -2650,15 +2667,15 @@ while (check == 0) {
 				for (g = 0 ; g < m ; g++ ) { rr = file_list[g];	mod_list[g] = rr;	}
 				Dialog.create("UVP5 START ACQUISITION MODULE   ");
 				Dialog.addMessage("-------------------------------------------------------------------------------------------------------      ");
-				Dialog.addMessage("The selected modfile must exist in the CAMERA LOVCAM Modfile directory.");             
+				Dialog.addMessage("The selected modfile must exist in the PC-CAMERA LOVCAM Modfile directory.");             
 				Dialog.addChoice("        SELECT Camera acquisition file ",mod_list);
 				Dialog.addMessage("-------------------------------------------------------------------------------------------------------      ");	
-				Dialog.addMessage("CAMERA START will take "+starting_time+"sec. \n \nCAMERA STOP will take "+stop_time+ "sec.")
-				Dialog.addMessage("DO NOT SHUT DOWN UVP5 POWER WHILE CAMERA is RECORDING !      ");	 		
+				Dialog.addMessage("PC-CAMERA START will take "+starting_time+"sec. \n \nPC-CAMERA STOP will take "+stop_time+ "sec.")
+				Dialog.addMessage("DO NOT SHUT DOWN UVP5 POWER WHILE PC-CAMERA is RECORDING !      ");	 		
 				Dialog.addMessage("-------------------------------------------------------------------------------------------------------      ");	
 				Dialog.addMessage(" PRESS SPACE BAR during ACQUISITION to STOP caméra using normal procedure. ");
 				Dialog.addMessage("-------------------------------------------------------------------------------------------------------      ");	
-				Dialog.addCheckbox("PLOT profile",true);
+				Dialog.addCheckbox("PLOT profile",false);
 				Dialog.addMessage("-------------------------------------------------------------------------------------------------------      ");					
 				Dialog.show();
 				modfile = 		Dialog.getChoice();
@@ -2688,7 +2705,7 @@ while (check == 0) {
 				print("ret: "+ff);
 
 				// --------------------------- PHASE ACQUISITION -----------------------------------
-				showMessage("ACQUISITION will start when you press OK   \n \nACTIVATE ImageJ (click in ImageJ window) and PRESS SPACE BAR when you want to STOP ACQUISITION");
+				showMessage("The ACQUISITION will start when you press OK   \n \nACTIVATE ImageJ (click in ImageJ window) and PRESS SPACE BAR when you want to STOP ACQUISITION");
 				print("-----------------------------------------------------------------------------------------------------------------");
 				print("ACTIVATE ImageJ (click in ImageJ window) and PRESS SPACE bar to STOP recording");
 				print("-----------------------------------------------------------------------------------------------------------------");
@@ -2714,7 +2731,7 @@ while (check == 0) {
 							showStatus(ff);
 							time = 100000;	
 							stop_acq = "true";	
-							showMessage("Acquisition being stopped due to camera error message.");	
+							showMessage("The Acquisition is being stopped due to camera error message.");	
 							print("=>  UVP5 camera being stopped");
 						} // if
 						if (indexOf(ff,ret_message)>=0) {	showStatus(ff); print("> Acquisition started");			time = 100000;			}//
@@ -2887,7 +2904,7 @@ while (check == 0) {
 							keyd = isKeyDown("space"   );
 							if (keyd == 1 ) {
 								wait(200);
-								res1 = getBoolean("Do you want to stop acquisition ? \n \nPRESS YES to stop \n \nPRESS NO to keep recording.");
+								res1 = getBoolean("Do you want to stop the acquisition ? \n \nPRESS YES to stop \n \nPRESS NO to keep recording.");
 								if (res1 == 1)	{	
 									stop_button = true;					
 									// -------------------- Heure fin ----------------------
@@ -2905,8 +2922,8 @@ while (check == 0) {
 				sent_message = "U013STOP_ACQ!";
 				ret_message = "V027SET_OUTPUT_00000000_OK!";
 				// ------------- Ecriture du message sur le com ---------------------------
-				showStatus("CAMERA being stopped");
-				showMessage("UVP5 camera being stopped");
+				showStatus("PC-CAMERA being stopped");
+				showMessage("The UVP5 camera is being stopped");
 				print("=>  UVP5 camera being stopped");
 				Ext.write(sent_message);
 				// ----------- Attente reception message arrêt --------------------------
@@ -2932,7 +2949,7 @@ while (check == 0) {
 	}
 	// ------------------------- Sauvegarde de l'image --------------------------------------------
 	if (isOpen("UVP5 profile")) {
-		aa = getBoolean("DO YOU WANT TO SAVE THE IMAGE OF THE PROFILE ? (do not press CANCEL)");
+		aa = getBoolean("DO YOU WANT TO SAVE THE GRAPH OF THE PROFILE ? (do not press CANCEL)");
 		if (aa == true) {
 			selectImage("UVP5 profile");
 			texte = pathresults +  "\\Real_time_plot_"+dateheuremmss;

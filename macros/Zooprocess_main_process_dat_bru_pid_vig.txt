@@ -1,12 +1,13 @@
 // --------------------- Zooprocess_main_process_dat_bru_pid_vig.txt ------------------------------
-version = "7.40";
-date = "2020/11/20";
+version = "8.20";
+date = "2023/09/08";
 
 // HD/STD for process DAT
 // Correction du "skip" pour PID & Vignettes
 // Gestion des BRU1 (sans image name)
 // Copie TSV des HD
 // Recovered folder message & plot in loop
+// Plot profile systematique
 
 args = 	getArgument();
 arg = 	split(args," ");
@@ -20,6 +21,7 @@ cruise = substring(path,3,long-1);
 pathconfig = path+"\\config\\";
 text_run = chemzooprocess+"batch_run.txt";
 text_stop = chemzooprocess+"batch_stop.txt";
+processplot = true;
 
 if (File.exists(text_run) == false && File.exists(text_stop) == false) {
 	// -------------- Creation du fichier BATCH ---------------------
@@ -41,11 +43,8 @@ for (i=0; i<filelist.length ; i++) {
 		if (ctrl == 1 && ctrl1 == 1)	{rr = filelist[i]; 	list[j] = rr;	j = j + 1;		} // if
 } // for	
 //---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
-if (j==0) { configpres = 0;
-		getBoolean("No metadata file in the selected project. \nPress YES to create a file and add a profile !          ");
-		option = "create";
-} //
-else if (j==1) { configpres = 0;		metafile  = list[0];		} //
+if (j==0) { 	getBoolean("No metadata file in the selected project. \nPress Cancel to exit !          ");	} //
+else if (j==1) { metafile  = list[0];		} //
 else {
 	listaff = newArray(j);
 	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
@@ -104,7 +103,7 @@ Dialog.addMessage("Project :        "+path);
 Dialog.addMessage("Metadatafile :   "+metafile);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 Dialog.addCheckbox("PROCESS DAT, BRU ?",true);
-Dialog.addCheckbox("Plot profiles ?",plot_opt);
+//Dialog.addCheckbox("Plot profiles ?",plot_opt);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 Dialog.addCheckbox("PROCESS PID and VIGNETTES ?",true);
 Dialog.addMessage("ECOTAXA tsv files are automatically saved with PID files.");
@@ -114,14 +113,14 @@ Dialog.addCheckbox("SKIP processed file ?",true);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
 Dialog.show;
 processbrudat = 	Dialog.getCheckbox();
-processplot = 		Dialog.getCheckbox();
+//processplot = 		Dialog.getCheckbox();
 processpid = 		Dialog.getCheckbox();
 batch = 		Dialog.getCheckbox();
 skip = 			Dialog.getCheckbox();
 
 // ------------------------------------- RECOVER metadata if any work subfolder deleted ---------------------------
 recover = false;
-message = "Some profiles directories were missing. \nTheir metadata have been recovered before the process : ";
+//	message = "Some profiles directories were missing. \nTheir metadata have been recovered before the process : \n ";
 for (i=1; i<array.length ; i++) { 
 	// ----------------- Nom de fichier ---------------------------------------
 	ligne = replace(array[i],";"," ");
@@ -133,7 +132,7 @@ for (i=1; i<array.length ; i++) {
 	pathprofile = path+"\\work\\"+Stationname+"\\";
 	pathprofilemeta  = pathprofile+Stationname+"_meta.txt";
 	if (File.exists(pathprofile) == false || File.exists(pathprofilemeta) == false ) {
-		message = message+"\n"+Stationname;
+//		message = message+"\n"+Stationname;
 		// ----------------- Impression de la premiere lignes -----------------
 		if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
 		print(array[0]);	
@@ -150,7 +149,7 @@ for (i=1; i<array.length ; i++) {
 		recover = true;
 	} //  if
 } // for
-if (recover == true) showMessage("METADATA RECOVERED",message);
+//	if (recover == true) showMessage("METADATA information ",message);
 
 //------------------------------------- Fichier CONFIG ------------------------------------------------------------------
 if (processpid == true) {
@@ -226,7 +225,7 @@ if ( processbrudat == true ) {
 	} // for
 
 	//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
-	if (j==0 && ((processbrudat == true && processpid == false)  ) || batch == false) { configpres = 0;
+	if (j==0 && ((processbrudat == true && processpid == false)  ) || batch == false) { 
 		getBoolean("No un-processed raw profile file in the selected project. \nPress CANCEL to abort !          ");
 	} //
 	else { 	
@@ -428,11 +427,10 @@ if (processpid == true) {
 		} // if				
 	} // for
 	//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
-	if (j==0 ) { configpres = 0;
+	if (j==0 ) {
 		aa = getBoolean("All profiles processed in the selected project \n (or DAT files not yet processed). \nPress CANCEL to abort !          ");
 	} //
-	else { 	
-		listproc = newArray(j);
+	else { 	listproc = newArray(j);
 		for (k=0;k<listproc.length ;k++) {	rr = list[k];	listproc[k] = rr;		} // for
 	} // else
 

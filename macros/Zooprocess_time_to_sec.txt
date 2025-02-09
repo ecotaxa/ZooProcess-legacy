@@ -1,0 +1,25 @@
+// ----------------- Zooprocess_time_to_sec.txt --------------------
+version = "7.44";
+date = "2021/09/07";
+// forlat entrée YYYYMMDDHHMMSS
+
+time = 	getArgument();
+year = parseFloat(substring(time,0,4));
+month = parseInt(substring(time,4,6));
+day = parseInt(substring(time,6,8));
+hour = parseInt(substring(time,8,10));
+min = parseInt(substring(time,10,12));
+sec = parseInt(substring(time,12,14));
+Time_sec = sec+min*60+hour*3600 + day*24*3600 + month* 31*24*3600 + (year - 2008) * 365 *24*3600;
+/*
+print(time);
+print(year);
+print(month);
+print(day);
+print(hour);
+print(min);
+print(sec);
+*/
+// ----------------------------- FIN ----------------------------------------------
+return toString(Time_sec);
+

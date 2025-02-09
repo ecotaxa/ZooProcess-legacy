@@ -1,0 +1,15 @@
+// -------------------------- Zooscan_find_version -----------------------
+version = "8.03";
+date = "2020/10/31";
+
+scanner = 	getArgument();
+zooscan = "unknown";
+if (scanner == ) {	zooscan = "biotom";	}
+else if (scanner == ) {	zooscan = "Hydroptic V1";	}
+else if (scanner == ) {	zooscan = "Hydroptic V2";	}
+else if (scanner == || scanner ==) {	zooscan = "Hydroptic V3";	}
+else if (scanner == || scanner ==) {	zooscan = "Hydroptic V4";	}
+else { aa = getBoolean("The zooscan model is not identified. \nPress Cancel to abort !");	}
+
+// ---------------------- FIN ---------------------------
+ret = zooscan;

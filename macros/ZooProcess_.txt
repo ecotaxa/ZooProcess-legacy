@@ -1,0 +1,1099 @@
+// -------------------------------ZooProcess_.txt---------------------------------------------------------------------------------------------------
+version =	 "8.28";
+date =	 "2024/10/03";
+imagejversion = "1.41o";
+
+// gestion advanced/user
+// vuescan absent
+// Messages Normal End
+// cas pas Vuescan, pas scanner
+// Retour automatique en mode USER
+// gestion user/advanced => forcage user
+
+arg = getArgument(); 
+array = split(arg," ");
+instrum= 		array[0]; 
+chemzooprocess = 	array[1];
+instrum = toLowerCase(instrum);
+
+// ---------------------------- Default settings --------------------------------------
+if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if
+run("Misc...", "divide=Infinity antialiased_tool");
+run("free memory");
+setBatchMode(false);
+requires(imagejversion);
+run("Colors...", "foreground=black background=white selection=red");
+run("Input/Output...", "jpeg=100 file=.xls");
+run("Profile Plot Options...", "width=450 height=200 minimum=0 maximum=0");
+if (isOpen("test")) { selectImage("test"); close();	} // if
+if (isOpen("Zooprocess")) {selectImage("Zooprocess"); 	close();		} // if
+
+
+ecranw= screenWidth();
+ecranh= screenHeight();
+vuescanexist = false;
+flag_install=false;
+config_files = false;
+advanced_mode = false;
+scanner = "no_scanner";
+vuescan_default = "9.7.67";
+previouspath = "do_not_select";
+
+// if (ecranw <1260 || ecranh < 1020) { getBoolean("The dimensions of your monitor are less than 1280 x 1024.                                 \n     \nPress YES to Continue.     \nPress CANCEL to ABORT.             ");	} // if
+
+//----------------------Selection AUTOMATIQUE du repertoire de travail chem----------------------------------------------------------------------
+mat = newArray("C:\\Zooscan\\","C:\\Zooscan\\","D:\\Zooscan\\","E:\\Zooscan\\","F:\\Zooscan\\","G:\\Zooscan\\","H:\\Zooscan\\");
+//mat = newArray("C:\\Zooscan\\");
+i = 0;
+while (i<mat.length) {
+	chem= mat[i];
+	if (File.exists(chem+"zooprocess.txt") == true && File.exists(chem+"zooscan.txt") == true) { flag_install = true;	i = 1000;	}
+	i++;
+} // while
+
+// ------------ Création RUN file ---------------------------
+text_run = chemzooprocess+"batch_run.txt";
+text_stop = chemzooprocess+"batch_stop.txt";
+if (File.exists(text_stop)) { File.rename(text_stop,text_run);	}
+else {
+	if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+	print("Do not delete this file !");
+	text =  "save=" + text_run;
+	selectWindow("Log");
+	run("Text...",text);	
+	run("Close");	
+}//else
+
+// ============================= Routine installation =============================
+if (flag_install==false ) {
+	inst = false;
+	while(inst == false) {
+		ret = runMacro("Zooprocess_install_7",version+" install biotom 1 biotom");
+		flag = toString(ret);
+		if (lengthOf(flag) ==1)  { 	getBoolean("Error message : ''Zooprocess_install_7.txt'' macro aborted.                 \n \nPress Cancel to abort !                       "); 	} // if
+		else {	argret = split(flag," ");	chem = 	argret[0]; vuescan = argret[1];	scanner = argret[2];		zooscan = argret[3]; 	inst = true;			
+			if (isOpen("test")) { selectImage("test"); close();	} // if
+		} // else
+	} // while
+	
+	// -------------------- MAJ des projets Zooscan dans Zooprocess.txt -------------
+	previouspath = "copy";
+	print_file = 1;
+	flag = runMacro("Zooscan_list_projects.txt",chem+" "+previouspath+" "+print_file);
+	dataproj = split(flag,"\ ");
+	nbproj = dataproj[1];
+	flag_install = true;
+} // if
+//print("chem= ",chem);
+
+// ============================= Verifications dans le cas ou Zooprocess est installe =============================
+if (File.exists(chem+"\\Zooscan.txt") == true && File.exists(chem+"zooscan.txt") == true) {
+	open(chem+"\\Zooscan.txt");
+	wait(100);
+	data = getInfo();
+	run('Close');
+	ligne = split(data,"\n");
+	scanner = ligne[0];	
+	// ---------- Correction nom scanner si nouvelle version Zooprocess > 8.03 -----------------------------
+	//	if (startsWith(scanner,"Perfection") == false && scanner != "no_scanner") {
+	
+	if ((startsWith(scanner,"Perfection") == false && startsWith(scanner,"GT-X") == false) && scanner != "no_scanner") {
+		showMessage("Your version of Zooprocess has been updated. The Zooscan.txt file is updated now requiring to re-select the Zooscan version.");
+		ret = runMacro("Zooscan_select_system.txt",chem);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Warning message : ''Zooscan_select_system'' process aborted                       "); 	} // if
+		else { scanner = ligne[0];	vuescan = ligne[1]; source = ligne[2];	}
+	}
+	// ---------- Presence des fichiers de scan dans config -----------------------
+	pathconfig = chem+"\\"+"Zooscan_config";
+	if (File.exists(pathconfig)) {
+		if ( File.exists(pathconfig+"\\vuescan_zooscan_calibration_OD_level_cadre1.ini") && File.exists(pathconfig+"\\vuescan_zooscan_calibration_OD_level_cadre2.ini") && File.exists(pathconfig+"\\vuescan_zooscan_calibration_OD_posA4.ini")) {
+			config_files = true;
+		}
+	}
+}	
+// ============================= Test de l'existence du logiciel vuescan et recherche version =============================
+ret = runMacro("Zooscan_check_vuescan_pictures");
+flag = toString(ret);
+if (lengthOf(flag) == 1)  { getBoolean("Zooscan_check_vuescan_pictures.txt macro aborted? \n \nPress Cancel to abort !    ");	} // if
+else {	argret = split(flag," ");	vuescan = argret[0];	chemvue = argret[1];			} // else
+if (vuescan != vuescan_default ) {	
+	// showMessage("Vuescan is not properly installed. Check that you installed the version "+vuescan_default+"\n \nThe scanning tools are disabled. \n \nPress YES to continue.");	
+}
+if (vuescan == vuescan_default) {	vuescanexist = true;	}
+
+// ============================= Hardware type =============================
+ret = runMacro("Zooscan_define_zooscan_version.txt",scanner);
+zooscan=toString(ret);
+if (lengthOf(zooscan) == 1)  { 	getBoolean("Warning message : ''Zooscan_define_zooscan_version'' process aborted.   \n \nPress Cancel to abort ! ");   }	
+
+// ============================= Récuperation dernier projet utilise =============================
+// le premier enregistrement est reserve au dernier projet ouvert
+open(chem+"zooprocess.txt");
+wait(100);
+info = getInfo();
+run("Close");
+//	if (lengthOf(info) < 12) {	getBoolean("The ''zooprocess.txt'' file from the "+chem+" folder is empty. \n \nYou must do the following operations : \n1) Press Cancel to abort. \n2) Manually correct the ''zooprocess.txt'' file. \n3) Start again Zooprocess. "); } // if 
+if (lengthOf(info) > 12) {	data = split(info,"\n");
+	previouspath = data[0];
+	if (data[0] == "Test file used by ZooProcess to distinguish the Zooscan working directory from other Zooscan folders.") { 
+		Dialog.create("WARNING           ");
+		Dialog.addMessage("New version of Zooprocess creates now a project list in zooprocess.txt");
+		Dialog.addMessage("You have to create now some new folders for your files                    \nOnce created, please move all your images and files in the right folders   ");
+		Dialog.show();
+	} // if  
+} // else
+
+// ============================= MAJ des projets Zooscan dans Zooprocess.txt =============================
+print_file = 1;
+flag = runMacro("Zooscan_list_projects.txt",chem+" "+previouspath+" "+print_file);
+dataproj = split(flag,"\ ");
+nbproj = dataproj[1];
+
+// ============================= PATHDISPLAY : Ouverture pour création liste projets à afficher =============================
+open(chem+"zooprocess.txt");
+wait(100);
+info = getInfo();
+run("Close");
+if (vuescanexist == true && config_files == true && (zooscan != "unknown" || zooscan != "Zooscan_not_connected" || zooscan != "other") ) 	{	info = info+"\nCREATE A NEW PROJECT";		}
+pathdisplay = split(info,"\n");
+
+// ============================= Menu(s) =============================
+// ------------------------ menu advanced --------------------
+advanced_menu = newArray(44);
+for (i=0; i<advanced_menu.length ;i++) {	advanced_menu[i]=" ";		} // for
+advanced_menu[0]=	"Fill in Sample metadata";						//	Projet
+
+if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {
+	advanced_menu[2]=	"---------- disabled tool -----------";
+	advanced_menu[3]=	"---------- disabled tool -----------";
+}
+else {	advanced_menu[2]=	"SCAN and CONVERT a BACKGROUND";						//	Projet
+	advanced_menu[3]=	"SCAN a SAMPLE";			//	Projet
+}
+advanced_menu[4]=	"CONVERT & PROCESS scanned SAMPLES in batch mode";				//	Projet
+advanced_menu[5]=	"CHECK the process using segmented images";				//	Projet
+advanced_menu[7]=	"SEPARATION of touching objects on selected vignettes";	
+advanced_menu[8]=	"SEPARATION of touching objects from global image (msk or vis)";					//	Projet
+advanced_menu[9]=	"SEPARATION of touching objects from all vignettes";					//	Projet
+
+advanced_menu[11]=	"EDIT the SAMPLE and FRACTION metadata ";
+advanced_menu[13]=	"UPDATE all metadata from the sample and scan CSV tables. ";
+
+if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {	advanced_menu[15]=	"---------- disabled tool -----------";	}
+else {advanced_menu[15]=	"SCAN, CONVERT and PROCESS a Sample with Zooscan";}
+//	advanced_menu[16]=	"CONVERT RAW image to 8 bit calibrated image";				//	Projet
+//	advanced_menu[17]=	"PROCESS (Converted) Image (process one)";					//	Projet
+advanced_menu[18]=	"PROCESS AGAIN all Background images";					//	Projet
+
+advanced_menu[20]=	"STATS and GRAPHS";						// 	Projet deduit du path des fichiers ouverts
+advanced_menu[21] =	"Manual measurements on selected vignettes";					//	Projet deduit du path des fichiers ouverts	
+advanced_menu[22] =	"Manual measurements on all vignettes";					//	Projet deduit du path des fichiers ouverts
+advanced_menu[23] = "VIEW Image with outlines";						//	Projet deduit du path des fichiers ouverts	
+advanced_menu[24]= 	"VIEW vignettes"; 							//	Projet deduit du path des fichiers ouverts	
+advanced_menu[25] = "Create tables for ECOTAXA";	
+
+advanced_menu[27] =	"EXTRACT vignettes in folders according to PREDICTION or VALIDATION";			//	Projet deduit du path des fichiers ouverts					
+advanced_menu[28] =	"LOAD identifications from sorted vignettes";				//	Projet deduit du path des fichiers ouverts					
+advanced_menu[29] = "EXTRACT vignettes for PLANKTON IDENTIFIER (unsorted vignettes for training) ";
+advanced_menu[30] = "CREATE subset of a Learning Set from identified vignettes (random)";
+//advanced_menu[27] =	"Create Learn-PID file from a TRAINING SET";				//	Projet deduit du path des fichiers ouverts	
+
+advanced_menu[31]=	"EDIT configuration file";						//	Projet
+advanced_menu[33]=	"EDIT LUT file";							// 	projet
+advanced_menu[34]=	"CHANGE / CHECK Zooscan model & parameters";
+
+if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {		advanced_menu[36]=	"---------- disabled tool -----------";	}
+else {		advanced_menu[36]=	"CALIBRATION Tools";	}
+advanced_menu[37]=	"DIAGNOSTIC tools";
+advanced_menu[38]=	"OTHER tools";			//	Projet
+advanced_menu[40]=	"CLOSE all opened IMAGES";
+advanced_menu[41] = "Select another instrument";
+//advanced_menu[42]=	"SWITCH temporarily to ADVANCED mode";
+
+// -------------------- Menu user -----------------------------------
+user_menu=newArray(18);
+for (i=0;i<user_menu.length;i++) {	user_menu[i]=" ";		} // for
+user_menu[0]=	"Fill in Sample metadata";						//	Projet
+if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {	
+	user_menu[2]= "---------- disabled tool -----------";	
+	user_menu[4]= "---------- disabled tool -----------";		
+}
+else { 	user_menu[2]=	"SCAN and CONVERT a BACKGROUND";						//	Projet
+	user_menu[4]=	"SCAN a SAMPLE";	
+}
+user_menu[6]=	"CONVERT & PROCESS scanned SAMPLES in batch mode";				//	Projet
+user_menu[8]=	"CHECK the process using segmented images";				//	Projet
+user_menu[10]=	"SEPARATION of touching objects on selected vignettes";	
+user_menu[12]=	"EDIT the SAMPLE and FRACTION metadata ";
+user_menu[16]=	"SWITCH temporarily to ADVANCED mode";
+
+// -------------------- OLD ! ----------------------------------------------------------------------------------------------------
+//	advanced_menu[34]=	"IMPORT images and data (Zooscan 2003)";				//	Projet	
+
+// ============================= SELECTION du PROJET =============================
+check = 0;
+while (check == 0) {	
+	Dialog.create("ZOOPROCESS                                                version "+version+"                                      "+date);
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("-------------------------------------          ZOOPROCESS for ZOOSCAN           --------------------------------------");
+	Dialog.addMessage("---------------------------------------------     for ImageJ version "+imagejversion+"     ---------------------------------------------");
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("                                     Laboratoire d'Oceanologie de Villefranche sur mer");
+	Dialog.addMessage("                                                           CNRS - Sorbonne University");
+	Dialog.addMessage("                                                            marc.picheral@imev-mer.fr");
+	Dialog.addMessage("                                                             http://piqv.imev-mer.fr ");
+	Dialog.addMessage("                         Please refer to ZooProcess and ImageJ if used for Publication");
+	Dialog.addMessage("                                                         http://rsb.info.nih.gov/ij/index.html");
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	zooscan_cor = replace(zooscan,"_"," ");
+	if (vuescanexist == true ) {	Dialog.addMessage("VUESCAN version : "+vuescan);
+		Dialog.addMessage("Connected ZOOSCAN : "+zooscan_cor);
+	}
+	else {	Dialog.addMessage("VUESCAN is not installed. ");	} // else
+	
+	if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {
+		Dialog.addMessage("SCANNING and PROJECT CREATION tools disabled");
+	}
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addChoice("       SELECT PROJECT",pathdisplay);
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("Press CANCEL to EXIT Zooprocess");
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.show();			
+	projfolder = Dialog.getChoice();
+	if (projfolder == "CREATE A NEW PROJECT" ) {
+		control = toString(check);
+		ret = runMacro("Zooscan_create_project_5",version+" "+chem+" "+control);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message : Zooscan_create_project_5.txt macro aborted                       "); 		} // if
+		else {	argret = split(flag," ");	docu = argret[0];	check = argret[1];		projfolder = argret[2];		
+			doc = argret[3];		prt = argret[4];	projfolder = argret[5];		fin = argret[6];
+			if (docu == "1") { 
+				showMessage("The project \n \n"+projfolder+ " \n \nis created and selected.        ");
+			} // if	
+		} // else
+	} // if NEW
+	else if ( lengthOf(projfolder) < 12) { showMessage("Wrong selection");	}
+	else {  //---------------------- On a choisi un repertoire qui devrait être OK, verifions -------------------------------------------------------------
+		for (i=0;i<pathdisplay.length;i++) { 
+			if (pathdisplay[i] == projfolder) { 		index = i;	} // if
+		} // for
+		//	print(path);
+		pathconfig =	projfolder+"\\"+"\\Zooscan_config";
+		pathmeta = 	projfolder+"\\"+"\\Zooscan_meta\\";
+		pathscan = 	projfolder+"\\"+"\\Zooscan_scan";
+		pathwork = 	projfolder+"\\"+"\\Zooscan_scan\\"+"\\_work";
+		pathraw = 	projfolder+"\\"+"\\Zooscan_scan\\"+"\\_raw";
+		pathresults = 	projfolder+"\\"+"\\Zooscan_results";
+		if (File.exists(projfolder) && File.exists(pathconfig) && File.exists(pathmeta) && File.exists(pathscan)   && File.exists(pathwork) && File.exists(pathraw) && File.exists(pathresults)) {
+			check = 1;	 
+		} // if	
+		else { //-------------------------Probleme dans les repertoires------------------------
+			showMessage("The "+projfolder+" folder system is not correct                   \nSelect another project     \nThe project is removed from the list");
+			pathdisplay[index] = 	"removed";
+			pathdisplay[0] = 	"removed";
+			
+			//------------------------Enregistrement de zooprocess.txt ---------------------------
+			if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+			for (i = 0 ; i<pathdisplay.length ; i++) { 
+				if (pathdisplay[i] != "removed" || pathdisplay[i] != "NEW") {	print(pathdisplay[i]);	} // if 
+			} // for
+			//-------------------Sauvegarde--------------------------------------------------
+			selectWindow("Log");
+			sauve = "save=" + chem + "zooprocess.txt";
+			run("Text...",sauve);
+		} // else
+	} // else if
+} // while
+
+// ============================= MAJ Zooprocess.txt =============================
+print("The project list is being updated in ''zooprocess.txt''. BE PATIENT !!!! ");
+print_file = 1;
+flag = runMacro("Zooscan_list_projects.txt",chem+" "+projfolder+" "+print_file);
+
+// ============================= USER / ADVANCED =============================
+pathconfig =	projfolder+"\\"+"\\Zooscan_config";
+mode_user = 	pathconfig+"\\mode_file_user.txt";
+mode_advanced = pathconfig+"\\mode_file_advanced.txt";
+
+// ----------------- si aucun fichier de mode ----------------
+if (File.exists(mode_advanced) == false && File.exists(mode_user) == false) {
+	if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+	print("Do not delete");
+	selectWindow("Log");
+	text =  "save=" + mode_user;
+	run("Text...",text);	
+	run("Close");
+} 
+else if (File.exists(mode_advanced) == true && File.exists(mode_user) == true) {
+	// ----------------- si deux fichiers -------------------------
+	showMessage("BOTH ''mode_file_user.txt'' & ''mode_file_advanced.txt'' files exits in "+pathconfig+"\n DELETE one of them before continuing ! \nPress YES then.");
+}
+else if (File.exists(mode_advanced)) { 	mode_select = File.rename(mode_advanced,mode_user);	} // if	
+//	if (File.exists(mode_advanced)) advanced_mode = true;
+
+// ============================= MAJ fichier META 7.11 si existe =============================
+chemmeta = projfolder + "\\Zooscan_meta\\";
+if (File.exists(chemmeta+"zooscan_read_header.csv") || File.exists(chemmeta+"zooscan_scan_header.csv") || File.exists(chemmeta+"zooscan_sample_header.csv")) {
+	showMessage("METADATA tables from version 7.11 are updated now.");
+	ret = runMacro("Zooscan_metadata_update",chem+" "+projfolder);
+	flag = toString(ret);
+	if (lengthOf(flag) == 1)  {aa = getBoolean("Check METADATA csv file in "+chemmeta+"\n \nPress CANCEL to abort");		}
+}//
+
+// ============================= TEST et CORRECTION SCAN_HEADER.CSV =============================
+// --------------------- lecture du fichier SCAN SAMPLE ----------------------------
+if ( File.exists(chemmeta+"zooscan_scan_header_table.csv")) {
+	metafile = chemmeta+"zooscan_scan_header_table.csv";
+	open(metafile);  
+	wait(100);
+	metadata_scan = getInfo();
+	data_scan = split(metadata_scan,"\n");
+	k = data_scan.length;
+	run("Close");	
+	// ---------------- Création vecteurs -------------------------------------------------------------------------------------
+	scanId = newArray(k-1);
+	sampleId_frac = newArray(k-1);	fracId  = newArray(k-1);		Scanop = newArray(k-1);	vol_frac = newArray(k-1);
+	Fracmin = newArray(k-1);	Fracsup = newArray(k-1);		Fracnb = newArray(k-1);	Observation = newArray(k-1);
+	Code = newArray(k-1);		Submethod = newArray(k-1);		Cellpart = newArray(k-1);	Replicates = newArray(k-1);
+	Volini = newArray(k-1);		Volprec = newArray(k-1);
+	nb_1 = 0;
+	
+	for (i=0; i< k-1 ; i++) {
+		texte = data_scan[i+1];
+		texte = replace(texte,";"," ");
+		array = split(texte," ");
+		scanId[i]= array[0]; 	
+		// ----------- Controle fraction -----------------
+		if (endsWith(array[0],"_1") && endsWith(array[0],"__1")== false ) {	//|| endsWith(array[0]),"_2")) {	
+			nb_1++;	
+			//	ccc = getBoolean(array[0]+" OK  "+nb_1);		
+		} //
+		else {		scanId[i]= array[0]+"_1"; 	
+			//	ccc = getBoolean(array[0]+" NOK  "+nb_1);
+		}
+		sampleId_frac[i] = array[1];	
+		Scanop[i] = array[2];		
+		fracId [i] = array[3];	
+		Fracmin[i] = array[4];	
+		Fracsup[i] = array[5];		
+		Fracnb[i] = array[6];	
+		Observation[i] = array[7];
+		Code[i] = array[8];	Submethod[i] = array[9];	Cellpart[i] = array[10];	Replicates[i] = array[11];
+		Volini[i] = array[12];	Volprec[i] = array[13];
+	} // for
+	// ---------- Test ---------------------
+	if (nb_1 < k-1) { // ------------ existe des scanId se terminant pas par -1 ---------------
+		aa = getBoolean("Zooprocess detected some probale mistakes in the "+chemmeta+"zooscan_scan_header_table.csv file.\nSome ''scanid'' names do not end by ''_1''.\nThis may be due to a bug in previous version. \nPress YES to allow Zooprocess to correct the file.\nPress CANCEL to abort.");
+		if (aa == 1) { 
+			bb = getBoolean("Zooprocess will correct the "+chemmeta+"zooscan_scan_header_table.csv file.\nPlease make a backup of this file BEFORE pressing YES to proceed !");	
+			if (bb == 1) {//-------------- Correction ------------
+				// ------------------------- Ecriture SCAN HEADER --------------------
+				print("A purger");	selectWindow("Log");		run("Close");
+				texte = "scanId;sampleId;scanop;fracId;fracmin;fracsup;fracnb;observation;code;subMethod;cellPart;replicates;volIni;volPrec";
+				texte = toLowerCase(texte);
+				print(texte);
+				for (h=0; h< k-1 ; h++) {
+					texte = scanId[h]+";"+sampleId_frac[h]+";"+Scanop[h]+";"+fracId[h]+";"+Fracmin[h]+";"+Fracsup[h]+";"+Fracnb[h]+";"+Observation[h]+";"+Code[h]+";"+Submethod[h]+";"+Cellpart[h]+";"+Replicates[h]+";"+Volini[h]+";"+Volprec[h];
+					print(texte);
+				} // for
+				text = "save="+chemmeta+"zooscan_scan_header_table.csv";
+				selectWindow("Log");
+				run("Text...",text);
+				cc = getBoolean(chemmeta+"zooscan_scan_header_table.csv file CORRECTED !\nYou should now correct all metadata in you project.\n \nPress YES to proceed. \nPress NO to skip.");	
+				if (cc == 1) {
+					// --------------- Update from CSV ------------
+					ret = runMacro("Zooscan_edit_metadata_main",argu+" cor");				
+				}
+			}// if
+			else {		showMessage(chemmeta+"zooscan_scan_header_table.csv file NOT CORRECTED !");		}
+		}
+		else {			showMessage(chemmeta+"zooscan_scan_header_table.csv file NOT CORRECTED !");		}
+	}// if
+}// if exists
+
+// ---------------------------- PATH ----------------------------------------------
+lon = lengthOf(projfolder);
+zoosc = indexOf(projfolder,"Zooscan_");
+proj = substring(projfolder,zoosc+8,lon);
+chemtemp = 	chem + "Zooscan_temp\\";
+chemscan = 	projfolder  + "\\Zooscan_scan\\";
+chemsuivi = 	projfolder  + "\\Zooscan_check\\";
+
+// ============================= SELECTION DE LA TACHE =============================
+rin = 0;
+while (rin==0) { 
+	Dialog.create("ZOOPROCESS for ZOOSCAN                        version "+version+"                                 "+date+"       ");
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	if (vuescanexist == true ) {	
+		Dialog.addMessage("VUESCAN version : "+vuescan);
+		Dialog.addMessage("Connected ZOOSCAN : "+zooscan_cor);
+	}
+	else {	Dialog.addMessage("VUESCAN is not installed. ");	} // else	
+	if (vuescanexist == true && (zooscan == "unknown" || zooscan == "Other" || zooscan == "Zooscan_not_connected"))  {
+		Dialog.addMessage("SCANNING and PROJECT CREATION tools disabled");
+	}	
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("Project :  "+projfolder);
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	if (File.exists(mode_advanced)) {	Dialog.addChoice("      SELECT PROCESS",advanced_menu);		}
+	else {					Dialog.addChoice("      SELECT PROCESS",user_menu);		}
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	if (File.exists(mode_advanced)) {	Dialog.addMessage("ADVANCED MODE");	}
+	else {					Dialog.addMessage("USER MODE");		}
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("Press CANCEL to exit and start again Zooprocess SELECT another project ");
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	Dialog.show();
+	task = Dialog.getChoice();	
+	
+	if (task == "SWITCH temporarily to ADVANCED mode") {
+		// ----------- MAJ des modes --------------------------------------------------------------------------------------
+		if (File.exists(mode_user)) { 		mode_select = File.rename(mode_user,mode_advanced);	advanced_mode = true;	} // if
+	} // if
+
+	//-------------------- "Select another instrument" ---------------------------------------------------------------------
+	else if (task == "Select another instrument") {
+		// --------------------------Affichage de la date et de l'heure ------------------
+		dateheure =	runMacro("Zooscan_get_time_5");
+		ret = runMacro("Zooprocess_change_instrum",chemzooprocess+" "+dateheure);
+		instrum = toString(ret);
+		if (lengthOf(instrum) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 	} // if
+		else { showMessage("New instrument : "+instrum+"\n \nRestart ZOOPROCESS !");	rin = 1;}	// else
+	} // if
+	
+	//-------------------- "UPDATE all metadata from the sample and scan CSV tables. "---------------------------------------------------------------------
+	else if (task == "UPDATE all metadata from the sample and scan CSV tables. " ) {
+		ret = runMacro("Zooscan_update_metadata_from_csvtables",chem+" "+projfolder);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 	} // if
+	} // if
+	
+	//--------------------"CLOSE all opened IMAGES"---------------------------------------------------------------------
+	else if (task == "CLOSE all opened IMAGES") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+	} // if
+	
+	// ------------------------ "SEPARATION of touching objects from global image (msk or vis)" ------------------------------------
+	else if (task == "SEPARATION of touching objects from global image (msk or vis)") {
+		ret = runMacro("Zooscan_separation_msk",chem+" "+projfolder);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 	} // if
+		else { 	showMessage("Normal End of "+task);                       	}				
+	} // else if
+	
+	// ------------------------ "DIAGNOSTIC tools" ---------------------------------------------------------
+	else if (task == "DIAGNOSTIC tools") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+		calibop=newArray("Analyse RAW background images","Check Normalization with OD discus");
+		Dialog.create("ZOOSCAN DIAGNOSTIC tools ");
+		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+		Dialog.addChoice("          SELECT DIAGNOSTIC TO PERFORM ",calibop);
+		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+		Dialog.show();
+		calib_task = Dialog.getChoice();
+		if (calib_task == "Analyse RAW background images") {	args = chem+" "+chemvue+" 1 "+proj +" "+projfolder;			ret = runMacro("Zooscan_background_diagnostic.txt",args);	} // if
+		if (calib_task == "Check Normalization with OD discus") {proc="threshold";	args = chem+" "+chemvue+" "+proc+" "+proj +" "+projfolder ;		ret = runMacro("Zooscan_threshold_5",args);			} // if
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message"+calib_task+" process aborted.       "); 	} // if
+		else { 				showMessage("Normal End of "+task);                       	}
+	} // if
+	
+	// ------------------------ "VISIT the ZOOSCAN USER FORUM" ---------------------------------------------------------
+	else if (task == "VISIT the ZOOSCAN USER FORUM") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+	} // if
+	
+	// ------------------------ "VISIT the ZOOSCAN website" ---------------------------------------------------------
+	else if (task == "VISIT the ZOOSCAN website") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+	} // if
+	
+	//-------------------- "Fill in Sample metadata" or "EDIT the SAMPLE and FRACTION metadata "---------------------------------------------------------------------
+	else if (task == "Fill in Sample metadata" || task == "EDIT the SAMPLE and FRACTION metadata ") {
+		argu = chem+" "+projfolder;
+		chemmeta = projfolder + "\\Zooscan_meta\\";
+		l = 2;                                                 
+		if ( File.exists(chemmeta+"zooscan_scan_header_table.csv") == false || File.exists(chemmeta+"zooscan_sample_header_table.csv") == false) {
+			ret = runMacro("Zooscan_metadata_read_raw",argu);
+			flag = toString(ret);
+			l= lengthOf(flag);
+		}//
+		if (l > 1)  {
+			if (task == "Fill in Sample metadata")	{	ret = runMacro("Zooscan_metadata_fill",argu+" fill NaN");			} // if
+			if (task == "EDIT the SAMPLE and FRACTION metadata ") 	{	ret = runMacro("Zooscan_edit_metadata_main",argu+" fill");		} // if
+			flag = toString(ret);
+			if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 				} // if
+			else { 				showMessage("Normal End of "+task);                       	}
+		}//
+		else {					showMessage("Error message Zooscan_metadata_read_raw process aborted.                       "); 	} // if
+	} // if
+	
+	// ------------------"EDIT the SAMPLE and FRACTION metadata " ------------------------------------------------
+	else if (task == "=>                 EDIT the SAMPLE and FRACTION metadata ") {
+		param = 1;	titre = "edit";	meta = 1;
+		args = "edit"+" "+chem+" "+"configfile" +" "+ param + " " + titre + " " + "1" +" "+ "1" +" "+ meta +" "+ "1" +" "+ "1" +" "+ "1" +" "+ "1" +" "+"chemscan"+" "+"chemwork1" +" "+"1"+" "+"1"+" "+"1" +" "+"1" +" "+"1"+" "+"1"+" "+"1"+" "+"1"+" "+"1"+" "+"1"+" 1 1 "+projfolder;
+		ret = runMacro("Zooscan_1cm",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 	} // if
+		else { 				showMessage("Normal End of "+task);                       	}
+	} // else if
+	
+	// ------------------ "CHANGE / CHECK Zooscan model & parameters" ------------------------------------------------
+	else if (task == "CHANGE / CHECK Zooscan model & parameters") {
+		ret = runMacro("Zooscan_select_system",chem);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Warning message ",task+" process aborted.                       "); 		} // if
+		else { 				showMessage("Normal End of "+task+" process.  \n \nCreate NEW projects to use the new configuration !            ");		} // else
+	} // else if
+	
+	// ------------------  "CHECK the process using segmented images" -------------------------------
+	else if (task == "CHECK the process using segmented images") {
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_check_msk1",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.                       "); 	} // if
+		else { 				showMessage("Normal End of "+task+" process. \n \nSPACE bar pressed !              ");	} // else
+	} // 
+	
+	// ------------------  "OTHER tools" ----------------------------------------------------------------------------
+	else if (task == "OTHER tools") {
+		args = chem+" "+projfolder;
+		arg1 = "3 "+chem;	
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+		otherop=newArray("Create tables for ECOTAXA","Check barcodes","Add detailled folders for validation","Update metadata from all meta files","READ METADATA and built table","Add ''TAG'' column to old PID files","Convert vis1 images to 300dpi","Add DATE column in PID files","Measure mean OD level of images (CNRS 2003 Zooscan)","ADD PID folders to an existing project","Create COLOR vignettes for microplastik","Create COLOR vignettes");
+		Dialog.create("ZOOSCAN OTHER tools ");
+		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+		Dialog.addChoice("          SELECT TOOL  ",otherop);
+		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+		Dialog.show();
+		other = Dialog.getChoice();
+		if (other == otherop[2]) {	ret = runMacro("Zooprocess_add_validation_folders",chemzooprocess+" "+projfolder+" "+instrum+" x root "+chemzooprocess);				} // if
+		if (other == otherop[3]) {	
+			param = 1;	titre = "editall";	meta = 1;
+			args = "editall"+" "+chem+" "+"configfile" +" "+ param + " " + titre + " " + "1" +" "+ "1" +" "+ meta +" "+ "1" +" "+ "1" +" "+ "1" +" "+ "1" +" "+"chemscan"+" "+"chemwork1" +" "+"1"+" "+"1"+" "+"1" +" "+"1" +" "+"1"+" "+"1"+" "+"1"+" "+"1"+" "+"1"+" "+"1"+" 1 1 "+projfolder;
+			ret = runMacro("Zooprocess_update_metadata_from_all_meta_files.txt",args);				
+		} // if
+		if (other == otherop[5]) {	ret = runMacro("Zooscan_convert_pid.txt",args);				} // if
+		if (other == otherop[6]) {	ret = runMacro("Zooscan_convert_vis1_images",args);				} // if
+		if (other == otherop[7]) {	ret = runMacro("Zooscan_add_date_pid",args);					} // if
+		if (other == otherop[8]) {	ret = runMacro("Zooscan_OD_Analysis",arg1);					} // if
+		if (other == otherop[9]) {	ret = runMacro("Zooscan_update_folders",args);				} // if
+		if (other == otherop[0]) {	ret = runMacro("Zooprocess_pid_to_ecotaxa_main",projfolder+" "+instrum);		} // if
+		if (other == otherop[1]) {	ret = runMacro("Zooscan_metadata_from_barcode",projfolder+" "+instrum+" "+chem);		} // if
+		if (other == otherop[10] || other == otherop[11]) {	ret = runMacro("Zooprocess_zooscan_vignettes_color_plastik",projfolder);		} // if
+		if (other == otherop[4]) {	
+			aa = getBoolean("All *_meta.txt files from "+pathraw+" will be read to built metadata tables. \n \nMetadata from samples that have not been yet scanned will be lost ! \n \nPress YES to continue. \n \nPress Cancel to abort if nécessary !");
+			argu = chem+" "+projfolder;
+			ret = runMacro("Zooscan_metadata_read_raw",argu);			
+		} // if			
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message    "+other+" process aborted.                       "); 	} // if
+		else { 				showMessage("Normal End of "+other);                       	}
+	} // 
+	// -----------------"Create tables for ECOTAXA"-------------------------------------------------------------------------------------------------------
+	else if (task == "Create tables for ECOTAXA") {
+		ret = runMacro("Zooprocess_pid_to_ecotaxa_main",projfolder+" "+instrum);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message    "+task+" process aborted.                       "); 	} // if
+		else { 				showMessage("Normal End of "+task);                       	}
+	}
+	
+	//-------------------"CREATE subset of a Learning Set from identified vignettes (random)"-------------------------------------------------------------
+	else if (task == "CREATE subset of a Learning Set from identified vignettes (random)") {
+		args = chem+" "+projfolder+" "+instrum+" "+chemtemp;
+		//	ret = runMacro("ZooscanUVP_extract_sub_learningset",args);
+		ret = runMacro("Zooprocess_extract_sub_learning_set",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" process aborted.                       "); 	} // if
+		else { 				showMessage("Normal End of "+task);                       	}
+	} // else if
+	
+	//-------------------"EDIT configuration file"-------------------------------------------------------------
+	else if (task == "EDIT configuration file") {
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_edit_configuration",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" process aborted.                       "); 	} // if
+		else { 		showMessage("Normal End of "+task);                       	}
+	} // else if
+	
+	//-------------------"EDIT LUT file"-------------------------------------------------------------
+	else if (task == "EDIT LUT file") {
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_edit_lut4",args);
+		flag = toString(ret);
+		if (lengthOf(flag)lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" tool aborted.                       "); 	} // if
+		else { 						showMessage("Normal End of "+task);                       	}
+		if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+	} // else if
+	
+	//-------------------"EXTRACT vignettes for PLANKTON IDENTIFIER (unsorted vignettes for training) "-------------------------------------------------------------
+	else if (task == "EXTRACT vignettes for PLANKTON IDENTIFIER (unsorted vignettes for training) ") {
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_vignettes_for_train.txt",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" process aborted.                      "); 	} // if
+		else { 		showMessage("Normal End of "+task);                       	}
+	} // else if
+	
+	//-------------------"View Image with outlines"----------------------------------------------------------
+	else if (task == "VIEW Image with outlines") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		run("free memory");
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_view_image_outlines",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 
+			while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			showMessage("Warning message ",task+" process aborted.                       "); 
+		} // if
+		else {	
+			while (nImages()>0) { wait (500);
+				showStatus("CLOSE IMAGE TO END PROCESS");
+			} // while 
+			showStatus("End of view image macro ! ");
+		} // 
+	} // else if 
+	
+	//------------------CONVERT RAW image to 8 bit calibrated image------------------------------------
+	else if (task == "CONVERT RAW image to 8 bit calibrated image") {
+		process  = "zooprocess";
+		args = chem+" "+projfolder+" "+process+" 0 0 0 "+chemzooprocess;
+		ret = runMacro("Zooscan_convert_main",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { showMessage("Warning message ",task+" process aborted.                       "); 	} // if
+		else { 		showMessage("Normal End of "+task);                       	}
+	} // else if
+	
+	//------------------ PROCESS AGAIN all Background images ------------------------------------
+	else if (task == "PROCESS AGAIN all Background images") {
+		process  = "zooprocess";
+		args = chem+" "+chemvue+" 1 "+proj +" "+projfolder;
+		ret = runMacro("Zooscan_background_again",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Warning message ",task+" process aborted.                       "); 	} // if
+		else {				showMessage("Normal END ",task +"           "); 			} // 
+	} // else if
+	
+	//-------------------"SEPARATION of touching objects from all vignettes"----------------------------------------------------------
+	else if (task == "SEPARATION of touching objects from all vignettes") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		run("free memory");
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_separation_from_vignettes_5",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			showMessage("Warning message ",task+"  process aborted !                      "); 
+		} // if
+		else {	showMessage("Normal END",task +"           "); 			} // 
+	} // else if 
+	
+	//-------------------"SEPARATION of touching objects on selected vignettes"----------------------------------------------------------
+	else if (task == "SEPARATION of touching objects on selected vignettes") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		run("free memory");
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_separation_from_vignettes_multiples",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			showMessage("Warning message ",task+"  process aborted !                      "); 
+		} // if
+		else {	showMessage("Normal END",task +"           "); 			} // 
+	} // else if 
+	
+	//---------------------------"Manual measurements on selected vignettes"--------------------------------------
+	else if (task == "Manual measurements on selected vignettes") {
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		run("free memory");
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_manual_measure_sel_5",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" process aborted                       "); 	} // if
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+	} // else if 
+	
+	//---------------------------"Manual measurements on all vignettes"--------------------------------------
+	else if (task == "Manual measurements on all vignettes") {
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		run("free memory");
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_manual_measure_all_5",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message ",task+" process aborted                       ");  	} // if
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+	} // else if 
+	
+	//-------------------"LOAD identifications from sorted vignettes"---------------------------------------------------------------------------------------------------------
+	else if (task == "LOAD identifications from sorted vignettes") {
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		run("free memory");
+		wait(2000);
+		args = chem+" "+projfolder+" "+instrum+" "+chemtemp;
+		ret = runMacro("Zooscan_load_vignette_from_folders",args);
+		flag = toString(ret);
+		if (lengthOf(flag) ==1)  { 	showMessage("Warning ",task+" process aborted !   		\nCheck files in the ''Pid_results'' folder.         \n(duplicates in filenames, wrong imagename in the data section.... )         ");	} // if
+		else { 				showMessage("Normal End of "+task);                       	}
+	} // if 
+	
+	// ------------------------"EXTRACT vignettes in folders (''prediction'' or ''vis'' folder)"------------------------------------------------------------------------------------------ 
+	else if (task == "EXTRACT vignettes in folders according to PREDICTION or VALIDATION") { 
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		run("free memory");
+		wait(2000);
+		//	setBatchMode(true);
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_extract_vignette_to_folders",args);
+		flag = toString(ret);
+		if (lengthOf(flag)!=1)  { 	while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		} // if
+		else { showMessage("Error message ",task+" process aborted                       "); 	} // else
+		//	setBatchMode(false);
+	} // if 
+	
+	//--------------------"Create Learn-PID file from a TRAINING SET"------------------------------------------------------------------------------------------ 
+	else if (task == "Create Learn-PID file from a TRAINING SET") { 
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		run("free memory");
+		wait(2000);
+		args = chem+" "+projfolder;
+		ret = runMacro("Zooscan_create_learn_PID",args);
+		flag = toString(ret);
+		if (lengthOf(flag) !=1)  { 	while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		} // if
+		else { showMessage("Error message ",task+" process aborted                       "); 	} // else
+	} // if 
+	
+	//--------------------"View vignettes------------------------------------------------------------------------------------------ 
+	else if (task == "VIEW vignettes") { //----------------Choix de differentes methodes de visualisation----------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		run("free memory");
+		list = newArray("From [data] section of a PID file","From a 2D graph built from a PID file","From a TXT file (multiple images allowed)","From a Ident file created by manual identification");
+		Dialog.create("VIEW VIGNETTES                        ");
+		Dialog.addMessage("--------------------- SELECT METHOD --------------------------------             ");
+		Dialog.addChoice(" ",list);
+		Dialog.addMessage( "-------------------------------------------------------------------------------");
+		Dialog.show();
+		job = Dialog.getChoice();
+		args = chem+" "+projfolder;
+		if (job==list[0]) { 
+			ret = runMacro("Zooscan_vignette_from_pid",args);
+			flag = toString(ret);
+			if (lengthOf(flag) == 1)  { 	//---------Fermeture de l'image ouverte ainsi que de la derniere vignette
+				run("Close");	// Fermeture de la derniere vignette
+				run("Close");	// Fermeture de l'image source
+			} // if
+		} // if job
+		else if (job == list[2]) { 
+			ret = runMacro("Zooscan_vignette_from_txt",args);
+			flag = toString(ret);
+			if (lengthOf(flag) == 1)  { 	//---------Fermeture de l'image ouverte ainsi que de la derniere vignette
+				while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			} // if
+		} // if job
+		else if (job == list[1]) { 
+			ret = runMacro("Zooscan_vignette_from_pid_plot",args);
+			flag = toString(ret);
+			if ( lengthOf(flag) == 1)  { showMessage("Error message :   Zooscan_vignette_from_pid_plot ABORTED                    "); 	} // if
+			else 	  { 	
+				//---------Fermeture de l'image ouverte ainsi que de la derniere vignette
+				while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			} // if
+		} // if op
+		else if (job == list[3]) { 
+			ret = runMacro("Zooscan_vignette_from_ident",args);
+			flag = toString(ret);
+			if (lengthOf(flag) == 1)  { 	
+				//---------Fermeture de l'image ouverte ainsi que de la derniere vignette
+				while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+			} // if		
+		} // if 
+	} // if 
+	
+	//-------------------"STATS and GRAPHS"------------------------------------------------------------------------------------------ 
+	else if (task == "STATS and GRAPHS") { //----------------Choix de differentes methodes ----------------
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while	
+		list = newArray("PLOT 16 Graphs & 15 Histograms","PLOT selected graphs & histograms","Process only BASIC STATS of a sample");
+		Dialog.create(task);
+		Dialog.addMessage("----------------------------------------------------------------             ");
+		Dialog.addMessage("Project  :  "+proj);
+		Dialog.addMessage("----------------------------------------------------------------             ");
+		Dialog.addMessage("----------   SELECT OPERATION   --------------------             ");
+		Dialog.addMessage("If a parametre doesn't exist in the file, \nIts data will be set equivalent to ''N°''.");
+		Dialog.addChoice(" ",list);
+		Dialog.addCheckbox("Save ALL created graphs ?", false);
+		Dialog.addCheckbox("Save ALL created histograms ?", false);
+		Dialog.addMessage("----------------------------------------------------------------             ");
+		Dialog.show();
+		job = 		Dialog.getChoice();
+		savefig = 	Dialog.getCheckbox();
+		savehis = 	Dialog.getCheckbox();
+		//		ret = "1003";
+		if (job==list[0]) { option = "1";	} // if
+		if (job==list[1]) { option = "2";	} // if
+		if (job==list[2]) { option = "3";	} // if
+		args = chem+" "+option+" Z D "+savefig+" "+savehis+" "+projfolder;		// D = titrered
+		ret = runMacro("Zooscan_graph",args);
+		flag = toString(ret);
+		if (lengthOf(flag) != 1)  { 	//---------Fermeture de l'image ouverte ainsi que de la derniere vignette
+			showMessage("End of  STATS & GRAPH process !    \nThe graphs will be closed when Zooprocess will be launched again                   "); 
+		} // if
+		else {	showMessage("Error message",task+" process aborted                       "); 			} // else
+	} // if 
+	
+	//--------------------"IMPORT images and data (Zooscan 2003)"---------
+	else if (task == "IMPORT images and data (Zooscan 2003)") { 
+		run("free memory");
+		args = chem + " " + projfolder;
+		ret = runMacro("Zooscan_Import",args);
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { showMessage("Error message : Zooscan_Import Process aborted     "); } // if
+	} // else if
+	
+	//-----------------CALIBRATE Zooscan    "SCAN and CONVERT a BACKGROUND"-----------------------
+	else if (task == "CALIBRATION Tools" || task == "SCAN and CONVERT a BACKGROUND") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");			} // while	
+		run("free memory");
+		if (task == "SCAN and CONVERT a BACKGROUND") { cal= "SCAN Background Image";		proc="back";	} //if
+		else {	Dialog.create("ZOOSCAN CALIBRATION MENU");
+			Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+			Dialog.addMessage("GREY LEVEL images are scanned using the ''vuescan_zooscan_calibration_OD_level'' files from the main \n"+chem+"Zooscan_config folder.");
+			Dialog.addMessage("PROCESS THRESHOLD is done in the selected ''"+proj+"'' project.             \nIt requires an image of the OD discus scanned at 300 dpi.           \nThe name of the sample must include ''targets''."); 
+			Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------                             ");
+			Dialog.addMessage("SELECT OPERATION TO PERFORM");
+			calibop=newArray("Check Normalization with OD discus","Find OD position","Measure average GREY LEVEL in OD reference, narrow frame","Measure average GREY LEVEL in OD reference, large frame","CHECK Mouse button");
+			Dialog.addChoice(" ",calibop);
+			Dialog.show();
+			cal = Dialog.getChoice();
+			proc = "1";
+		} // else
+		print("chemvue= ",chemvue);
+		if (vuescanexist == true && (cal != "Check Normalization with OD discus" && cal != "CHECK Mouse button" )) { Dialog.create("SCAN PROCEDURE");
+			Dialog.addMessage("QUIT VUESCAN (if open) before proceeding");
+			Dialog.show();
+		} // else
+		if (cal== "Measure average GREY LEVEL in OD reference, narrow frame" ) { 	proc="narrow"; 	} // if
+		if (cal== "Measure average GREY LEVEL in OD reference, large frame") { 		proc="large"; 	} // if
+		if (cal== "Process threshold") { 						proc="threshold"; 	} // if
+		flag = "22";	ret = "1111";
+		args = chem+" "+chemvue+" "+proc+" "+proj +" "+projfolder ;
+		if (cal == "Check Normalization with OD discus") { 	ret = runMacro("Zooscan_threshold_5",args);		} // if
+		if (cal == "CHECK Mouse button") {			ret = runMacro("Zooscan_check_mouse.txt");		} // if
+		if (vuescanexist == true) {
+			if (cal == "Find OD position") { 	ret = runMacro("Zooscan_OD_position_5",args);	} // if
+			if (proc== "narrow" || proc== "large") {	ret = runMacro("Zooscan_grey_level_5",args);		} // if
+			if (proc== "back") {			ret = runMacro("Zooscan_background_5",args);	} // if
+		} // if
+		flag = toString(ret);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" Process aborted.     "); } // if
+		else if ( ret == "1111" )  { 	showMessage("Warning message",task+" tool desabled because vuescan is not installed !    "); } // if
+	} // if
+	
+	//----------------SCAN, CONVERT and PROCESS a Sample with Zooscan or SCAN a SAMPLE-------------------------------------------------------------------
+	else if (vuescanexist == true && (task == "SCAN, CONVERT and PROCESS a Sample with Zooscan" || task == "SCAN a SAMPLE")) {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");		} // while	
+		run("free memory");
+		titre ="enter_imagename";
+		operation = "scan_process";
+		if (task == "SCAN a SAMPLE") { 	operation = "scan";			} // if
+		print("Scan d'un echantillon avec VUESCAN");
+		// ---------------Test sur l'existence du repertoire des fichiers de config ----------------------------------------
+		chemconfig = projfolder + "\\Zooscan_config\\";
+		lon = lengthOf(projfolder); 
+		zoosc = indexOf(projfolder,"Zooscan_");
+		proj = substring(projfolder,zoosc+8,lon);
+		confrep = File.exists(chemconfig);
+		confpres = 0;
+		chemmeta = projfolder + "\\Zooscan_meta\\";
+		if (confrep==0) {  showMessage("Error message : "+chemconfig+" folder doesn't exist, macro aborted  ");   } // if
+		else if ( File.exists(chemmeta+"zooscan_sample_header_table.csv") == false) { showMessage("No METADATA filled ! \nPress NO and fill SAMPLE metadata FIRST !");	}// 						
+		else { 	print("CONFIG folder exits");
+			//-------------- Choix du fichier SCAN dans _config ------------------------------------
+			filelist  = getFileList(chemconfig);
+			//-------------- Selection des fichiers dont le nom comporte les mots "vuescan_zooscan","narrow","large"---------------------
+			j = 0;	flagframe = 0;
+			list = newArray(filelist.length);
+			for (i=0; i<filelist.length ; i++) {	
+				if (indexOf(filelist[i],"narrow")>=0 || indexOf(filelist[i],"large")>=0 || indexOf(filelist[i],"2003")>=0) { 	flagframe =1; 	} // if
+				if (indexOf(filelist[i],"vuescan_zooscan")==0 && flagframe==1)	{rr = filelist[i]; list[j] = rr;  j++;  	flagframe = 0; } // if
+			} // for
+			//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------
+			if (j > 0 ) {						confpres = 1;
+				// ---------------------- Purger les lignes vides de la liste -----------------------------------------
+				listaff = newArray(j);
+				for (i=0; i<listaff.length ; i++) {	rr = list[i]; 	listaff[i] = rr;		} // for
+			} // if
+			if (j==0) { print("No valid configuration file in the "+projfolder );
+				getBoolean("No valid VUESCAN config file in "+projfolder+"             \nPress Cancel to abort         ");
+			} //
+			else if ( j == 1) {	scanfile = listaff[0];			confpres = 1;					} 
+			else { print(j+" configuration files in the "+projfolder);
+				confpres = 1;
+				scanfile = "ERROR";
+				test =0;
+				Dialog.create("SCAN CONFIG MENU");
+				Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------         ");
+				Dialog.addMessage("Project  :  "+proj);
+				Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------         ");
+				message = "SELECT SCAN CONFIG FILE in " + chemconfig+"                       " ;
+				Dialog.addMessage(message);
+				message = "Select the correct frame size (narrow/large)                       " ;
+				Dialog.addMessage(message);
+				message = "Your scanning configuration filename starts with ''vuescan_zooscan'' and contains ''narrow'' or ''large''            " ;
+				Dialog.addMessage(message);
+				Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------         ");
+				Dialog.addMessage("SELECT Scan Config File ");
+				Dialog.addChoice(" ", listaff);
+				Dialog.show();
+				scanfile = Dialog.getChoice();
+			} // else confpres
+			if (indexOf(scanfile,"narrow") >0) { 	framesize = "narrow";		} // if
+			if (indexOf(scanfile,"large") >0) { 	framesize = "large";			} // if
+			if (indexOf(scanfile,"2003") >0) { 	framesize = "2003";			} // if
+			
+		} // else confrep
+		if (confpres ==1 ) { //--------------------On continue le process------------------------------------
+			Dialog.create("SCAN PROCEDURE");
+			Dialog.addMessage("QUIT VUESCAN (if open) before proceeding");
+			Dialog.show();
+			task = 		replace(task," ","_");
+			operation = 	replace(operation," ","_");
+			titre = 	replace(titre," ","_");
+			args = chem+" "+chemvue+" "+scanfile+" "+chemconfig+" "+task+" "+titre+" "+operation+" "+framesize+" "+projfolder;
+			print("args= ",args);
+			ret = runMacro("Zooscan_scan_5",args);
+			flag = toString(ret);
+			if (lengthOf(flag) == 1)  { showMessage("Error message",task+" process aborted  !   "); } // if
+			else { 	wait(2000);
+				// -------------------------- Process des images scannees en boucle (Si 2 frames) ----------------------------------------------
+				if (operation == "scan_process") { 
+					array = split(ret," ");
+					titrered = array[0];
+					titrered = replace(titrered,".","_");
+					nb=array[1];
+					nbframe= parseInt(nb);
+					// ------------------------------- Process single image (avec le nom de l'image saisie) ---------------------------------
+					for (m=1;m<=nb;m++) { 
+						param = "1";
+						scan = 1;
+						arg1 = param+" "+titrered+"_"+m+".tif"+" "+scan+" "+chem+" "+projfolder+" "+chemzooprocess;
+						// -------------------- Definition du "arg" dans Zooscan_trt1_1.txt --------------------------------------------	
+						arg = runMacro("Zooscan_trt_1",arg1); 
+						flag=toString(arg);
+						if (lengthOf(flag) == 1)  { showMessage("Error message",task+" process aborted.     \nCheck the LOG file, it may be corrupted. \nA temporary LOG file has been saved in the Zooscan_temp folder                  "); } // if
+						else { 	showStatus("TESTING FILES & FOLDERS : WAIT !");
+							// --------------------------- Process utilisant le "arg" -------------------------------------------------
+							arg = runMacro("Zooscan_1m",arg);
+							flag=toString(arg);
+							if (lengthOf(flag) == 1)  { showMessage("Error message",task+" process aborted.     \nCheck the LOG file, it may be corrupted. \nA temporary LOG file has been saved in the Zooscan_temp folder                  "); } // if
+						} // else
+					} // for
+				} // if operation
+			} // else 	
+		} // if confpres
+	} // else if
+	
+	//-----------------------"PROCESS (Converted) Image (process one)"--------------------------------------------------------------------
+	else if (task == "PROCESS (Converted) Image (process one)") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
+		print("Process d'une image");
+		param = "1";
+		setBatchMode(0);
+		arg1 = "1 B 0 "+chem+" "+projfolder+" "+chemzooprocess;
+		print(arg1);
+		arg = runMacro("Zooscan_trt_1",arg1); 
+		flag=toString(arg);
+		if (lengthOf(flag) == 1)  { getBoolean("Error message : "+task+" process aborted. \nPress Cancel to Abort !                       "); 		 } // if
+		// ----------------- On continue le traitement avec les parametres ------------------------
+		arg = runMacro("Zooscan_1m",arg);
+		flag=toString(arg);
+		if (lengthOf(flag) == 1)  { 	showMessage("Error message",task+" process aborted.      \nCheck the LOG file, it may be corrupted. \nA temporary LOG file has been saved in the Zooscan_temp folder                 "); } // if
+		else { 				showMessage("Normal END of "+task+" process.                    ");	} // else
+	} // else if
+	
+	//-------------------------CONVERT & PROCESS scanned SAMPLES in batch mode-----------------------------------------------------------------
+	else if (task == "CONVERT & PROCESS scanned SAMPLES in batch mode") {
+		//----------------------- Close OPEN IMAGES---------------------------------
+		while (nImages()>0) {	selectImage(nImages());  	run("Close");	} // while
+		//------------Fermeture et sauvegarde d'un premier SUIVI vide----------------------------------------------
+		if (isOpen("Suivi_log.txt")) {	selectWindow("Suivi_log.txt");	run("Close");	} // if
+		if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if
+		run("free memory");
+		//---------------- Archivage du Suivi --------------------------------
+		if (File.exists(chemtemp +"Suivi_log.txt")) { 
+			opensuivi = chemtemp +"Suivi_log.txt";
+			open(opensuivi);
+			wait(100);
+			suivi = getInfo();
+			run("Close");
+			array = split(suivi,"\n");
+			for (i=0; i<array.length; i++) {	print(array[i]);		} // for
+			selectWindow("Log");
+			if (array.length ==1 ) {	sauve = "save=" + chemtemp +"Suivi_"+"temp"+"_log.txt";		} // if
+			else {	datesuivi = split(array[2],"\ ");
+				datefichier = datesuivi[1];
+				sauve = "save=" + chemtemp +"Suivi_"+datefichier+"_log.txt";		
+			} // else
+			run("Text...",sauve);
+			run("Close");
+		} // if
+		print("BATCH image process");
+		selectWindow("Log");
+		sauve = "save=" + chemtemp +"Suivi_log.txt";
+		run("Text...",sauve);
+		param = "2";
+		arg1 = "2 B 0 "+chem+" "+projfolder+" "+chemzooprocess;
+		print(arg1);
+		arg = runMacro("Zooscan_trt_1",arg1); 
+		flag=toString(arg);
+		if (lengthOf(flag) == 1)  { showMessage("Error message   ",task+" process aborted     "); 		} // if
+		// ----------------- Affichage du suivi --------------------------------------
+		else {
+			if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+			opensuivi = chemtemp +"Suivi_log.txt";
+			open(opensuivi);
+			wait(100);
+			suivi = getInfo();
+			run("Close");
+			array = split(suivi,"\n");
+			for (i=0; i<array.length; i++) {	print(array[i]);		} // for
+			if (array.length ==1 ) {	sauve = "save=" + chemtemp +"Suivi_"+"temp"+"_log.txt";		} // if
+			else {	datesuivi = split(array[2],"\ ");
+				datefichier = datesuivi[1];
+				print("------------ All files processed -------------");
+				sauve = "save=" + chemtemp +"Suivi_"+datefichier+"_log.txt";
+				selectWindow("Log");
+				run("Text...",sauve);
+				test = File.exists(chemsuivi);
+				if (test == 0) { 		File.makeDirectory(chemsuivi);		} // if
+				sauve = "save=" + chemsuivi +"Suivi_"+datefichier+"_log.txt";
+				run("Text...",sauve);
+				showMessage("Normal END of "+task+" process          \n \nTo control process operations, open file : \n \nSuivi_"+datefichier+"_log.txt \nin  \n"+ chemsuivi  );
+			} // else
+		} // else
+	} // else if 
+	
+	// ----------- Bascule mode USER --------------------------------------------------------------------------------------
+	if (File.exists(mode_advanced) && task != "SWITCH temporarily to ADVANCED mode") { 	mode_select = File.rename(mode_advanced,mode_user);	advanced_mode = false;	} // if	
+	
+} // while rin
+// ----------- Bascule mode USER --------------------------------------------------------------------------------------
+if (File.exists(mode_advanced)) { 	mode_select = File.rename(mode_advanced,mode_user);	advanced_mode = false;	} // if	
+
+// --------------------------------------------- FIN ------------------------------------------------------------------------------------------
+ret = "zooscan";
+return ret;

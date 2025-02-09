@@ -1,8 +1,9 @@
 // -------------------------- Zooscan_find_vuescan ----------------------
-version = "7.32";
-date = "2019/10/15";
+version = "7.45";
+date = "2020/10/25";
 
 // V800
+// Vuescan 9.7.67
 
 // --------------------- Test de l'existence du logiciel vuescan------------------------------------------
 chemvue= "D:\\Vuescan\\";
@@ -36,10 +37,8 @@ if (flag == "1" && File.exists(chemvue+"\\vuescan.htm")) {
 	selectWindow("vuescan.htm");
 	run("Close");
 	index = 0;
-	pos = indexOf(data,"8.3.23");
-	if (pos > 1) 	vuescan = "8.3.23";				
-	pos = indexOf(data,"8.4.57");
-	if (pos > 1) 	vuescan = "8.4.57";						
+	if (indexOf(data,"8.3.23") > 1) 	vuescan = "8.3.23";				
+	if (indexOf(data,"8.4.57") > 1) 	vuescan = "8.4.57";						
 } // if
 else if (flag == "1" && File.exists(chemvue+"\\vuescan.log")) {
 	run("Text File... ", "open="+chemvue+"\\vuescan.log");
@@ -51,7 +50,8 @@ else if (flag == "1" && File.exists(chemvue+"\\vuescan.log")) {
 	run("Close");
 	index = 0;
 	if (indexOf(data,"9.0.51") > 1) 	vuescan = "9.0.51";	
-	if (indexOf(data,"9.5.24") > 1) 	vuescan = "9.5.24";						
+	if (indexOf(data,"9.5.24") > 1) 	vuescan = "9.5.24";	
+	if (indexOf(data,"9.7.67") > 1) 	vuescan = "9.7.67";						
 } // if
 
 if (flag=="0" || vuescan == "unknown") {

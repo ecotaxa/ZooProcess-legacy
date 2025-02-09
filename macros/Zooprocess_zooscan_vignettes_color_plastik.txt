@@ -1,8 +1,9 @@
 // ----------------------- Zooprocess_zooscan_vignettes_color_plastik --------------------
-version = "7.24";
-date = "2017/03/15";
+version = "8.20";
+date = "2023/11/05";
 // cas 1_n
 // plastik 
+// color (generique)
 
 
 arg = 		getArgument(); 
@@ -14,7 +15,8 @@ path_work_color = projfolder_color + "\\Zooscan_scan\\_work\\";
 path_pid_results= projfolder + "\\PID_process\\Pid_results\\";
 path_raw_color = projfolder_color + "\\Zooscan_scan\\_raw\\";
 
-showMessage("PROCESS microplastik COLOR VIGNETTES","This routines requires two projects.\nYou must start it from the one containing the B&W processed images. \nPID files must be in ''Pid_results'' folder.");
+showMessage("PROCESS microplastik COLOR VIGNETTES","This routines requires two projects : \n -- Source : "+projfolder+"\n -- Color : "+projfolder_color);
+
 setBatchMode(true);
 
 chem= "none";
@@ -37,18 +39,20 @@ status = false;
 titre= "image";
 duration = 1000;
 nb = 5;
-link = "http://www.zooscan.obs-vlfr.fr//";
-print("ZOOPROCESS PLASTIK TOOL");
+link = "http://piqv.imev-mer.fr//";
+print("ZOOPROCESS COLOR vignettes TOOL");
 //------------ Free MEMORY --------------------------------------------
 for (i=0; i<nb; i++) {	showStatus("Free memory, WAIT !");	run("free memory");	progress = (i+1)/nb;	showProgress(progress);	wait(duration);	} // for
 
-// --------------- Liste des PID dans projet source ayant iamge dans projet COLOR ------------------
+// --------------- Liste des PID dans projet source ayant image dans projet COLOR ------------------
 filelist = getFileList(path_pid_results);
 j = 0;
 list_pid = newArray(filelist.length);
 for (i=0; i<filelist.length ; i++) {	
 	if (endsWith(filelist[i],".pid"))	{rr = filelist[i]; 	list_pid[j] = rr;	j = j + 1;		} // if
 } // for
+if (j == 0) aa = getBoolean("No PID file with corresponding color image in "+projfolder_color)+" \n \nPress Cancel to abort !");
+
 // ------------- Boucle sur les PID --------------------------
 for (m =0; m < j ; m++) {
 	
@@ -113,7 +117,10 @@ for (m =0; m < j ; m++) {
 			else if (indexOf(data[k],"k_18_sur_19_1") >1) { 	add = "_18_sur_19_"; texte = replace(data[k],add,"_");	}
 			else if (indexOf(data[k],"k_19_sur_19_1") >1) { 	add = "_19_sur_19_"; texte = replace(data[k],add,"_");	}
 			else {						add = "_";	}
-			ligne = replace(texte,"microplastik","microplastik"+add+"color");
+			if (indexOf(texte,"microplastik") > 1) {
+				ligne = replace(texte,"microplastik","microplastik"+add+"color");
+			}
+			else {	ligne = replace(texte,sample_name_short,sample_name_short+"_color");	}
 			data[k] = ligne;
 			if (startsWith(ligne,"[Data]")) deb = k;
 			print(ligne);		

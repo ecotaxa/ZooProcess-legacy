@@ -1,6 +1,6 @@
 // --------------------- Zooprocess_UVP5_sum_DAT ------------------------------
-version = "7.40";
-date = "2020/11/12";
+version = "8.13";
+date = "2022/12/08";
 
 // Retrait des lignes dans lesquelles il n'y a pas d'objet (pb de flash)
 // Nb maxi images / cast passé de 100000 à 500000
@@ -10,6 +10,7 @@ date = "2020/11/12";
 // Utilisation pour plot des profils après saisie
 // Changement du nom de l'image du profil => ajout N° images
 // removed filter for data : //	if (indexOf(data_print,"!;	0;	0;	0;	0;	0;") < 0 || process_type == "save_only") 		print(data_print);
+// image name
 
 args = 	getArgument();
 arg = 	split(args," ");
@@ -279,6 +280,7 @@ if (option == "metadata" || option == "plotonly") {
 
 		// ----------- Sauvegarde --------------------
 		saveAs("jpg", pathresults+"UVP5_"+profileprocessed+"_"+index_min+"_"+index_max+".jpg"); 
+		rename("min_max_image");
 	}//
 }
 else {	// -------------- Impression ------------------------------------

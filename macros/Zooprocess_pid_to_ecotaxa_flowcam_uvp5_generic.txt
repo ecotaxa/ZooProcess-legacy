@@ -1,6 +1,6 @@
 //------------- Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic ---------------
-version = "7.37";
-date = "2020/03/31";
+version = "8.28";
+date = "2025/01/08";
 
 // Utilisé pour flowcam et UVP5
 // Acqu_instrument = uvp5, pixel, Exposure, Thrsh
@@ -16,6 +16,15 @@ date = "2020/03/31";
 // Correction calcul ESD pour Flowcam et Generic
 // instrum uvp != uvp5
 // objet_rawvig activé pour UVP5
+// calcul image volume pour flowcam (2023/04/30)
+// ajout metadata complètes FlowCam
+// erreur volconc = 18
+// ajout bottom depth pour FlowCam
+// Qc codes
+// 8.27 : Détection automatique des colonnes pour variables dérivées
+// 8.28 : correction pour détection des colonnes du Flowcam couleur
+// 8.28 : archivage ancien TSV si existe
+// 8.28 : fluid_imaged_volume passé en float (au lieu de int)
 
 
 arg = 		getArgument(); 
@@ -33,7 +42,7 @@ process_opt = 		array[3];
 outlines = 		array[4];
 status = 		array[5];
 option = 		array[6];
-link = "http://www.zooscan.obs-vlfr.fr//";
+link = "http://piqv.imev-mer.fr//";
 if (array.length > 7) link = 			array[7];
 
 ecotaxa_folder = pid_folder;
@@ -110,7 +119,7 @@ while (i < data.length) {
 	i++;
 }// while
 if (pid == false) {
-	if (annotation_list_C[3] == "marc picheral" ) annotation_list_C[4] = "marc.picheral@obs-vlfr.fr";
+	if (annotation_list_C[3] == "marc picheral" ) annotation_list_C[4] = "marc.picheral@imev-mer.fr";
 	
 	// ------------ si pas PID et pas Validated ----------------------
 	if (annotation_list_C[5] == "NaN" ) annotation_list_C[5] = "predicted";
@@ -121,20 +130,7 @@ img_list_C = newArray(10);
 img_list_A[0] = "img_file_name";	img_list_C[0] = "[t]";
 img_list_A[1] = "img_rank";		img_list_C[1] = "[f]";
 
-// -------------- OBJECT ----------------------------
-object_list_A = newArray(8);
-object_list_B = newArray(8);
-object_list_C = newArray(8);
-for (i = 0; i < object_list_B.length; i++) {	object_list_B[i] = "NaN";	object_list_C[i] = "NaN";	object_list_C[i] = "[t]";}// for
-object_list_A[0] = "object_id";			
-object_list_A[1] = "object_link";		
-object_list_A[2] = "object_lat";		object_list_C[2] = "[f]";	
-object_list_A[3] = "object_lon";		object_list_C[3] = "[f]";		
-object_list_A[4] = "object_date";		
-object_list_A[5] = "object_time";		
-object_list_A[6] = "object_depth_min";		object_list_C[6] = "[f]";
-object_list_A[7] = "object_depth_max";		object_list_C[7] = "[f]";
-object_list_B[1] = link;	//	"http://www.lov.obs-vlfr.fr/fr/moyens_a_la_recherche/plate_forme_imagerie.html/";
+
 
 // --------------------------- Variables dérivées -------------------------------------
 nb_derived = 13;
@@ -177,18 +173,33 @@ if (other_par == true) {
 // +++++++++++++++++++++ UVP5 ++++++++++++++++++++++++++++++++++++++
 if (instrum == "uvp5") {
 	Acq_id = "uvp5";
+	// -------------- OBJECT ----------------------------
+	object_list_A = newArray(8);
+	object_list_B = newArray(8);
+	object_list_C = newArray(8);
+	for (i = 0; i < object_list_B.length; i++) {	object_list_B[i] = "NaN";	object_list_C[i] = "NaN";	object_list_C[i] = "[t]";}// for
+	object_list_A[0] = "object_id";			
+	object_list_A[1] = "object_link";		
+	object_list_A[2] = "object_lat";		object_list_C[2] = "[f]";	
+	object_list_A[3] = "object_lon";		object_list_C[3] = "[f]";		
+	object_list_A[4] = "object_date";		
+	object_list_A[5] = "object_time";		
+	object_list_A[6] = "object_depth_min";		object_list_C[6] = "[f]";
+	object_list_A[7] = "object_depth_max";		object_list_C[7] = "[f]";
+	object_list_B[1] = link;	//	"http://www.lov.obs-vlfr.fr/fr/moyens_a_la_recherche/plate_forme_imagerie.html/";
+	
 	// -------------- ACQU -------------------------------------
 	acqu_list_A = newArray(19);
 	acqu_list_B = newArray(19);
 	acqu_list_C = newArray(19);
 	for (i = 0; i < acqu_list_B.length; i++) {	acqu_list_B[i] = "NaN";	acqu_list_C[i] = "[f]";	}// for
-	acqu_list_A[0] = "acq_id";			acqu_list_C[0] = "[t]";	//
-	acqu_list_A[1] = "acq_sn";			acqu_list_C[1] = "[t]";	//
+	acqu_list_A[0] = "acq_id";			//acqu_list_C[0] = "[t]";	//
+	acqu_list_A[1] = "acq_sn";			//acqu_list_C[1] = "[t]";	//
 	acqu_list_A[2] = "acq_volimage";		
 	acqu_list_A[3] = "acq_aa";			
 	acqu_list_A[4] = "acq_exp";			
 	acqu_list_A[5] = "acq_pixel";			
-	acqu_list_A[6] = "acq_file_description";	acqu_list_C[6] = "[t]";	//
+	acqu_list_A[6] = "acq_file_description";	//acqu_list_C[6] = "[t]";	//
 	acqu_list_A[7] = "acq_tasktype";		
 	acqu_list_A[8] = "acq_disktype";		
 	acqu_list_A[9] = "acq_shutterspeed";		
@@ -199,7 +210,7 @@ if (instrum == "uvp5") {
 	acqu_list_A[14] = "acq_erase_border_blob";	
 	acqu_list_A[15] = "acq_choice";			
 	acqu_list_A[16] = "acq_ratio";		
-	acqu_list_A[17] = "acq_instrument";		acqu_list_C[17] = "[t]";	acqu_list_B[17] = "uvp5";		
+	acqu_list_A[17] = "acq_instrument";		//acqu_list_C[17] = "[t]";	acqu_list_B[17] = "uvp5";		
 	acqu_list_A[18] = "acq_exposure";			
 	
 	// ---------------- SAMPLE -------------------------------------
@@ -215,10 +226,10 @@ if (instrum == "uvp5") {
 	sample_list_A[5] = "sample_bottomdepth";	
 	sample_list_A[6] = "sample_ctdrosettefilename";	
 	sample_list_A[7] = "sample_dn";			
-	sample_list_A[8] = "sample_winddir";		sample_list_C[8] = "[f]";//
-	sample_list_A[9] = "sample_windspeed";		sample_list_C[9] = "[f]";//	
-	sample_list_A[10] = "sample_seastate";		sample_list_C[10] = "[f]";//
-	sample_list_A[11] = "sample_nebuloussness";	sample_list_C[11] = "[f]";	////
+	sample_list_A[8] = "sample_winddir";		//sample_list_C[8] = "[f]";//
+	sample_list_A[9] = "sample_windspeed";		//sample_list_C[9] = "[f]";//	
+	sample_list_A[10] = "sample_seastate";		//sample_list_C[10] = "[f]";//
+	sample_list_A[11] = "sample_nebuloussness";	//sample_list_C[11] = "[f]";	////
 	sample_list_A[12] = "sample_yoyo";		
 	sample_list_A[13] = "sample_comment";	
 
@@ -238,15 +249,15 @@ if (instrum == "uvp5") {
 	process_list_A[1] = "process_software";	
 	process_list_A[2] = "process_date";		
 	process_list_A[3] = "process_time";		
-	process_list_A[4] = "process_first_img";	process_list_C[4] = "[f]";//
-	process_list_A[5] = "process_last_img";		process_list_C[5] = "[f]";//
-	process_list_A[6] = "process_pressure_gain";	process_list_C[6] = "[f]";//
+	process_list_A[4] = "process_first_img";	//process_list_C[4] = "[f]";//
+	process_list_A[5] = "process_last_img";		//process_list_C[5] = "[f]";//
+	process_list_A[6] = "process_pressure_gain";	//process_list_C[6] = "[f]";//
 	process_list_A[7] = "process_calibration";	
-	process_list_A[8] = "process_pixel";		process_list_C[8] = "[f]";//
-	process_list_A[9] = "process_upper";		process_list_C[9] = "[f]";//
-	process_list_A[10] = "process_gamma";		process_list_C[10] = "[f]";//
-	process_list_A[11] = "process_esdmin";		process_list_C[11] = "[f]";//
-	process_list_A[12] = "process_esdmax";		process_list_C[12] = "[f]";
+	process_list_A[8] = "process_pixel";		//process_list_C[8] = "[f]";//
+	process_list_A[9] = "process_upper";		//process_list_C[9] = "[f]";//
+	process_list_A[10] = "process_gamma";		//process_list_C[10] = "[f]";//
+	process_list_A[11] = "process_esdmin";		//process_list_C[11] = "[f]";//
+	process_list_A[12] = "process_esdmax";		//process_list_C[12] = "[f]";
 
 	aa = indexOf(pid_folder,"uvp5");
 	ligne = substring(pid_folder,aa,lengthOf(pid_folder));
@@ -255,29 +266,6 @@ if (instrum == "uvp5") {
 	cc = indexOf(ligne,"_");
 	acqu_list_B[1] = substring(ligne,0,cc);
 	
-	/* ----------------- PIXEL pour chaque SN ----------------------	
-	if (indexOf(acqu_list_B[1],"000") > 0) { acqu_list_B[5] = 0.174;	process_list_B[8] =0.174;}
-	else if (indexOf(acqu_list_B[1],"sn001") > 0) {acqu_list_B[5] = 0.147;	process_list_B[8] =0.147;}
-	else if (indexOf(acqu_list_B[1],"sn002") > 0) {acqu_list_B[5] = 0.148;	process_list_B[8] =0.148;}
-	else if (indexOf(acqu_list_B[1],"sn002zd") > 0) {acqu_list_B[5] = 0.118;	process_list_B[8] =0.118;}
-	else if (indexOf(acqu_list_B[1],"sn002zh") > 0) {acqu_list_B[5] = 0.101;	process_list_B[8] =0.101;}
-	else if (indexOf(acqu_list_B[1],"sn002zp") > 0) {acqu_list_B[5] = 0.096;	process_list_B[8] =0.096;}
-	else if (indexOf(acqu_list_B[1],"sn003") > 0) {acqu_list_B[5] = 0.147;	process_list_B[8] =0.147;}
-	else if (indexOf(acqu_list_B[1],"sn005") > 0) {acqu_list_B[5] = 0.147;	process_list_B[8] =0.147;}
-	else if (indexOf(acqu_list_B[1],"sn006") > 0) {acqu_list_B[5] = 0.149;	process_list_B[8] =0.149;}
-	else if (indexOf(acqu_list_B[1],"sn007") > 0) {acqu_list_B[5] = 0.149;	process_list_B[8] =0.149;}
-	else if (indexOf(acqu_list_B[1],"sn008") > 0) {acqu_list_B[5] = 0.149;	process_list_B[8] =0.149;}
-	else if (indexOf(acqu_list_B[1],"sn009") > 0) {acqu_list_B[5] = 0.148;	process_list_B[8] =0.148;}
-	else if (indexOf(acqu_list_B[1],"sn010") > 0) {acqu_list_B[5] = 0.151;	process_list_B[8] =0.151;}
-	else if (indexOf(acqu_list_B[1],"sn011") > 0) {acqu_list_B[5] = 0.147;	process_list_B[8] =0.147;}
-	else if (indexOf(acqu_list_B[1],"sn101") > 0) {acqu_list_B[5] = 0.147;	process_list_B[8] =0.147;}
-	else if (indexOf(acqu_list_B[1],"sn102") > 0) {acqu_list_B[5] = 0.146;	process_list_B[8] =0.146;}
-	else if (indexOf(acqu_list_B[1],"sn103") > 0) {acqu_list_B[5] = 0.145;	process_list_B[8] =0.145;}
-	else if (indexOf(acqu_list_B[1],"sn200") > 0) {acqu_list_B[5] = 0.085;	process_list_B[8] =0.085;}
-	else if (indexOf(acqu_list_B[1],"sn201") > 0) {acqu_list_B[5] = 0.086;	process_list_B[8] =0.086;}
-	else if (indexOf(acqu_list_B[1],"sn202") > 0) {acqu_list_B[5] = 0.088;	process_list_B[8] =0.088;}	
-	else if (indexOf(acqu_list_B[1],"sn203") > 0) {acqu_list_B[5] = 0.086;	process_list_B[8] =0.086;}
-	*/
 	// ------------- Pixel from uvp5_configuration_data.txt file -------------------------------------
 //	aa = getBoolean(settings_folder+"\\uvp5_configuration_data.txt");
 
@@ -362,6 +350,7 @@ if (instrum == "uvp5") {
 			oo_int = floor(oo);
 			object_list_B[3] = sign * (oo_int+100*(oo - oo_int)/60);
 		}//if	
+		
 	}
 	// --------------------------- Relecture du fichier HDR si données manquantes ----------------------------
 	if (isNaN(acqu_list_B[9])) {
@@ -411,175 +400,381 @@ if (instrum == "uvp5") {
 else if (instrum == "flowcam") {
 	//++++++++++++++++++++++++++++++ FLOWCAM +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	Acq_id = "flowcam";
+	area_ratio = 1;
+	// -------------- OBJECT ----------------------------
+	object_list_A = newArray(10);
+	object_list_B = newArray(10);
+	object_list_C = newArray(10);
+	for (i = 0; i < object_list_B.length; i++) {	object_list_B[i] = "NaN";	object_list_C[i] = "NaN";	object_list_C[i] = "[t]";}// for
+	object_list_A[0] = "object_id";			
+	object_list_A[1] = "object_link";		
+	object_list_A[2] = "object_lat";		object_list_C[2] = "[f]";	
+	object_list_A[3] = "object_lon";		object_list_C[3] = "[f]";		
+	object_list_A[4] = "object_date";		
+	object_list_A[5] = "object_time";		
+	object_list_A[6] = "object_depth_min";		object_list_C[6] = "[f]";
+	object_list_A[7] = "object_depth_max";		object_list_C[7] = "[f]";
+	object_list_A[8] = "object_lat_end";		object_list_C[8] = "[f]";	
+	object_list_A[9] = "object_lon_end";		object_list_C[9] = "[f]";
+	object_list_B[1] = link;	//	"http://www.lov.obs-vlfr.fr/fr/moyens_a_la_recherche/plate_forme_imagerie.html/";
 	// -------------- ACQU -------------------------------------
-	acqu_list_A = newArray(26);
-	acqu_list_B = newArray(26);
-	acqu_list_C = newArray(26);
+	acqu_list_A = newArray(28);
+	acqu_list_B = newArray(28);
+	acqu_list_C = newArray(28);
 	for (i = 0; i < acqu_list_B.length; i++) {	acqu_list_B[i] = "NaN";	acqu_list_C[i] = "[t]";	}// for
-	acqu_list_A[0] = "acq_id";			acqu_list_C[0] = "[t]";	//
-	acqu_list_A[1] = "acq_instrument";		acqu_list_C[1] = "[t]";		acqu_list_B[1] = "flowcam";
-	acqu_list_A[2] = "acq_celltype";			acqu_list_C[2] = "[f]";	//
+	acqu_list_A[0] = "acq_id";			//acqu_list_C[0] = "[t]";	//
+	acqu_list_A[1] = "acq_instrument";		//acqu_list_C[1] = "[t]";		
+	acqu_list_B[1] = "flowcam";
+	acqu_list_A[2] = "acq_celltype";			//acqu_list_C[2] = "[f]";	//
 	acqu_list_A[3] = "acq_software";		
 	acqu_list_A[4] = "acq_magnification";			
-	acqu_list_A[5] = "acq_dsp_firmware";			
+	acqu_list_A[5] = "acq_software_version";			
 	acqu_list_A[6] = "acq_serialno";	
-	acqu_list_A[7] = "acq_mode";	acqu_list_C[6] = "[t]";	//
+	acqu_list_A[7] = "acq_mode";	//acqu_list_C[6] = "[t]";	//
 	acqu_list_A[8] = "acq_stop_reason";		
 	acqu_list_A[9] = "acq_fluid_volume_imaged";	
 	acqu_list_A[10] = "acq_start";		
 	acqu_list_A[11] = "acq_end";			
 	acqu_list_A[12] = "acq_sampling_time";
 	acqu_list_A[13] = "acq_autoimage_rate";			
-	acqu_list_A[14] = "acq_flash_duration";		acqu_list_C[14] = "[f]";	//
-	acqu_list_A[15] = "acq_flash_delay";		acqu_list_C[15] = "[f]";	//
+	acqu_list_A[14] = "acq_flash_duration";			acqu_list_C[14] = "[f]";	//
+	acqu_list_A[15] = "acq_flash_delay";			acqu_list_C[15] = "[f]";	//
 	acqu_list_A[16] = "acq_camera_name";			
 	acqu_list_A[17] = "acq_initialization";			
-	acqu_list_A[18] = "acq_recalibration_interval_minute";		acqu_list_C[16] = "[f]";	//	
+	acqu_list_A[18] = "acq_recalibration_interval_minute";	acqu_list_C[16] = "[f]";	//	
 	acqu_list_A[19] = "acq_flow_cell_type";			
-	acqu_list_A[20] = "acq_save_image_file";			acqu_list_C[20] = "[f]";	//
-	acqu_list_A[21] = "acq_threshold_black";			acqu_list_C[21] = "[f]";	//
-	acqu_list_A[22] = "acq_threshold_light";			acqu_list_C[22] = "[f]";	//
-	acqu_list_A[23] = "acq_min_esd";				acqu_list_C[23] = "[f]";	//
-	acqu_list_A[24] = "acq_max_esd";				acqu_list_C[24] = "[f]";	//
-	acqu_list_A[25] = "acq_raw_image_total";			acqu_list_C[25] = "[f]";	//
+	acqu_list_A[20] = "acq_save_raw_file";			//acqu_list_C[20] = "[f]";	//
+	acqu_list_A[21] = "acq_threshold_black";		acqu_list_C[21] = "[f]";	//
+	acqu_list_A[22] = "acq_threshold_light";		acqu_list_C[22] = "[f]";	//
+	acqu_list_A[23] = "acq_min_esd";			acqu_list_C[23] = "[f]";	//
+	acqu_list_A[24] = "acq_max_esd";			acqu_list_C[24] = "[f]";	//
+	acqu_list_A[25] = "acq_raw_image_total";		acqu_list_C[25] = "[f]";	//
+	acqu_list_A[26] = "acq_total_image";			acqu_list_C[26] = "[f]";	//
+	acqu_list_A[27] = "acq_operator";
 	
 	// ---------------- SAMPLE -------------------------------------
-	sample_list_A = newArray(10);
-	sample_list_B = newArray(10);
-	sample_list_C = newArray(10);
+	sample_list_A = newArray(42);
+	sample_list_B = newArray(42);
+	sample_list_C = newArray(42);
 	for (i = 0; i < sample_list_B.length; i++) {	sample_list_B[i] = "NaN";	sample_list_C[i] = "[t]";	}// for
 	sample_list_A[0] = "sample_id";			
-	sample_list_A[1] = "sample_project";		
-	sample_list_A[2] = "sample_ship";		
+	sample_list_A[1] = "sample_project";
+	sample_list_A[2] = "sample_ship";
 	sample_list_A[3] = "sample_filename";		
-	sample_list_A[4] = "sample_barcode";		
-	sample_list_A[5] = "sample_samplinggear";	
+	sample_list_A[4] = "sample_barcode";
+	sample_list_A[5] = "sample_samplinggear";
 	sample_list_A[6] = "sample_volconc";		sample_list_C[6] = "[f]";//
-	sample_list_A[7] = "sample_volpump";		sample_list_C[7] = "[f]";//				
-	sample_list_A[8] = "sample_comment_or_volume";	
+	sample_list_A[7] = "sample_volpump";		sample_list_C[7] = "[f]";//	
+	sample_list_A[8] = "sample_comment_or_volume";
+	// ----------------- Nouvelles metadata (version 8.15) -------------------------
+	sample_list_A[9] = "sample_stationId";	
+	sample_list_A[10] = "sample_cruise";
+	sample_list_A[11] = "sample_ship_speed_knots";		sample_list_C[11] = "[f]";//
+	sample_list_A[12] = "sample_ctd_ref";
+	sample_list_A[13] = "sample_other_ref";			
+	sample_list_A[14] = "sample_conc_vol_ml";		sample_list_C[14] = "[f]";//				
+	sample_list_A[15] = "sample_initial_col_vol_m3";	sample_list_C[15] = "[f]";//
+	sample_list_A[16] = "sample_dilution_method";
+	sample_list_A[17] = "sample_fixative";		
+	sample_list_A[18] = "sample_tow_nb";			sample_list_C[18] = "[f]";//
+	sample_list_A[19] = "sample_tow_type";	
+	sample_list_A[20] = "sample_net_type";	
+	sample_list_A[21] = "sample_net_mesh_um";		sample_list_C[21] = "[f]";//
+	sample_list_A[22] = "sample_net_surf_m2";		sample_list_C[22] = "[f]";//
+	sample_list_A[23] = "sample_comment";	
+	sample_list_A[24] = "sample_vol_qc";		
+	sample_list_A[25] = "sample_depth_qc";	 	 
+	sample_list_A[26] = "sample_qc_air_tightness";	
+	sample_list_A[27] = "sample_qc_richness";	
+	sample_list_A[28] = "sample_qc_conditioning";	
+	sample_list_A[29] = "sample_qc_content_of_disturbing_elements";	
+	sample_list_A[30] = "sample_net_duration_min";		sample_list_C[30] = "[f]";//
+	sample_list_A[31] = "sample_cable_length_m";		sample_list_C[31] = "[f]";//
+	sample_list_A[32] = "sample_cable_angle_deg";		sample_list_C[32] = "[f]";//
+	sample_list_A[33] = "sample_cable_speed_m_s-1";		sample_list_C[33] = "[f]";//
+	sample_list_A[34] = "sample_jar_nb";			sample_list_C[34] = "[f]";//
+	sample_list_A[35] = "sample_sieve_min_um";		sample_list_C[35] = "[f]";//
+	sample_list_A[36] = "sample_sieve_max_um";		sample_list_C[36] = "[f]";//
+	sample_list_A[37] = "sample_flow_start_count";		sample_list_C[37] = "[f]";//
+	sample_list_A[38] = "sample_flow_end_count";		sample_list_C[38] = "[f]";//
+	sample_list_A[39] = "sample_flow_type";	
+	sample_list_A[40] = "sample_operator";	
+	sample_list_A[41] = "sample_bottom_depth";		sample_list_C[41] = "[f]";//
+	
+	// -------------------- QC codes -------------------------------------
+//	jar_air_qc_liste = newArray("not_documented","ok","nok","not_preserved","fresh_sample"); 
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_air");
+	aa = split(macro_flag," ");
+	jar_air_qc_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	jar_air_qc_liste[k] = aa[k];	}
 
+//	jar_richness_liste = newArray("not_documented","normal","very_rich","quasi_empty","not_preserved","fresh_sample"); 
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_richness");
+	aa = split(macro_flag," ");
+	jar_richness_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	jar_richness_liste[k] = aa[k];	}
+	
+//	jar_condition_liste = newArray("not_documented","good","dried","rotten","not_preserved","fresh_sample"); 
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_condition");
+	aa = split(macro_flag," ");
+	jar_condition_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	jar_condition_liste[k] = aa[k];	}
+
+//	jar_disturb_liste = newArray("not_documented","no","one_or_few","soup","not_preserved","fresh_sample"); 
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_disturb");
+	aa = split(macro_flag," ");
+	jar_disturb_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	jar_disturb_liste[k] = aa[k];	}	
+	
+//	depth_qc_liste = newArray("not_documented","measured","calculated_from_cable_length","estimated");
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_depth");
+	aa = split(macro_flag," ");
+	depth_qc_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	depth_qc_liste[k] = aa[k];	}	
+	
+//	vol_qc_liste = newArray("not_documented","recorded_from_flowmeter","calculated_from_mean_other_nets","estimated_from_area_distance"); //,"0 : to be LATER documented");
+	macro_flag = runMacro("Zooprocess_flowcam_qc_codes_vol");
+	aa = split(macro_flag," ");
+	vol_qc_liste = newArray(aa.length);
+	for (k = 0; k < aa.length ; k++) {	vol_qc_liste[k] = aa[k];	}	
+	
 	// ------------------- Ligne à formater selon ALTIDEV ----------------	
-	sample_list_A[9] = "sample_dataportal_descriptor";	
+/*	sample_list_A[9] = "sample_dataportal_descriptor";	
 	if (indexOf(toLowerCase(projfolder),"tara") >= 0 && indexOf(toLowerCase(projfolder),"tara_pacific") < 0) {
 		sample_list_B[9] = "<bioimagingdescriptors><bioimagingdescriptor domain=\"Bio-imaging\" trait=\"Automated Imaging Modalities\" descriptor=\"FLOWCAM\" /><bioimagingdescriptor domain=\"Bio-imaging\" trait=\"Sample Fixation\" descriptor=\"LIVE\" /><bioimagingdescriptor domain=\"Bio-imaging\" trait=\"Staining Methods\" descriptor=\"No Staining\" /></bioimagingdescriptors>";
 	}
-
+*/
 	// ------------------ PROCESS --------------------------------------
-	process_list_A = newArray(22);
-	process_list_B = newArray(22);
-	process_list_C = newArray(22);
+	process_list_A = newArray(24);
+	process_list_B = newArray(24);
+	process_list_C = newArray(24);
 	for (i = 0; i < process_list_B.length; i++) {	process_list_B[i] = "NaN";	process_list_C[i] = "[t]";	}// for
 	process_list_A[0] = "process_id";		
 	process_list_A[1] = "process_software";			
 	process_list_A[2] = "process_start_date";			
 	process_list_A[3] = "process_start_time";		
 	process_list_A[4] = "process_background_method";		
-	process_list_A[5] = "process_nb_images";	process_list_C[5] = "[f]";//		
-	process_list_A[6] = "process_rolling";		process_list_C[6] = "[f]";//		
-	process_list_A[7] = "process_pixel";		process_list_C[7] = "[f]";//		
-	process_list_A[8] = "process_upper";		process_list_C[8] = "[f]";//		
-	process_list_A[9] = "process_gamma_value";	process_list_C[9] = "[f]";//			
-	process_list_A[10] = "process_esd_min";		process_list_C[10] = "[f]";//	
-	process_list_A[11] = "process_esd_max";		process_list_C[11] = "[f]";//	
-	process_list_A[12] = "process_lut_offset";	process_list_C[12] = "[f]";//			
-	process_list_A[13] = "process_lut_slope";	process_list_C[13] = "[f]";//			
-	process_list_A[14] = "process_stop_n_images";	process_list_C[14] = "[f]";//			
-	process_list_A[15] = "process_scale";		process_list_C[15] = "[f]";//		
+	process_list_A[5] = "process_nb_images";		process_list_C[5] = "[f]";//		
+	process_list_A[6] = "process_rolling";			process_list_C[6] = "[f]";//		
+	process_list_A[7] = "process_pixel";			process_list_C[7] = "[f]";//		
+	process_list_A[8] = "process_upper";			process_list_C[8] = "[f]";//		
+	process_list_A[9] = "process_gamma_value";		process_list_C[9] = "[f]";//			
+	process_list_A[10] = "process_esd_min";			process_list_C[10] = "[f]";//	
+	process_list_A[11] = "process_esd_max";			process_list_C[11] = "[f]";//	
+	process_list_A[12] = "process_lut_offset";		process_list_C[12] = "[f]";//			
+	process_list_A[13] = "process_lut_slope";		process_list_C[13] = "[f]";//			
+	process_list_A[14] = "process_stop_n_images";		process_list_C[14] = "[f]";//			
+	process_list_A[15] = "process_scale";			process_list_C[15] = "[f]";//		
 	process_list_A[16] = "process_remove_objects_on_sides";			
 	process_list_A[17] = "process_stop_after_m_objects";		process_list_C[17] = "[f]";//		
 	process_list_A[18] = "process_nb_of_rawfile_images_in_folder";	process_list_C[18] = "[f]";//			
 	process_list_A[19] = "process_objects_processed";		process_list_C[19] = "[f]";//		
 	process_list_A[20] = "process_remove_duplicates";		process_list_C[20] = "[f]";//	
-	process_list_A[21] = "process_Grey_auto_adjust";		
-
+	process_list_A[21] = "process_grey_auto_adjust";
+//	process_list_A[22] = "process_operator";	
+	
+	// ----------------- Nouvelles metadata (version 8.15) -------------------------
+	process_list_A[22] = "process_unit_frame_vol_ul";		process_list_C[22] = "[f]";
+	process_list_A[23] = "process_all_frame_vol_ml";		process_list_C[23] = "[f]";
+	
 	// ---------- recherche des paramètres -------------
+	nb_images_processed_flowcam = 9999;
 	for (i = 1; i < data_deb;i++) {
-		text = toLowerCase(data[i]);
+		text = toLowerCase(data[i]);	
+//		text = replace(text,",,,,,","=");
+		text = replace(text,",  ","=");
+		text = replace(text,", ","=");
+		text = replace(text,"=  ","=");
 		text = replace(text,"= ","=");
-		text = replace(text,"= ","=");
-		text = replace(text," ","_");
-		text = replace(text,"="," "); 
-		text = split(text,"\ "); 
-		if (text.length > 1) val = text[text.length-1];
-		if (startsWith(toLowerCase(data[i]),"sampleid=")) { 			sample_list_B[0] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"project=")) { 		sample_list_B[1] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"ship=")) { 		sample_list_B[2] = toString(val); 						}
-		else if (startsWith(toLowerCase(data[i]),"filename=")) { 		sample_list_B[3] = toString(val); 						}//if}//if
-		else if (startsWith(toLowerCase(data[i]),"otherreffile=")) { 	sample_list_B[4] = toString(val); 						}//if
-		else if (startsWith(toLowerCase(data[i]),"samplinggear=")) { 	sample_list_B[5] = toString(val); 						}//if
-		else if (startsWith(toLowerCase(data[i]),"volconc=")) { 		sample_list_B[6] = toString(val); 						}//if
-		else if (startsWith(toLowerCase(data[i]),"volpump=")) { 		sample_list_B[7] = toString(val); 						}//if
-		else if (startsWith(toLowerCase(data[i]),"datetime=")) { 		object_list_B[4] = substring(val,0,8);	
-											object_list_B[5] = substring(val,9,13);						}//if							
-		else if (startsWith(toLowerCase(data[i]),"comment=")) { 		sample_list_B[8] = toString(val); 						}//if
-		else if (startsWith(toLowerCase(data[i]),"starting_time= 2") || startsWith(toLowerCase(data[i]),"starting_time=  2")) { 	process_list_B[2] = substring(val,0,8); 
-											process_list_B[3] = substring(val,9,13);					}
+		text = replace(text," ","_");		
+		text = split(text,"\=");
+		variable_name = replace(text[0]," ","_");	
+		if (text.length >1) {
+			variable_val = toString(text[1]);			
+			if (endsWith(text[1],"ml")) {	aa = split(text[1],"\_");	variable_val = toString(aa[0]);		}
+		}
 
-		else if (startsWith(toLowerCase(data[i]),"background_method=")) { 	process_list_B[4] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"image_processed=")) { 		process_list_B[5] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"rolling=")) { 		process_list_B[6] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"pixel=")) { 		process_list_B[7] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"upper=")) { 		process_list_B[8] = toString(val); 						}//if	
-		else if ( startsWith(toLowerCase(data[i]),"gamma=")) { 		process_list_B[9] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"esdmin=")) { 		process_list_B[10] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"esdmax=")) { 		process_list_B[11] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"lut_offset=") || startsWith(toLowerCase(data[i]),"lut_ofset=")) { 		process_list_B[12] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"lut_slope=") || startsWith(toLowerCase(data[i]),"lut slope=")) { 		process_list_B[13] = toString(val); 						}//if		
-		else if (startsWith(toLowerCase(data[i]),"stop_after_n_images=")) { 		process_list_B[14] = toString(val); 					}//if		
- 		else if (startsWith(toLowerCase(data[i]),"scale=")) { 		process_list_B[15] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"remove_objects_on_sides=")) { 		process_list_B[16] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"stop_after_m_objects=")) { 		process_list_B[17] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"nb_of_rawfile_images_in_folder=")) { 		process_list_B[18] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"objects_processed=")) { 		process_list_B[19] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"remove_duplicates=")) { 		process_list_B[20] = toString(val); 						}//if		
- 		else if (startsWith(toLowerCase(data[i]),"grey_auto_adjust=")) { 		process_list_B[21] = toString(val); 						}//if		
+		if (startsWith(toLowerCase(variable_name),"sampleid")) { 		sample_list_B[0] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"project")) { 		sample_list_B[1] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"filename")) { 		sample_list_B[3] = toString(variable_val); 						}//if}//if
+		else if (startsWith(toLowerCase(variable_name),"barcode")) { 		sample_list_B[4] = toString(variable_val); 						}//if
+		else if (startsWith(toLowerCase(variable_name),"samplinggear")) { 	sample_list_B[5] = toString(variable_val); 						}//if
+		else if (startsWith(toLowerCase(variable_name),"volconc")) { 		sample_list_B[6] = toString(variable_val); 						}//if
+		else if (startsWith(toLowerCase(variable_name),"volpump")) { 		sample_list_B[7] = toString(variable_val); 						}//if
+		else if (startsWith(toLowerCase(variable_name),"datetime")) { 		object_list_B[4] = substring(variable_val,0,8);		object_list_B[5] = substring(variable_val,9,13);			}
+		else if (startsWith(data[i],"comment=")) {				sample_list_B[23] = toString(variable_val); 						}
+/*		else if (startsWith(toLowerCase(variable_name),"comment")) { 		
+			sample_list_B[8] = toString(variable_val); 
+			sample_list_B[23] = toString(variable_val); 
+		}//if
+		*/
+		else if (startsWith(data[i],"Starting_time=") ) { process_list_B[2] = substring(variable_val,0,8); 	process_list_B[3] = substring(variable_val,9,13);	}
+/*		else if (startsWith(toLowerCase(variable_name),"starting_time= 2") || startsWith(toLowerCase(variable_name),"starting_time=  2")) { 	process_list_B[2] = substring(variable_val,0,8); 
+											process_list_B[3] = substring(variable_val,9,13);					}
+*/
+		else if (startsWith(toLowerCase(variable_name),"background_method")) { 	process_list_B[4] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"image_processed")) { 		process_list_B[5] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"rolling")) { 		process_list_B[6] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"pixel")) { 		process_list_B[7] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"upper")) { 		process_list_B[8] = toString(variable_val); 						}//if	
+		else if ( startsWith(toLowerCase(variable_name),"gamma")) { 		process_list_B[9] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"esdmin")) { 		process_list_B[10] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"esdmax")) { 		process_list_B[11] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"lut_offset") || startsWith(toLowerCase(variable_name),"lut_ofset")) { 		process_list_B[12] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"lut_slope") || startsWith(toLowerCase(variable_name),"lut slope")) { 		process_list_B[13] = toString(variable_val); 						}//if		
+		else if (startsWith(toLowerCase(variable_name),"stop_after_n_images")) { 		process_list_B[14] = toString(variable_val); 					}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"scale")) { 		process_list_B[15] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"remove_objects_on_sides")) { 		process_list_B[16] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"stop_after_m_objects")) { 		process_list_B[17] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"nb_of_rawfile_images_in_folder")) { 		process_list_B[18] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"objects_processed")) { 		process_list_B[19] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"remove_duplicates")) { 		process_list_B[20] = toString(variable_val); 						}//if		
+ 		else if (startsWith(toLowerCase(variable_name),"grey_auto_adjust")) { 		process_list_B[21] = toString(variable_val); 						}//if		
  		
-		else if (startsWith(toLowerCase(data[i]),"zmin=")) { 		object_list_B[6] = toString(val);							}
-		else if (startsWith(toLowerCase(data[i]),"zmax=")) { 		object_list_B[7] = toString(val);							}
+		else if (startsWith(toLowerCase(variable_name),"zmin")) { 		object_list_B[6] = toString(variable_val);							}
+		else if (startsWith(toLowerCase(variable_name),"zmax")) { 		object_list_B[7] = toString(variable_val);							}
 		
-		else if (startsWith(toLowerCase(data[i]),"celltype=")) { 		acqu_list_B[2] = toString(val); 						}//if		
-		else if (startsWith(toLowerCase(data[i]),"softwarename=")) { 		acqu_list_B[3] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"cameramagnification=")) { 		acqu_list_B[4] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"dspfirmwareversion=")) { 		acqu_list_B[5] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"serialno=")) { 			acqu_list_B[6] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"mode=")) { 			acqu_list_B[7] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"stop_reason=") || startsWith(toLowerCase(data[i]),"stop reason=")) { 			acqu_list_B[8] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"fluid_volume_imaged=") || startsWith(toLowerCase(data[i]),"fluid volume imaged=")) { 		acqu_list_B[9] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"start=")	||	startsWith(toLowerCase(data[i]),"start=")) { 			
-											acqu_list_B[10] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"end=")) { 				acqu_list_B[11] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"sampling_time=") || startsWith(toLowerCase(data[i]),"sampling time=")) { 		acqu_list_B[12] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"autoimagerate=")) { 		acqu_list_B[13] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"flashduration=")) { 		acqu_list_B[14] = toString(val); 						}//if	
-		else if (startsWith(toLowerCase(data[i]),"flashdelay=")) { 			acqu_list_B[15] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"cameraname=")) { 			acqu_list_B[16] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"initialization=")) { 		acqu_list_B[17] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"recalibrationintervalminutes=")) { acqu_list_B[18] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"flowcelltype=")) { 		acqu_list_B[19] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"saveimagefiles=")) { 		acqu_list_B[20] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"thresholddark=")) { 		acqu_list_B[21] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"thresholdlight=")) { 		acqu_list_B[22] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"minesd=")) { 			acqu_list_B[23] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"maxesd=")) { 			acqu_list_B[24] = toString(val); 				}//if	
-		else if (startsWith(toLowerCase(data[i]),"rawimagetotal=")) { 		acqu_list_B[25] = toString(val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"celltype")) { 		acqu_list_B[2] = toString(variable_val); 						}//if		
+		else if (startsWith(toLowerCase(variable_name),"softwarename")) { 		acqu_list_B[3] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"cameramagnification")) { 	acqu_list_B[4] = toString(variable_val); 						}//if	
+//		else if (startsWith(toLowerCase(variable_name),"dspfirmwareversion")) { 	acqu_list_B[5] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"softwareversion")) { 		acqu_list_B[5] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"serialno")) { 			acqu_list_B[6] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"mode")) { 			acqu_list_B[7] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"stop_reason") || startsWith(toLowerCase(variable_name),"stop reason=")) { 			acqu_list_B[8] = toString(variable_val); 						}//if	
+		//		else if (startsWith(toLowerCase(variable_name),"fluid_volume_imaged") || startsWith(toLowerCase(variable_name),"fluid volume imaged")) { 		
+		//			acqu_list_B[9] = toString(variable_val); 
+		//		}//if	
+		else if (indexOf(toLowerCase(data[i]),"fluid_volume_imaged") > -1 && indexOf(toLowerCase(data[i]),"fluid_volume_imaged") < 3) {
+			aa = split(data[i],"="); 
+			acqu_list_B[9] = parseFloat(aa[1]);	
+		}
+		else if (startsWith(toLowerCase(variable_name),"start")	||	startsWith(toLowerCase(variable_name),"start")) { 			
+		acqu_list_B[10] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"end")) { 				acqu_list_B[11] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"sampling_time") || startsWith(toLowerCase(variable_name),"sampling time")) { 		acqu_list_B[12] = toString(variable_val); 		}//if	
+		else if (startsWith(toLowerCase(variable_name),"autoimagerate")) { 		acqu_list_B[13] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"flashduration")) { 		acqu_list_B[14] = toString(variable_val); 						}//if	
+		else if (startsWith(toLowerCase(variable_name),"flashdelay")) { 			acqu_list_B[15] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"cameraname")) { 			acqu_list_B[16] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"initialization")) { 		acqu_list_B[17] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"recalibrationintervalminutes")) { acqu_list_B[18] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"flowcelltype")) { 		acqu_list_B[19] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"saverawfiles")) { 		acqu_list_B[20] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"thresholddark")) { 		acqu_list_B[21] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"thresholdlight")) { 		acqu_list_B[22] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"minesd")) { 			acqu_list_B[23] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"maxesd")) { 			acqu_list_B[24] = toString(variable_val); 				}//if	
+		else if (startsWith(toLowerCase(variable_name),"rawimagetotal")) { 		acqu_list_B[25] = toString(variable_val); 				}//if	
 
-		else if (startsWith(toLowerCase(data[i]),"latitude=")) { 	oo = val; sign = 1;	
+//		else if (startsWith(toLowerCase(variable_name),"latitude") ) { 	oo = variable_val; sign = 1;	
+		else if (startsWith(data[i],"latitude=")) { 	oo = variable_val; sign = 1;	
 			if (oo < 0) sign = -1;
 			oo = abs(oo);
 			oo_int = floor(oo);
 			object_list_B[2] = sign * (oo_int+100*(oo - oo_int)/60);
 		}//if		
-		else if (startsWith(toLowerCase(data[i]),"longitude=")) { 		oo = val; sign = 1;	                                                               
+//		else if (startsWith(toLowerCase(variable_name),"longitude") ) { oo = variable_val; sign = 1;	 
+		else if (startsWith(data[i],"longitude=")) { oo = variable_val; sign = 1;	
 			if (oo < 0) {	sign = -1;	}//
 			oo = abs(oo);
 			oo_int = floor(oo);
 			object_list_B[3] = sign * (oo_int+100*(oo - oo_int)/60);
 		}//if	
-	}//for	
+		else if (startsWith(data[i],"latitude_end=")) { oo = variable_val; sign = 1;	
+			if (oo < 0) sign = -1;
+			oo = abs(oo);
+			oo_int = floor(oo);
+			object_list_B[8] = sign * (oo_int+100*(oo - oo_int)/60);
+		}//if		
+		else if (startsWith(data[i],"longitude_end=")) { oo = variable_val; sign = 1;	                                                               
+			if (oo < 0) {	sign = -1;	}//
+			oo = abs(oo);
+			oo_int = floor(oo);
+			// ------------ La longitude est inversée dans les données Zooscan --------
+			object_list_B[9] = -1 *sign * (oo_int+100*(oo - oo_int)/60);
+		}//if	
+				
+		// --------------------- nouvelles metadata ----------------------
+		else if (startsWith(toLowerCase(data[i]),"area_ratio")) { 	area_ratio = toString(variable_val);				}
+		else if (startsWith(toLowerCase(data[i]),"operator_sample")) { 	sample_list_B[40] = toString(variable_val);			}
+		else if (startsWith(toLowerCase(data[i]),"operator_acq")) { 	acqu_list_B[27]	= toString(variable_val);			}			
+		else if (indexOf(toLowerCase(data[i]),"total") > -1 && indexOf(toLowerCase(data[i]),"total") < 3) { 
+//			aa = replace(data[i],"="," "); 
+			aa = split(data[i],"="); 
+//			nb_images_processed_flowcam = parseInt(aa[aa.length -1]);
+			nb_images_processed_flowcam = parseInt(aa[1]);	
+			acqu_list_B[26]	= nb_images_processed_flowcam;	
+		}	
+		else if (startsWith(toLowerCase(data[i]),"stationid")) { 	sample_list_B[9] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"cruise")) { 		sample_list_B[10] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"ship=")) { 		sample_list_B[2] = toString(variable_val); 						}
+		else if (startsWith(toLowerCase(data[i]),"ship_speed_knots")) { sample_list_B[11] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"ctdref")) { 		sample_list_B[12] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"other_ref")) { 	sample_list_B[13] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"conc_vol_ml")) { 	
+			sample_list_B[14] = toString(parseInt(variable_val));	
+			sample_list_B[6] = toString(variable_val);	
+		}	
+		else if (startsWith(toLowerCase(data[i]),"initial_col_vol")) { 	sample_list_B[15] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"dilution_method")) { 	sample_list_B[16] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"fixative")) { 	sample_list_B[17] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"townb")) { 		sample_list_B[18] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"towtype")) { 		sample_list_B[19] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"nettype")) { 		sample_list_B[20] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"netmesh")) { 		sample_list_B[21] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"netsurf")) { 		sample_list_B[22] = toString(variable_val);			}			
+		else if (startsWith(toLowerCase(data[i]),"vol_qc")) { 		sample_list_B[24] = vol_qc_liste[parseInt(variable_val)];	}	
+		else if (startsWith(toLowerCase(data[i]),"depth_qc")) { 	sample_list_B[25] = depth_qc_liste[parseInt(variable_val)];	}	
+		else if (startsWith(toLowerCase(data[i]),"sample_qc")) { 	
+			Sample_qc = toString(variable_val);	
+			sampleqc_air = parseInt(substring(Sample_qc,0,1));
+			sampleqc_rich = parseInt(substring(Sample_qc,1,2));
+			sampleqc_cond = parseInt(substring(Sample_qc,2,3));
+			sampleqc_dist = parseInt(substring(Sample_qc,3,4));
+			sample_list_B[26] = jar_air_qc_liste[sampleqc_air];
+			sample_list_B[27] = jar_richness_liste[sampleqc_rich];
+			sample_list_B[28] = jar_condition_liste[sampleqc_cond];
+			sample_list_B[29] = jar_disturb_liste[sampleqc_dist];
+		}	
+		else if (startsWith(toLowerCase(data[i]),"net_duration")) { 	sample_list_B[30] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"cable_length")) { 	sample_list_B[31] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"cable_angle")) { 	sample_list_B[32] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"cable_speed")) { 	sample_list_B[33] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"nb_jar")) { 		sample_list_B[34] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"sieve_min")) { 	sample_list_B[35] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"sieve_max")) { 	sample_list_B[36] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"flow_start")) { 	sample_list_B[37] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"flow_end")) { 	sample_list_B[38] = toString(variable_val);			}	
+		else if (startsWith(toLowerCase(data[i]),"flow_type")) { 	sample_list_B[39] = toString(variable_val);			}	
+		
+	}//for
+	// ---------- volume une image en µl ---------------------------------------	
+//	aa = getBoolean("nb_images_processed_flowcam= "+nb_images_processed_flowcam+ "\n fluid_volume_imaged= "+ acqu_list_B[9]);
+	if (nb_images_processed_flowcam == 9999 || acqu_list_B[9] == "NaN") {	
+		aa = getBoolean("PID to ECOTAXA WARNING :\n \n The variables ''total'' and ''fluid_volume_imaged''permitting to compute the imaged volume are not in "+pid_file+"\n \nPress CANCEL to abort and fix the problem by running the ''Update all metadata...'' in ADVANCED mode ! ");	
+	}
+	else {	process_list_B[22] = parseFloat(acqu_list_B[9])*1000 / nb_images_processed_flowcam;	}// acq_fluid_volume_imaged	
+	// ---------- volume all processed images en ml ------------------
+	process_list_B[23] = parseFloat(area_ratio) * process_list_B[22] * parseInt(process_list_B[5]) / 1000;		// process_nb_images
 }// flowcam
 else if (instrum == "generic") {
 	//++++++++++++++++++++++++++++++ GENERIC +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	Acq_id = "generic";
+		// -------------- OBJECT ----------------------------
+	object_list_A = newArray(8);
+	object_list_B = newArray(8);
+	object_list_C = newArray(8);
+	for (i = 0; i < object_list_B.length; i++) {	object_list_B[i] = "NaN";	object_list_C[i] = "NaN";	object_list_C[i] = "[t]";}// for
+	object_list_A[0] = "object_id";			
+	object_list_A[1] = "object_link";		
+	object_list_A[2] = "object_lat";		object_list_C[2] = "[f]";	
+	object_list_A[3] = "object_lon";		object_list_C[3] = "[f]";		
+	object_list_A[4] = "object_date";		
+	object_list_A[5] = "object_time";		
+	object_list_A[6] = "object_depth_min";		object_list_C[6] = "[f]";
+	object_list_A[7] = "object_depth_max";		object_list_C[7] = "[f]";	
+	object_list_B[1] = link;	//	"http://www.lov.obs-vlfr.fr/fr/moyens_a_la_recherche/plate_forme_imagerie.html/";
 	// -------------- ACQU -------------------------------------
 	acqu_list_A = newArray(4);
 	acqu_list_B = newArray(4);
@@ -617,21 +812,21 @@ else if (instrum == "generic") {
 	process_list_A[3] = "process_start_time";			
 	process_list_A[4] = "process_analysed_color_channel";		
 	process_list_A[5] = "process_background_method";		
-	process_list_A[6] = "process_nb_images";	process_list_C[6] = "[f]";//		
-	process_list_A[7] = "process_rolling";		process_list_C[7] = "[f]";//
-	process_list_A[8] = "process_pixel";		process_list_C[8] = "[f]";//	
-	process_list_A[9] = "process_upper";		process_list_C[9] = "[f]";//		
-	process_list_A[10] = "process_gamma_value";	process_list_C[10] = "[f]";//	
+	process_list_A[6] = "process_nb_images";	//process_list_C[6] = "[f]";//		
+	process_list_A[7] = "process_rolling";		//process_list_C[7] = "[f]";//
+	process_list_A[8] = "process_pixel";		//process_list_C[8] = "[f]";//	
+	process_list_A[9] = "process_upper";		//process_list_C[9] = "[f]";//		
+	process_list_A[10] = "process_gamma_value";	//process_list_C[10] = "[f]";//	
 	process_list_A[11] = "process_vignette_color";		
-	process_list_A[12] = "process_esd_min";		process_list_C[12] = "[f]";//	
-	process_list_A[13] = "process_esd_max";		process_list_C[13] = "[f]";//	
-	process_list_A[14] = "process_lut_offset";	process_list_C[14] = "[f]";//			
-	process_list_A[15] = "process_lut_slope";	process_list_C[15] = "[f]";//		
+	process_list_A[12] = "process_esd_min";		//process_list_C[12] = "[f]";//	
+	process_list_A[13] = "process_esd_max";		//process_list_C[13] = "[f]";//	
+	process_list_A[14] = "process_lut_offset";	//process_list_C[14] = "[f]";//			
+	process_list_A[15] = "process_lut_slope";	//process_list_C[15] = "[f]";//		
 	process_list_A[16] = "process_remove_objects_on_sides";			
-	process_list_A[17] = "process_stop_n_images";	process_list_C[17] = "[f]";//			
-	process_list_A[18] = "process_scale";		process_list_C[18] = "[f]";//		
-	process_list_A[19] = "process_stop_after_m_objects";		process_list_C[19] = "[f]";//		
-	process_list_A[20] = "process_nb_of_rawfile_images_in_folder";	process_list_C[20] = "[f]";//			
+	process_list_A[17] = "process_stop_n_images";	//process_list_C[17] = "[f]";//			
+	process_list_A[18] = "process_scale";		//process_list_C[18] = "[f]";//		
+	process_list_A[19] = "process_stop_after_m_objects";		//process_list_C[19] = "[f]";//		
+	process_list_A[20] = "process_nb_of_rawfile_images_in_folder";	//process_list_C[20] = "[f]";//			
 	process_list_A[21] = "process_Grey_auto_adjust";		
 	
 	// ---------- recherche des paramètres -------------
@@ -734,6 +929,41 @@ long = entete.length;
 if (pid == false) {
 	if (annotation_list_C[5] == "validated") long = entete.length - field_sup_nb;
 }
+
+// ---------------- Recherche des index des colonnes des features ---------------------------
+col_symetrieh = 0;
+col_symetriev = 0;
+col_nb1 = 0;
+col_nb2 = 0;
+col_nb3 = 0;
+for (i = 0; i < entete.length ; i++) {
+	if (toLowerCase(entete[i]) == "area" ) 	col_area = i;
+	if (toLowerCase(entete[i]) == "major" ) 	col_major = i;
+	if (toLowerCase(entete[i]) == "minor" ) 	col_minor = i;
+	if (toLowerCase(entete[i]) == "mean" ) 	col_mean = i;
+	if (toLowerCase(entete[i]) == "min" ) 	col_min = i;
+	if (toLowerCase(entete[i]) == "max" ) 	col_max = i;
+	if (toLowerCase(entete[i]) == "stddev" ) 	col_stddev = i;
+	if (startsWith(toLowerCase(entete[i]),"perim" )) 	col_perim = i;
+	if (toLowerCase(entete[i]) == "area_exc" ) 	col_area_exc = i;
+	if (toLowerCase(entete[i]) == "feret" ) 	col_feret = i;
+	if (toLowerCase(entete[i]) == "xm" ) 	col_xm = i;
+	if (toLowerCase(entete[i]) == "ym" ) 	col_ym = i;
+	if (toLowerCase(entete[i]) == "x" ) 	col_x = i;
+	if (toLowerCase(entete[i]) == "y" ) 	col_y = i;
+	if (toLowerCase(entete[i]) == "kurt" || toLowerCase(entete[i]) == "kurt_green") 	col_kurt = i;
+	if (toLowerCase(entete[i]) == "skew" || toLowerCase(entete[i]) == "skew_green") 	col_skew = i;
+	if (toLowerCase(entete[i]) == "convperim" ) col_convperim = i;
+	if (toLowerCase(entete[i]) == "convarea" ) 	col_convarea = i;
+	if (toLowerCase(entete[i]) == "median" || toLowerCase(entete[i]) == "median_green") 	col_median = i;
+	if (toLowerCase(entete[i]) == "skelarea" ) col_skelarea = i;
+	if (toLowerCase(entete[i]) == "symetrieh" ) col_symetrieh = i;
+	if (toLowerCase(entete[i]) == "symetriev" ) col_symetriev = i;
+	if (toLowerCase(entete[i]) == "nb1" ) 	col_nb1 = i;
+	if (toLowerCase(entete[i]) == "nb2" ) 	col_nb2 = i;
+	if (toLowerCase(entete[i]) == "nb3" ) 	col_nb3 = i;
+}
+
 // ---------------- Nombre de colonnes a supprimer -------------------------------------------
 start_field = 2;
 // -------- index de la colonne contenant la ref Rawimg pour UVP5 --------------
@@ -807,15 +1037,28 @@ for (j = data_deb+1;j < data.length;j++) {
 	}// if
 	// ------------ Variables dérivées -----------------------------	
 	if (indexOf(toLowerCase(data[data_deb]),"kurt")>1) {
-		area = 		parseInt(entete[2]);	
-		if (instrum == "uvp5") {	area = 		parseInt(entete[3]);	}
-		major = 	parseInt(entete[18]);	minor = 	parseInt(entete[19]);
-		mean = 		parseFloat(entete[4]);	min = 		parseInt(entete[7]);	max = 		parseInt(entete[8]);
-		stddev = 	parseInt(entete[5]);	perim = 	parseInt(entete[13]);	area_exc = 	parseInt(entete[30]);
-		feret = 	parseInt(entete[22]);	xm = 		parseInt(entete[11]);	ym = 		parseInt(entete[12]);
-		x = 		parseInt(entete[9]);	y = 		parseInt(entete[10]);
-	
-//		esd = 2*((area/PI)^0.5);				objet_derived_C[0] = esd;
+		// -------------- Nouveau process Flowcam color ------------------
+		area = 		parseInt(entete[col_area]);
+		major = 	parseInt(entete[col_major]);	minor = 	parseInt(entete[col_minor]);
+		mean = 		parseFloat(entete[col_mean]);	min = 		parseInt(entete[col_min]);	
+		max = 		parseInt(entete[col_max]);	stddev = 	parseFloat(entete[col_stddev]);	
+		perim = 	parseInt(entete[col_perim]);	area_exc = 	parseInt(entete[col_area_exc]);
+		feret = 	parseInt(entete[col_feret]);	xm = 		parseInt(entete[col_xm]);	
+		ym = 		parseInt(entete[col_ym]);	x = 		parseInt(entete[col_x]);
+		y = 		parseInt(entete[col_y]);  	kurt = 		parseFloat(entete[col_kurt]);
+		skew = 		parseFloat(entete[col_skew]);	convperim = 	parseInt(entete[col_convperim]);
+		convarea = 	parseInt(entete[col_convarea]);	median = 	parseInt(entete[col_median]);
+		skeleton = 	parseInt(entete[col_skelarea]);
+		if (col_symetrieh > 0 ) {			
+			symetrieh = 	parseFloat(entete[col_symetrieh]);	symetriev = 	parseFloat(entete[col_symetriev]);
+			nb1 = 		parseInt(entete[col_nb1]);		nb2 = 		parseInt(entete[col_nb2]);
+			nb3 = 		parseInt(entete[col_nb3]);
+		}
+		else {	symetrieh = 0;		symetriev = 0;
+			nb1 = 0;		nb2 = 0;	nb3 =0;
+		}
+		
+		//		esd = 2*((area/PI)^0.5);				objet_derived_C[0] = esd;
 		esd = 2*(sqrt(area/PI));				objet_derived_C[0] = esd;		
 		elongation = major/minor;				objet_derived_C[1] = elongation;
 		range = max-min;					objet_derived_C[2] =	range;
@@ -840,18 +1083,6 @@ for (j = data_deb+1;j < data.length;j++) {
 		cdexc = (1/(sqrt(area_exc))) * sqrt(pow(xm-x,2)+pow(ym-y,2));	objet_derived_C[12] = cdexc;
 		// -------------------- AUTRES -----------------------------
 		if (other_par == true) {
-			kurt = 		parseInt(entete[26]);
-			skew = 		parseInt(entete[25]);
-			convperim = 	parseInt(entete[52]);
-			convarea = 	parseInt(entete[53]);
-			symetrieh = 	parseInt(entete[48]);
-			symetriev = 	parseInt(entete[49]);
-			nb1 = 		parseInt(entete[39]);
-			nb2 = 		parseInt(entete[40]);
-			nb3 = 		parseInt(entete[41]);
-			median = 	parseInt(entete[24]);
-			skeleton = 	parseInt(entete[32]);
-			
 			objet_derived_C[13] = kurt/mean;
 			objet_derived_C[14] = skew/mean;
 			objet_derived_C[15] = convperim/perim;
@@ -863,7 +1094,7 @@ for (j = data_deb+1;j < data.length;j++) {
 			objet_derived_C[21] = nb3/area;
 			objet_derived_C[22] = nb1/range;
 			objet_derived_C[23] = nb2/range;
-			objet_derived_C[24] = nb3/range;
+			objet_derived_C[24] = nb3/range;			
 			objet_derived_C[25] = median-mean;
 			objet_derived_C[26] = (median-mean)/range;
 			objet_derived_C[27] = skeleton/area;
@@ -915,12 +1146,15 @@ for (j = 0; j < m;j++) {
 selectWindow("Log");
 save_tsv = "no";
 aa = indexOf(pid_file,".");
-//	ecotaxa_file = "ecotaxa_"+ substring(pid_file,0,aa-5)+"_"+annotation_list_C[5]+".tsv";
 ecotaxa_file = "ecotaxa_"+ substring(pid_file,0,aa-5)+".tsv";
 text =  "save=" + ecotaxa_folder + "\\" + ecotaxa_file;
-
-//	aa = getBoolean(text);
 if ((option == "maj" && File.exists(ecotaxa_folder + "\\" + ecotaxa_file)) || option == "new" ) {
+	dateheure =	runMacro("Zooscan_get_time_5");
+	if (File.exists(ecotaxa_folder + "\\" + ecotaxa_file)) {
+		// ------------ Creation d'une archive du TSV si existe déjà ---------------------------------------------
+		File.rename(ecotaxa_folder + "\\" + ecotaxa_file , ecotaxa_folder + "\\_ecotaxa_" + substring(pid_file,0,aa-5)+"_"+dateheure+".tsv");
+	}
+	// ------------ Sauvegarde nouveau fichier -------------
 	run("Text...",text);
 	save_tsv = "ok";
 }

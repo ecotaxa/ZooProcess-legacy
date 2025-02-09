@@ -1,6 +1,6 @@
 // ------------------------- Zooscan_metadata_fill_window ----------------------------------------------
-version = "7.40";
-date = "2021/01/08";
+version = "8.27";
+date = "2024/08/02";
 requires("1.41o");
 
 // Check latitude/longitude
@@ -9,9 +9,14 @@ requires("1.41o");
 // Nouveaux formats saisie LAT/LON
 // Modif ordre des paramètres
 // Limite date passée de 2020 à 2100
+// Meilleures légendes des champs et tests améliorés
+// Meilleure organisation des fenêtres
+// Checks lat/lon end
+// meilleurs checks input
 
 // ------------------- Collection de Villefranche sur mer ------------------------------
 czz = false;
+process_type = "edit";
 
 arg = 		getArgument(); 
 array = 	split(arg," ");
@@ -22,16 +27,20 @@ towtype = array[12]; 		nettype =array[13]; 		netmesh = array[14]; 		netsurf = ar
 zmax = array[16]; 		zmin = array[17]; 		vol = array[18];		sample_comment = array[19];
 proj = array[20];		sample = array[21];
 // ----------------- Nouveaux paramètres -------------------
-if (array.length > 21 ) { 	vol_qc = array[22];			depth_qc = array[23];		sample_qc = array[24]; 			barcode = array[25];
+//if (array.length == 39 ) { 	
+if (array.length == 38 ) { 
+	vol_qc = array[22];			depth_qc = array[23];		sample_qc = array[24]; 			barcode = array[25];
 	latitude_end = array[26];		longitude_end = array[27];	net_duration = array[28];		ship_speed_knots = array[29];
 	cable_length = array[30];		cable_angle = array[31];	cable_speed = array[32];		nb_jar = array[33];
-	czz = array[36];
+	czz = array[36];			process_type = array[37];	//	operator = array[38];
 }//
-else {	vol_qc = "0";			depth_qc = "0";			sample_qc = "0000";	 	barcode = "NaN";
+else if (array.length == 22 ) {	
+	vol_qc = "0";			depth_qc = "0";			sample_qc = "0000";	 	barcode = "NaN";
 	latitude_end = "0.0";		longitude_end = "0.0";		net_duration = 9999;		ship_speed_knots = 9999;
 	cable_length = 9999;		cable_angle = 9999;		cable_speed = 9999;		nb_jar = 9999;
-	czz = array[24];
+	czz = "0000";
 }
+else { aa = getBoolean("The metadata are NOK. \nThe input for the Zooscan_metadata_fill_window.txt macro is "+array.length+" char. \nThe ''zooscan_sample_header_table.csv'' \n or \nthe ''zooscan_scan_header_table.csv'' table might be corrupted. \n \nPlease press CANCEL and check your files.");	}
 
 // ------------------- CORRECTIONS --------------------
 if (depth == "NaN") depth = 9999;
@@ -61,6 +70,7 @@ if (latitude == "nan") latitude = "0.0";
 if (longitude == "nan") longitude = "0.0";
 if (latitude_end == "nan") latitude_end = "0.0";
 if (longitude_end == "nan") longitude_end = "0.0";
+if (sample_qc == "nan") sample_qc = "0000";
 
 // ---------------------- Saisie des données SAMPLE ------------------------------------------------------
 check= 1;
@@ -68,17 +78,15 @@ while (check == 1) {
 	check= 0;
 	message = "Warning : \n";
 	// ----------------------------- WINDOW #1 -----------------------------------------------------
-	Dialog.create(" METADATA      Window #1   version : "+version+"   Please ENTER or CHECK the informations ");
+	Dialog.create(" METADATA                          Window #1                  version : "+version+"                                     Please ENTER or CHECK the informations ");
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	Dialog.addMessage("SAMPLE ID : "+sample+"\nMETADATA from sample ''"+sampleId +"'' displayed below.");
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	
 	Dialog.addString("Scientific program ",scientificprog );
 	Dialog.addString("Station Id (''NaN'' if unknown) ",stationId );
-	Dialog.addNumber("Bottom Depth (m) ",depth );
+	Dialog.addNumber("Bottom depth (m) ",depth );
 	Dialog.addString("Sampling date (YYYYMMDD-HHMM) ",date );
-	//	Dialog.addMessage("CONVENTION at LOV => Latitude : (-12.06398 for 12°06.398 S)  Longitude : (-135.05325 for 135°05.325 E)");
-	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	latitude = parseFloat(latitude);
 	latitude_ns = newArray("N","S");
 	if (latitude < 0) { latitude_ns = newArray("S","N");	}
@@ -88,11 +96,6 @@ while (check == 1) {
 	Dialog.addNumber("LATITUDE (degree) ",latitude_deg);
 	Dialog.addNumber("LATITUDE (minute) ",latitude_min);
 	Dialog.addChoice("LATITUDE (N/S)    ",latitude_ns);
-	
-	//	Dialog.addString("     Latitude (DD.MM for North,   -DD.MM for South)",latitude );
-	//	Dialog.addString("Longitude (DDD.MM for West, -DDD.MM for Est)",longitude );	
-	//	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-	
 	longitude = parseFloat(longitude);
 	longitude_ew = newArray("W","E");
 	if (longitude < 0) { longitude_ew = newArray("E","W");	}
@@ -104,33 +107,30 @@ while (check == 1) {
 	Dialog.addChoice("LONGITUDE (E/W)    ",longitude_ew);
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	
-	towtype_list = newArray(" ","1 : Oblique","2 : Horizontal","3 : Vertical","0 : not documented");
+	towtype_list = newArray(" ","1 : Oblique","2 : Horizontal","3 : Vertical","0 : Other sampling method");	//,"0 : not documented");
 	val = parseInt(towtype);
 	if (val == 0 || val == 999) val = 4;
+//	if (val == 999) val = 0;
 	towtype_val = towtype_list[val];
 	towtype_list[0] = towtype_val;
 	Dialog.addChoice("Tow type",towtype_list );
-	Dialog.addString("Net type (WP2, JB, Omori...) ",nettype );
+	Dialog.addString("Net/sampling type (WP2, JB, Regent, Omori, Multinet...) ",nettype );
 	Dialog.addNumber("Net mesh (µm)",netmesh );
 	Dialog.addNumber("Net opening surface (m2)",netsurf );
-	Dialog.addNumber("Maximum Depth, 9999 if unknown  (m) : Z max",zmax );
-	Dialog.addNumber("Minimum Depth, 9999 if unknown  (m) : Zmin",zmin );
-	depth_qc_liste = newArray(" ","1 : BEST, Z recorded (depth recorder)","2 : MEDIUM, Z calculated (from other data)","3 : BAD, Z estimated (no measured data)","0 : to be LATER documented");
+	Dialog.addNumber("Maximum Depth of the net, 9999 if unknown  (m) : Zmax",zmax );
+	Dialog.addNumber("Minimum Depth of the net, 9999 if unknown  (m) : Zmin",zmin );
+	Dialog.addNumber("Ship speed (knots) 9999 if not documented",parseFloat(ship_speed_knots) );
+	Dialog.addNumber("Cable speed (m/s) 9999 if not documented",parseFloat(cable_speed) );
+	Dialog.addNumber("      Cable angle from vertical (°) 9999 if not documented",parseInt(cable_angle) );
+	Dialog.addNumber("Cable length (m) 9999 if not documented",parseInt(cable_length) );
+	Dialog.addNumber("        Sampling duration (minute) 9999 if not documented",parseInt(net_duration) );		
+	depth_qc_liste = newArray(" ","1 : MEASURED by a depth sensor","2 : CALCULATED from cable length and angle","3 : ESTIMATED from cable length"); //,"0 : to be LATER documented");
 	val = parseInt(depth_qc);
-	if (val == 0) val = 4;
 	depth_qc_val = depth_qc_liste[val];
 	depth_qc_liste[0] = depth_qc_val;
-	Dialog.addChoice("Depth QC ",depth_qc_liste);
-	Dialog.addNumber("Number of tow in the same sample ",townb );
-	Dialog.addNumber("   Filtered volume, sum of ALL nets jar if number of tow > 1 (m3), 99999 if unknown",vol );
-	vol_qc_liste = newArray(" ","1 : BEST, volume recorded (flowmeter)","2 : MEDIUM, volume calculated (from other data)","3 : BAD, volume estimated (no measured data)","0 : to be LATER documented");
-	val = parseInt(vol_qc);
-	if (val == 0) val = 4;
-	vol_qc_val = vol_qc_liste[val];
-	vol_qc_liste[0] = vol_qc_val;
-	Dialog.addChoice("Volume QC ",vol_qc_liste);
-	Dialog.addString("Add sample comment ",sample_comment);
-	
+	Dialog.addChoice("Quality Flag for the depth measurement of the net ",depth_qc_liste);
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
 	Dialog.show;
 	
 	Scientificprog = Dialog.getString();
@@ -148,7 +148,7 @@ while (check == 1) {
 	stationId  = toString(StationId);
 	
 	Depth = Dialog.getNumber();
-	if (Depth == 0) { message = message + "Depth is not a number  or Depth set to 0   \n  "; check = 1;		} // if
+	if (Depth == 0) { message = message + "Bottom depth is not a number  or Depth set to 0   \n  "; check = 1;		} // if
 	depth  = Depth;
 	
 	Date = Dialog.getString();
@@ -184,16 +184,6 @@ while (check == 1) {
 	else {		message = message+ "Date format incorrect \n  ";					check = 1;		} // else
 	date  = Date;
 	
-	/*	Latitude = Dialog.getString();
-	if (indexOf(Latitude,".") < 0) { message = message + "Latitude is not a number (add decimals) \n  "; check = 1; } // if	
-	if (indexOf(Latitude,"°") > 0) { message = message + "Latitude format is not OK \n  "; check = 1; } // if	
-	latitude  = toString(Latitude);
-	
-	Longitude = Dialog.getString();
-	if (indexOf(Longitude,".") < 0) { message = message + "Longitude is not a number (add decimals) \n  "; check = 1; } // if
-	if (indexOf(Longitude,"°") > 0) { message = message + "Longitude format is not OK \n  "; check = 1; } // if	
-	longitude  = toString(Longitude);
-	*/
 	latitude_deg = Dialog.getNumber();
 	if (indexOf(toString(latitude_deg),".") >= 0) {message = message + "Latitude (degree) is not an integer \n "; check = 1; }
 	if (latitude_deg > 90) {message = message + "Latitude (degree) > 90 \n "; check = 1; }
@@ -233,9 +223,9 @@ while (check == 1) {
 	if (longitude_ew == "E") longitude = "-"+longitude;
 	
 	Towtype = Dialog.getChoice();
-	if (Towtype == " ") { message = message + "Towtype = '' '', select correct criteria   \n  "; check = 1;} // if
+	if (Towtype == " ") { message = message + "Towtype = '' '', select a correct criteria   \n  "; check = 1;} // if
 	towtype = substring(Towtype,0,1);
-	if (towtype == 0)	Towtype = "999";
+	//	if (towtype == 0) { Towtype = "999"	};
 	
 	Nettype =Dialog.getString();
 	a= lengthOf(Nettype );
@@ -245,44 +235,34 @@ while (check == 1) {
 	nettype  = Nettype;
 	
 	Netmesh = Dialog.getNumber();
-	if (Netmesh == 0) { message = message + "Net mesh is not a number  or Net mesh set to 0   \n  "; check = 1;} // if
+	if (Netmesh == 0) { message = message + "The net mesh is not a number  or Net mesh set to 0   \n  "; check = 1;} // if
 	netmesh = Netmesh;
 	
 	Netsurf = Dialog.getNumber();
-	if (Netsurf == 0) { message = message + "Net surface is not a number  or Net surface set to 0   \n  "; check = 1;} // if
+	if (Netsurf == 0) { message = message + "The net opening surface is not a number  or Net surface set to 0   \n  "; check = 1;} // if
 	netsurf  = Netsurf;
 	
 	Zmax = Dialog.getNumber();
-	if (Zmax == 0) { message = message + "Zmax is not a number  or Zmax set to 0   \n  "; check = 1;} // if
+	if (Zmax == 0) { message = message + "The max depth of the net is not a number  or set to 0   \n  "; check = 1;} // if
 	zmax  = Zmax;
 	
 	Zmin = Dialog.getNumber();
 	zmin  = Zmin;
-	
+
+	Ship_speed_knots = Dialog.getNumber();
+	ship_speed_knots  = Ship_speed_knots;
+	cable_speed = Dialog.getNumber();
+	cable_angle = Dialog.getNumber();
+	cable_length = Dialog.getNumber();	
+	net_duration = Dialog.getNumber();
+		
 	Depth_qc = Dialog.getChoice();
-	if (Depth_qc == " ") { message = message + "Depth QC = '' '', select correct criteria   \n  "; check = 1;} // if
+	if (Depth_qc == " ") { message = message + "Net depth QC = '' '', select correct criteria   \n  "; check = 1;} // if
 	depth_qc = substring(Depth_qc,0,1);
+	if (Depth_qc == "3") {	vol = netsurf * cable_length;	}
+	else if (Depth_qc == "2" && cable_angle < abs(90)) {	vol = netsurf * cable_length * cos(cable_angle);	}
 	
-	Townb = Dialog.getNumber();
-	if (Townb == 0) { message = message + "Townb is not a number  or Townb set to 0   \n  "; check = 1;} // if
-	townb  = Townb;
-	
-	Vol = Dialog.getNumber();
-	if (Vol == 0) { message = message + "Filtered volume is not a number  or Filtered volume set to 0   \n  "; check = 1;} // if
-	vol  = Vol;
-	
-	Vol_qc = Dialog.getChoice();
-	if (Vol_qc == " ") { message = message + "VOLUME QC = '' '', select correct criteria   \n  "; check = 1;} // if
-	vol_qc = substring(Vol_qc,0,1);
-	
-	sample_comment = Dialog.getString();
-	sample_comment = toLowerCase(sample_comment);
-	sample_comment  = replace(sample_comment ," ","_");
-	sample_comment  = replace(sample_comment ,";","_");
-	sample_comment  = replace(sample_comment ,"=","_");
-	sample_comment  = replace(sample_comment ,"+","_");
-	sample_comment  = replace(sample_comment ,"/","_");
-	sample_comment  = replace(sample_comment ,"-","_");	
+	if (longitude == "0.0" && latitude == "0.0") { check = getBoolean( "The starting latitude and longituide are 0.0. \nDid you really sample at this position ? \n \nPlease consider documenting this fields by pressing YES. \nPress NO otherwise.");	}
 	if (check == 1) { message = message + " \nEnter values again              ";		showMessage(message); 	} // if
 }
 
@@ -291,90 +271,84 @@ check= 1;
 while (check ==1) {
 	check= 0;
 	message = "Warning : \n";	
-	Dialog.create(" METADATA      Window #2   version : "+version+"   Please ENTER or CHECK the informations ");
+	Dialog.create(" METADATA                          Window #2                  version : "+version+"                                     Please ENTER or CHECK the informations ");
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	Dialog.addMessage("SAMPLE ID : "+sample+"\nMETADATA from sample ''"+sampleId +"'' displayed below.");
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-	Dialog.addNumber("        Sampling duration (minute) 9999 if not documented",parseInt(net_duration) );
-	//	Dialog.addMessage("CONVENTION at LOV => Latitude : (-12.06398 for 12°06.398 S)  Longitude : (-135.05325 for 135°05.325 E)");	
-	//	Dialog.addString("       ENDING Latitude    (DD.MM for North,   -DD.MM for South)",latitude_end );
-	//	Dialog.addString("       ENDING Longitude (DDD.MM for West, -DDD.MM for Est)",longitude_end );	
-	
-	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-	latitude_end = parseFloat(latitude_end);	
+	if ( Towtype == "3 : Vertical" && process_type == "new" ) { 
+		Dialog.addMessage("The towtype is ''Vertical''. The starting latitude and longitude are utilised. ");
+		latitude_end = latitude;
+		longitude_end = longitude;
+	}
+	latitude_end = parseFloat(latitude_end);
 	latitude_ns = newArray("N","S");
 	if (latitude_end < 0) { latitude_ns = newArray("S","N");	}
 	latitude_end = abs(latitude_end);
-	latitude_deg = floor(latitude_end);
-	latitude_min = 100*(latitude_end - latitude_deg);
-	Dialog.addNumber("ENDING LATITUDE (degree) ",latitude_deg);
-	Dialog.addNumber("ENDING LATITUDE (minute) ",latitude_min);
-	Dialog.addChoice("ENDING LATITUDE (N/S)    ",latitude_ns);
+	latitude_end_deg = floor(latitude_end);
+	latitude_end_min = 100*(latitude_end - latitude_end_deg);
 	
-	//	Dialog.addString("     Latitude (DD.MM for North,   -DD.MM for South)",latitude );
-	//	Dialog.addString("Longitude (DDD.MM for West, -DDD.MM for Est)",longitude );	
-	//	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-	
-	longitude_end = parseFloat(longitude_end);
+	longitude_end = parseFloat(longitude_end);	
 	longitude_ew = newArray("W","E");
 	if (longitude_end < 0) { longitude_ew = newArray("E","W");	}
 	longitude_end = abs(longitude_end);
-	longitude_deg = floor(longitude_end);
-	longitude_min = 100*(longitude_end - longitude_deg);	
-	Dialog.addNumber("ENDING LONGITUDE (degree) ",longitude_deg);
-	Dialog.addNumber("ENDING LONGITUDE (minute) ",longitude_min);
+	longitude_end_deg = floor(longitude_end);
+	longitude_end_min = 100*(longitude_end - longitude_end_deg);
+	
+	Dialog.addNumber("ENDING LATITUDE (degree) (missing value : 99999) ",latitude_end_deg);
+	Dialog.addNumber("ENDING LATITUDE (minute) (missing value : 0)",latitude_end_min);
+	Dialog.addChoice("ENDING LATITUDE (N/S)    ",latitude_ns);
+	Dialog.addNumber("ENDING LONGITUDE (degree) (missing value : 99999)",longitude_end_deg);
+	Dialog.addNumber("ENDING LONGITUDE (minute) (missing value : 0)",longitude_end_min);
 	Dialog.addChoice("ENDING LONGITUDE (E/W)    ",longitude_ew);
 	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-	
 	Dialog.addString("Ship ",ship );
-	Dialog.addNumber("Ship speed (knots) 9999 if not documented",parseInt(ship_speed_knots) );
-	Dialog.addNumber("Cable speed (m/s) 9999 if not documented",parseInt(cable_speed) );
-	Dialog.addNumber("      Cable angle from vertical (°) 9999 if not documented",parseInt(cable_angle) );
-	Dialog.addNumber("Cable length (m) 9999 if not documented",parseInt(cable_length) );
-	
 	Dialog.addString("CTD reference (filename) ",ctdref );
-	
-	Dialog.addNumber("Nb of jars for the sample, 9999 if not documented",parseInt(nb_jar) );
-	
-	Dialog.addString("BARCODE ",barcode);	
-	
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");	
+	Dialog.addNumber("Number of tows in the sample jar ",townb );
+	Dialog.addNumber("         Total filtered volume (m3), (sum of the nets), 99999 if unknown)",vol );
+	vol_qc_liste = newArray(" ","1 : RECORDED volume (flowmeter)","2 : CALCULATED volume (using the mean volume of other nets)","3 : ESTIMATED volume (net AREA x towed DISTANCE)"); //,"0 : to be LATER documented");
+	val = parseInt(vol_qc);
+//	if (val == 0) val = 4;
+	vol_qc_val = vol_qc_liste[val];
+	vol_qc_liste[0] = vol_qc_val;
+	Dialog.addChoice("Quality Flag of the filtered volume of the net ",vol_qc_liste);
+	Dialog.addString("Add sample comment ",sample_comment);	
+	Dialog.addNumber("Nb of jars for the sample, 9999 if not documented",parseInt(nb_jar) );	
+	Dialog.addString("BARCODE (separated by ''_'' if many) ",barcode);		
 	if (czz == true) {	Dialog.addString("CCP location code ",otherref );  }
-	else {			Dialog.addString("Other reference ",otherref );  }	
+	else {			Dialog.addString("Other reference ",otherref );  }		
+
+	sampleqc_air = parseInt(substring(sample_qc,0,1));
+	sampleqc_rich = parseInt(substring(sample_qc,1,2));
+	sampleqc_cond = parseInt(substring(sample_qc,2,3));
+	sampleqc_dist = parseInt(substring(sample_qc,3,4));
 	
-	jar_air_qc_liste = newArray("1 : airtighness OK","2 : airtighness NOK","0 : to be LATER documented");
-	Dialog.addChoice("JAR airtighness ",jar_air_qc_liste);
+	jar_air_qc_liste = newArray(" ","1 : JAR airtighness OK","2 : JAR airtighness NOK"); //,"0 : to be LATER documented");
+	aa = jar_air_qc_liste[sampleqc_air];
+	jar_air_qc_liste[0] = aa;	
+	Dialog.addChoice("JAR airtighness ",jar_air_qc_liste);	
 	
-	jar_richness_liste = newArray("1 : NORMAL richness","2 : VERY RICH sample","3 : almost NO PLANKTON sample","0 : to be LATER documented");
+	jar_richness_liste = newArray(" ","1 : NORMAL richness","2 : VERY RICH sample","3 : NO PLANKTON (almost) in sample"); // ,"0 : to be LATER documented");
+	aa = jar_richness_liste[sampleqc_rich];
+	jar_richness_liste[0] = aa;		
 	Dialog.addChoice("SAMPLE richness ",jar_richness_liste);
 	
-	jar_condition_liste = newArray("1 : GOOD conditionning","2 : DRYED (no remaining liquid)","3 : ROTTEN (loss of fixative)","0 : to be LATER documented");
-	Dialog.addChoice("SAMPLE conditionning ",jar_condition_liste);
+	jar_condition_liste = newArray(" ","1 : GOOD conditionning","2 : DRYED (no remaining liquid)","3 : ROTTEN (loss of fixative)"); //,"0 : to be LATER documented");
+	aa = jar_condition_liste[sampleqc_cond];
+	jar_condition_liste[0] = aa;		
+	Dialog.addChoice("SAMPLE conditionning ",jar_condition_liste);	
 	
-	jar_disturb_liste = newArray("1 : NO disturbing elements","2 : ONE or FEW very large objects present in the jar","3 : SOUP (phytoplankton - organic matter - clay/mud/mineral)","0 : to be LATER documented");
+	jar_disturb_liste = newArray(" ","1 : NO disturbing elements","2 : ONE or FEW very large objects present in the jar","3 : SOUP (phytoplankton - organic matter - clay/mud/mineral)"); //,"0 : to be LATER documented");
+	aa = jar_disturb_liste[sampleqc_dist];
+	jar_disturb_liste[0] = aa;
 	Dialog.addChoice("SAMPLE content ",jar_disturb_liste);
+	Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	
-	Dialog.show;
-	
-	net_duration = Dialog.getNumber();
-	
-	/*	Latitude_end = Dialog.getString();
-	if (toLowerCase(Latitude_end) != "nan") {
-	if (indexOf(Latitude_end,".") < 0 && indexOf(Latitude_end,"999") < 0) { message = message + "Latitude is not a number (add decimals) \n  "; check = 1; } // if	
-	if (indexOf(Latitude_end,"°") > 0 && indexOf(Latitude_end,"999") < 0) { message = message + "Latitude format is not OK \n  "; check = 1; } // if
-	}
-	latitude_end  = toString(Latitude_end);
-	
-	Longitude_end = Dialog.getString();
-	if (toLowerCase(Longitude_end) != "nan") {
-	if (indexOf(Longitude_end,".") < 0 && indexOf(Longitude_end,"999") < 0) { message = message + "Longitude is not a number (add decimals) \n  "; check = 1; } // if
-	if (indexOf(Longitude_end,"°") > 0 && indexOf(Longitude_end,"999") < 0) { message = message + "Longitude format is not OK \n  "; check = 1; } // if	
-	}
-	longitude_end  = toString(Longitude_end);
-	*/	
+	Dialog.show;	
 	
 	latitude_deg = Dialog.getNumber();
 	if (indexOf(toString(latitude_deg),".") >= 0) {message = message + "Latitude (degree) is not an integer \n "; check = 1; }
-	if (latitude_deg > 90) {message = message + "Latitude (degree) > 90 \n "; check = 1; }
+	if (latitude_deg > 90 && latitude_deg != 99999) {message = message + "Latitude (degree) > 90 \n "; check = 1; }
 	if (latitude_deg < 0) {message = message + "Latitude (degree) must not be signed \n "; check = 1; }
 	
 	latitude_min = Dialog.getNumber();
@@ -393,7 +367,7 @@ while (check ==1) {
 	
 	longitude_deg = Dialog.getNumber();
 	if (indexOf(toString(longitude_deg),".") >= 0) {message = message + "Longitude (degree) is not an integer \n "; check = 1; }
-	if (longitude_deg > 180) {message = message + "Longitude (degree) > 180 \n "; check = 1; }
+	if (longitude_deg > 180 && longitude_deg != 99999) {message = message + "Longitude (degree) > 180 \n "; check = 1; }
 	if (longitude_deg < 0) {message = message + "Longitude (degree) must not be signed \n "; check = 1; }		
 	
 	longitude_min = Dialog.getNumber();
@@ -417,12 +391,6 @@ while (check ==1) {
 	if (ind != -1) { Ship = replace(Ship," ","_"); 						 }
 	ship  = Ship;
 	
-	Ship_speed_knots = Dialog.getNumber();
-	ship_speed_knots  = Ship_speed_knots;
-	cable_speed = Dialog.getNumber();
-	cable_angle = Dialog.getNumber();
-	cable_length = Dialog.getNumber();
-	
 	CTDref = Dialog.getString();
 	a= lengthOf(CTDref );
 	if (a==0) {message = message+ "CTDref empty \n";		check = 1;		} // if
@@ -430,10 +398,39 @@ while (check ==1) {
 	if (ind != -1) { CTDref  = replace(CTDref ," ","_"); 					 }
 	ctdref  = CTDref;
 	
+	Townb = Dialog.getNumber();
+	if (Townb == 0) { message = message + "The Townb is not a number or Townb set to 0   \n  "; check = 1;} // if
+	townb  = Townb;
+	
+	Vol = Dialog.getNumber();
+	if (Vol == 0) { message = message + "The filtered volume is not a number or set to 0   \n  "; check = 1;} // if
+	vol  = Vol;
+	
+	Vol_qc = Dialog.getChoice();
+	if (Vol_qc == " ") { message = message + "VOLUME QC = '' '', select correct criteria   \n  "; check = 1;} // if
+	vol_qc = substring(Vol_qc,0,1);
+	
+	sample_comment = Dialog.getString();
+	sample_comment = toLowerCase(sample_comment);
+	sample_comment  = replace(sample_comment ," ","_");
+	sample_comment  = replace(sample_comment ,".","_");
+	sample_comment  = replace(sample_comment ,";","_");
+	sample_comment  = replace(sample_comment ,"=","_");
+	sample_comment  = replace(sample_comment ,"+","_");
+	sample_comment  = replace(sample_comment ,"/","_");
+	sample_comment  = replace(sample_comment ,"-","_");	
+	
 	nb_jar = Dialog.getNumber();
 	
 	barcode = Dialog.getString();	
 	barcode = toLowerCase(barcode);	
+	barcode  = replace(barcode ," ","_");
+	barcode  = replace(barcode ,".","_");
+	barcode  = replace(barcode ,";","_");
+	barcode  = replace(barcode ,"=","_");
+	barcode  = replace(barcode ,"+","_");
+	barcode  = replace(barcode ,"/","_");
+	barcode  = replace(barcode ,"-","_");
 	
 	Otherref = Dialog.getString();
 	a= lengthOf(Otherref );
@@ -454,11 +451,13 @@ while (check ==1) {
 	Jar_disturb_liste= Dialog.getChoice();	
 	sample_qc4 = substring(Jar_disturb_liste,0,1);
 	
-	sample_qc = sample_qc1+sample_qc2+sample_qc3+sample_qc4;	
+	sample_qc = sample_qc1+sample_qc2+sample_qc3+sample_qc4;
 	
+	if (longitude_end == "0.0" && latitude_end == "0.0") { check = getBoolean( "The ending latitude and longituide are 0.0. \nDid you really sample at this position ? \n \nPlease consider documenting this fields by pressing YES. \nPress NO otherwise.");	}
 	if (check == 1) { message = message + " \nEnter values again              ";		showMessage(message); 	} // if
 	
 } // while
+
 
 // ------------------- FIN ---------------------------
 texte = sample+" "+scanop+" "+ship+" "+scientificprog+" "+stationId+" "+date+" "+latitude+" "+longitude+" "+depth+" "+ctdref+" "+otherref+" "+townb+" "+towtype+" "+nettype+" "+netmesh+" "+netsurf+" "+zmax+" "+zmin+" "+vol+" "+sample_comment+" "+vol_qc+" "+depth_qc+" "+sample_qc+" "+barcode+" "+latitude_end+" "+longitude_end+" "+net_duration+" "+ship_speed_knots+" "+cable_length+" "+cable_angle+" "+cable_speed+" "+nb_jar;

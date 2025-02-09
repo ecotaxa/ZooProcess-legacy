@@ -1,6 +1,8 @@
 // ------------------ uvp5_get_data_from_c110.txt -----------------------
-version =	 "7.20";
-date =	 "2015/03/20";
+version =	 "8.27";
+date =	 "2024/09/25";
+
+// camera temperature
 
 ff = getArgument();
 ret = ff;
@@ -16,7 +18,7 @@ if (indexOf(ff,"C110") >= 0) {
 		depth = c110[1+4];			neg = substring(depth,0,1);
 		angle = c110[2+4];			temp = c110[4+4];				voltage = c110[5+4];
 		data_nb = c110[2];			data_size = c110[3];				data_grey = c110[4];	
-		fd_space = c110[1];		
+		fd_space = c110[1];			cam_temp = c110[11+4];	
 		factor= 1;
 		if ( voltage != "aaaaa") {
 			if (neg ==  "-" )  {	depth = substring(depth,1,5); factor = -1;	}
@@ -27,11 +29,13 @@ if (indexOf(ff,"C110") >= 0) {
 			if (lengthOf(voltage) < 3) voltage = voltage+".0";
 			if (lengthOf(voltage) == 4) voltage = voltage+"0";
 			temp = parseInt(temp);		temp = toString(temp);
-			//	ret = "ACQ : "+angle+"°   "+temp+"°C   "+voltage+"V   "+depth+"m   "+data;
-			ret = angle+" "+temp+" "+voltage+" "+depth+" "+data_nb+" "+data_size+" "+data_grey+" "+fd_space;
+			cam_temp = parseFloat(cam_temp);
+			cam_temp = cam_temp/1000;
+			cam_temp = toString(cam_temp);
+			cam_temp = substring(cam_temp,0,lengthOf(cam_temp));
+			ret = angle+" "+temp+" "+voltage+" "+depth+" "+data_nb+" "+data_size+" "+data_grey+" "+fd_space+" "+cam_temp;
 		}
 	}
 }
 // ------------ FIN ----------------------
 return ret;
-

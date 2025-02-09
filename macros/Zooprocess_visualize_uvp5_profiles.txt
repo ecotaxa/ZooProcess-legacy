@@ -1,9 +1,10 @@
 // --------------------------- Zooprocess_visualize_uvp5_profiles -----------------------------------------------
-version = "7.38";
-date = "2020/04/09";
+version = "7.44";
+date = "2021/08/25";
 
 // RAW abundance data for control
 // Possible en boucle
+// Z (m) => Z (decibar)
 
 args = 	getArgument();
 arg = 	split(args," ");
@@ -337,7 +338,7 @@ for (cast = 0; cast<listsel.length; cast++) {
 		if (miniy == 0) nbtics =  floor(abs(maxiy)/Zstep);
 		
 		// --------------- Abondances brutes (controle) -------
-		if (yoyo_opt != "H" ) {	Plot.create(profile+" abundance_raw",profile,"Z (m)");	}
+		if (yoyo_opt != "H" ) {	Plot.create(profile+" abundance_raw",profile,"Z (decibar)");	}
 		else {			Plot.create(profile+" abundance_raw",profile,"Time (sec)");	}
 		Plot.setLimits(minix, maxixab, miniy, maxiy);
 		Plot.setColor("orange");
@@ -347,7 +348,7 @@ for (cast = 0; cast<listsel.length; cast++) {
 		rename("All");
 		
 		// ---------------- Abondance -------------------------
-		if (yoyo_opt != "H" ) {	Plot.create(profile+" abundance",profile,"Z (m)");	}
+		if (yoyo_opt != "H" ) {	Plot.create(profile+" abundance",profile,"(decibar)");	}
 		else {			Plot.create(profile+" abundance",profile,"Time (sec)");	}
 		Plot.setLimits(minix, maxixab, miniy, maxiy);
 		Plot.setColor("red");
@@ -362,7 +363,7 @@ for (cast = 0; cast<listsel.length; cast++) {
 		//	saveAs("jpg", dirprocessed+"UVP5_"+profile+"_abundance_a.jpg"); 
 		
 		// ---------------- grey -------------------------
-		if (yoyo_opt != "H" ) {	Plot.create(profile+" grey",profile,"Z (m)");	}
+		if (yoyo_opt != "H" ) {	Plot.create(profile+" grey",profile,"Z (decibar)");	}
 		else {			Plot.create(profile+" grey",profile,"Time (sec)");	}
 		Plot.setLimits(minix, maxixgrey, miniy, maxiy);
 		Plot.setColor("blue");
@@ -375,7 +376,7 @@ for (cast = 0; cast<listsel.length; cast++) {
 		imageCalculator("AND", "All","UVP5_"+profile+"_grey.jpg");
 		
 		// ---------------- size (0-200µm)-------------------------
-		if (yoyo_opt != "H" ) {	Plot.create(profile+" size",profile,"Z (m)");	}
+		if (yoyo_opt != "H" ) {	Plot.create(profile+" size",profile,"Z (decibar)");	}
 		else {			Plot.create(profile+" size",profile,"Time (sec)");	}
 		Plot.setLimits(minix, maxixsize, miniy, maxiy);
 		Plot.setColor("green");

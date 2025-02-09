@@ -1,6 +1,9 @@
 //--------------------------Zooscan_separation-----------------------------------
 // L'image VIS est OUVERTE, Results est fermee a chaque fois qu''on relance l'analyse des particules (s'i est ouvert !)
-print("Version= 25/01/2006_Picheral_CNRS")
+version = "7.44";
+date = "2021/08/27";
+
+// LOGS
 
 //-------------------INITIALISATION-----------------------------------------
 //arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ 
@@ -363,9 +366,11 @@ if (res== 1) {saveAs("measurements",chemconfig+"measurementsB.txt");	} // if
 
 
 // Sauvegarde du LOG...
-selectWindow("Log");
-sauve = "save=" + chemwork + titrered + "_log.txt";
-run("Text...",sauve);
+if (isOpen("Log")) {	selectWindow("Log");
+	sauve = "save=" + chemwork + titrered + "_log.txt";
+	run("Text...",sauve);	
+}
+else {	showMessage("Log error in Zooscan_Separation.txt for "+titrered + "_log.txt");	}
 
 ret = arg;
 return ret;

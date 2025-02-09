@@ -1,6 +1,8 @@
 // --------------------------- Saisie des entetes --------------------------------
-date = "2011/12/08";
-version = "7.07";
+date = "2021/08/27";
+version = "7.44";
+
+// LOGs
 
 // --------------------------------------------------------------------------------------------------
 //arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ maskpar +" "+chemscan+" "+chemwork1 +" "+savevig+" "+savezip+" "+maskod +" "+ident +" "+maskident +" "+vis+" "+maskvis+" "+xxx+" "+yyy+" "+savetag;
@@ -506,17 +508,15 @@ for (i=0; i<30 ; i++) { data = metadatamat[i]; 	print(data);	} // for
 message = "Metadata modified in the following files : \n ";
 
 // ----------------------- Sauvegarde des infos dans un fichier des metadata du nom de l'image -----------------
-selectWindow("Log");
-sauvemeta = "save=" + chemfile + "_meta.txt";
-run("Text...",sauvemeta);
-message = message+"\n- "+chemfile + "_meta.txt \n ";
-
-// -------------------- Sauvegarde des infos dans un fichier de Backup des metadata ------------------------------
-if (chemconfig != "edit") {
-	selectWindow("Log");
-	sauvebu= "save="+chemmeta+ "metadata.txt";
-	run("Text...",sauvebu);
-} // if 
+if (isOpen("Log")) {	selectWindow("Log");	sauvemeta = "save=" + chemfile + "_meta.txt";	run("Text...",sauvemeta);	message = message+"\n- "+chemfile + "_meta.txt \n ";
+	// -------------------- Sauvegarde des infos dans un fichier de Backup des metadata ------------------------------
+	if (chemconfig != "edit") {
+		selectWindow("Log");
+		sauvebu= "save="+chemmeta+ "metadata.txt";
+		run("Text...",sauvebu);
+	} // if 
+}
+else {	showMessage("Log error in Zooscan_1cm.txt for "+chemmeta+ "metadata.txt");	}
 
 // -------------------- Mise a jour du/des PID, du/des LOG, du/des META ---------------------------------------------
 if (chemconfig == "edit") {
@@ -660,8 +660,8 @@ if (chemconfig == "edit") {
 		} // for
 		for (i=0; i<array.length ; i++) {	data = array[i];	print(data);	} // for
 		// ----------------- Enregistrement ----------------------------------------
-		selectWindow("Log");
-		run("Text...","save="+text);
+		if (isOpen("Log")) {	selectWindow("Log");		run("Text...","save="+text);		}
+		else {	showMessage("Log error in Zooscan_1cm.txt for "+chemmeta+ "metadata.txt");		}
 		message = message+"\n- "+text;
 	} // for
 	print("A purger");	selectWindow("Log");	run('Close');

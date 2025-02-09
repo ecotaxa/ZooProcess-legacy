@@ -1,0 +1,27 @@
+// ----------------------- Zooprocess_select_drive ---------------
+version = "8.09";
+date = "2022/02/22";
+
+message = 	getArgument();
+
+// ---------------------- Vérification des disques et selection ---------------------------
+drives = newArray("C:\\","D:\\","E:\\","F:\\","G:\\","H:\\","I:\\","J:\\","K:\\","L:\\","M:\\","N:\\","O:\\","P:\\","Q:\\","R:\\","S:\\","T:\\","U:\\","V:\\","W:\\","X:\\","Y:\\","Z:\\");
+affdrive = newArray(25);
+ind = 0;
+t= 0;
+while (t<drives.length) {
+	if (File.exists(drives[t])) { 	ex = drives[t];	affdrive[ind] = ex;	ind++;	} // if
+	t++;
+} // while
+aff = newArray(ind);
+for (r=0;r<ind;r++) { aff[r] = affdrive[r];	} // if
+Dialog.create("Drive selector                version "+version);	
+Dialog.addMessage("-------------------------------------------------------------------------------------------- ");
+Dialog.addMessage(message);
+Dialog.addChoice("           ",aff);
+Dialog.addMessage("-------------------------------------------------------------------------------------------- ");
+Dialog.show();
+drive = Dialog.getChoice();
+
+// ------------------ Fin -----------------------
+return drive;

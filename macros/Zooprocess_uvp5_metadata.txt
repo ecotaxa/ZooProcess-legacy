@@ -1,6 +1,6 @@
 // ------------------------- Zooprocess_uvp5_metadata --------------------
-version = "7.39";
-date = "2020/04/10";
+version = "8.20";
+date = "2024/01/14";
 
 // retrait ImageVol, Aa et Expo
 // update all
@@ -13,6 +13,9 @@ date = "2020/04/10";
 // Fomat de saisie latitude et longitude
 // Limitation last image changée
 // Last image issu de la détection auto
+// backup header file
+// retrait des controles sur la meteo
+// last image conservée lorsque resaisie
 
 arg = 		getArgument(); 
 array = 	split(arg," ");
@@ -25,7 +28,17 @@ ee = indexOf(path,'uvp5_sn');
 if (ee>1) {	Cruise = substring(path,ee+5,long);		}
 else {		Cruise  = 	substring(path,9,long);		}
 metafile = "uvp5_header_"+Cruise+".txt";
+metaname =  "uvp5_header_"+Cruise;
 macro_flag = "no";
+chemmeta = path+"\\meta\\";
+
+// ------------- Lecture de l'heure -----------------
+dateheuremmss =	runMacro("uvp5_get_time");
+
+// ------------- creation du repertoire de sauvegarde des archives des meta ---------
+chemarchives = 	chemmeta+"\\archives\\";
+File.makeDirectory(chemarchives);
+
 // ------------ WARNING ------------------------------------------------
 if (option == "update_all") {
 	bb = getBoolean("WARNING !!!!! \n \nThis tool will update ALL metadata in ALL files using "+metafile+" metadata. \nPRESS YES/OK to CONTINUE !");
@@ -36,7 +49,7 @@ maxgg = 100000;
 paramlist = "cruise;ship;filename;profileid;bottomdepth;ctdrosettefilename;latitude;longitude;firstimage;volimage;aa;exp;dn;winddir;windspeed;seastate;nebuloussness;comment;endimg;yoyo;stationid";
 
 // ----------------- Metafile pour UVP5 --------------------------------	
-filelist  = 	getFileList(path+"\\meta\\");
+filelist  = 	getFileList(chemmeta);
 
 //--------------- Selection des fichiers  -------------------
 j = 0;
@@ -49,16 +62,16 @@ for (i=0; i<filelist.length ; i++) {
 
 //---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
 if ( j == 0 ) {
-	ab = getBoolean("No metadata file in the selected project. \nPress YES to create a file and add a profile !          ");
+	showMessage("A new ''uvp5_header_"+Cruise+".txt'' metadata file is now created.");
 	option = "create";
 } //
-else if (File.exists(path+"\\meta\\"+metafile) == false && j==1) { configpres = 0;	File.rename(path+"\\meta\\"+list[0],path+"\\meta\\"+metafile);		showMessage(list[0]+" is renamed "+metafile+" according to CRUISE name.");	} //
+else if (File.exists(chemmeta+metafile) == false && j==1) { configpres = 0;	File.rename(chemmeta+list[0],chemmeta+metafile);		showMessage(list[0]+" is renamed "+metafile+" according to CRUISE name.");	} //
 print("A purger");	selectWindow("Log");	run('Close');
 
 // ------------------ CREATE empty -----------------
 if (option == "create") {
 	print(paramlist);	
-	sauve = "save=" + path+"\\meta\\"+metafile;
+	sauve = "save=" + chemmeta+metafile;
 	selectWindow("Log");
 	run("Text...",sauve);
 	run('Close');
@@ -66,12 +79,14 @@ if (option == "create") {
 } // 
 
 // ----------------------------- ADD EDIT ----------------------------------
-open(path+"\\meta\\"+metafile);
+open(chemmeta+metafile);
 wait(100);
 metadata = getInfo();
 run('Close');
 array = split(metadata,"\n");
 arrayrec = split(metadata,"\n");
+// ------------- Test longueur dernière ligne ------------
+if (array[array.length - 1] < 20) { aa = getBoolean("The "+chemmeta+metafile+" file must end with an empty line. \n \nPress CANCEL to abort. \n \nCorrect the file before restarting ''Fill in the metadata''.");	}
 liste = 		newArray(array.length-1);
 cruise = 		newArray(array.length);
 ship = 			newArray(array.length);
@@ -97,6 +112,13 @@ stationid =		newArray(array.length);
 profile_id_done = 	newArray(maxgg);
 profile_id_done[0] = "no";
 nbprofile_id_done = 	array.length;
+
+// ----------------- enregistrement fichier header d'origine -----------
+print("A purger");	selectWindow("Log");		run("Close");
+for (dl=0; dl< array.length ; dl++) {		texte = array[dl];		print(texte);	}	
+selectWindow("Log");
+text = "save="+chemarchives+metaname+"_"+dateheuremmss+".txt";
+run("Text...",text);
 
 // ---------------- Valeurs initiales ---------------------------------------------
 // ------- Ouverture du fichier de configuration du module de pilotage ------------
@@ -126,10 +148,10 @@ Latitude =	0;
 Longitude =	0;
 Firstimage =	0;
 Dn =		"D";
-Winddir =	9999;
-Windspeed =	9999;
-Seastate =	99;
-Nebuloussness =	99;
+Winddir =	0;
+Windspeed =	0;
+Seastate =	0;
+Nebuloussness =	0;
 Comment = 	"no";
 Lastimage = 	99999999;
 Yoyo_opt =	"N";
@@ -150,15 +172,15 @@ if (option != "create" ) {
 		Ctdrosettefile =	ligne[5];
 		Latitude =	ligne[6];
 		Longitude =	ligne[7];
-		Firstimage =	ligne[8];
+		Firstimage =	parseInt(ligne[8]);
 		Imagevol =	ligne[9];
 		Aa =		ligne[10];
 		Expo =		ligne[11];
 		Dn =		ligne[12];
-		Winddir =	ligne[13];
-		Windspeed =	ligne[14];
-		Seastate =	ligne[15];
-		Nebuloussness =	ligne[16];
+		Winddir =	parseInt(ligne[13]);
+		Windspeed =	parseInt(ligne[14]);
+		Seastate =	parseInt(ligne[15]);
+		Nebuloussness =	parseInt(ligne[16]);
 		if (ligne.length > 17 )	{	Comment =	ligne[17];		} // if
 		else { 				Comment = " ";			} // else
 		if (ligne.length == 21 ){	Lastimage =	ligne[18];	Yoyo_opt = ligne[19];		Stationid = ligne[20];		} // if
@@ -206,15 +228,15 @@ if (option == "update_all" ) {
 		Ctdrosettefile =	ligne[5];
 		Latitude =	ligne[6];
 		Longitude =	ligne[7];
-		Firstimage =	ligne[8];
+		Firstimage =	parseInt(ligne[8]);
 		Imagevol =	ligne[9];
 		Aa =		ligne[10];
 		Expo =		ligne[11];
 		Dn =		ligne[12];
-		Winddir =	ligne[13];
-		Windspeed =	ligne[14];
-		Seastate =	ligne[15];
-		Nebuloussness =	ligne[16];
+		Winddir =	parseInt(ligne[13]);
+		Windspeed =	parseInt(ligne[14]);
+		Seastate =	parseInt(ligne[15]);
+		Nebuloussness =	parseInt(ligne[16]);
 		if (ligne.length > 17 )	{	Comment =	ligne[17];		} // if
 		else { 				Comment = " ";			} // else
 		if (ligne.length == 21 ){	Lastimage =	ligne[18];	Yoyo_opt = ligne[19];		Stationid = ligne[20];		} // if
@@ -397,15 +419,15 @@ if (option == "edit") {
 		Ctdrosettefile =ligne[5];
 		Latitude =	ligne[6];
 		Longitude =	ligne[7];
-		Firstimage =	ligne[8];
+		Firstimage =	parseInt(ligne[8]);
 		Imagevol =	ligne[9];
 		Aa =		ligne[10];
 		Expo =		ligne[11];
 		Dn =		ligne[12];
-		Winddir =	ligne[13];
-		Windspeed =	ligne[14];
-		Seastate =	ligne[15];
-		Nebuloussness =	ligne[16];
+		Winddir =	parseInt(ligne[13]);
+		Windspeed =	parseInt(ligne[14]);
+		Seastate =	parseInt(ligne[15]);
+		Nebuloussness =	parseInt(ligne[16]);
 		if (ligne.length > 17 )	{	Comment =	ligne[17];		} // if
 		else { 				Comment = "no";			} // else
 		if (ligne.length == 21 ){	Lastimage =	ligne[18];	Yoyo_opt = ligne[19];		Stationid = ligne[20];		} // if
@@ -560,8 +582,11 @@ if (option == "edit") {
 			if (longitude_ew == "W") Longitude = "-"+Longitude;
 			
 			Firstimage = Dialog.getNumber();
+			Firstimage = round(Firstimage);
 			if (Firstimage == 0) { message = message + "Firstimage is not a number  or Firstimage set to 0   \n  "; check = 1;		} // if
+			
 			Lastimage = Dialog.getNumber();
+			Lastimage = round(Lastimage);
 			if (Lastimage == 0 || Lastimage < Firstimage ) { message = message + "Lastimage is not a number  or Lastimage set to < Firstimage   \n  "; check = 1;		} // if
 			Lastimage = toString(Lastimage);
 			
@@ -581,15 +606,19 @@ if (option == "edit") {
 			Winddir = round(Winddir);
 			if (Winddir > 360 && Winddir != 9999) { message = message + "Winddir is > 360 !   \n  "; check = 1;		} // if
 			if (Winddir < 0) { message = message + "Winddir is < 0 !   \n  "; check = 1;		} // if
+			
 			Windspeed = Dialog.getNumber();
 			Windspeed = round(Windspeed);
 			if (Windspeed > 100 && Windspeed != 9999) { message = message + "Windspeed > 100 !   \n  "; check = 1;		} // if
 			if (Windspeed < 0) { message = message + "Windspeed < 0 !   \n  "; check = 1;		} // if
+			
 			Seastate = Dialog.getNumber();
+			Seastate = round(Seastate);
 			if (Seastate > 12 && Seastate != 99 ) { message = message + "Seastate is > 12 !   \n  "; check = 1;		} // if
 			if (Seastate < 0) { message = message + "Seastate is < 0 !   \n  "; check = 1;		} // if
 			
 			Nebuloussness = Dialog.getNumber();
+			Nebuloussness = round(Nebuloussness);
 			if (Nebuloussness > 8 && Nebuloussness != 99) { message = message + "Nebuloussness > 8 !   \n  "; check = 1;		} // if
 			if (Nebuloussness < 0) { message = message + "Nebuloussness < 0 !   \n  "; check = 1;		} // if
 			
@@ -600,7 +629,7 @@ if (option == "edit") {
 			if (ind != -1) { Comment  = replace(Comment," ","_"); 				 }
 			if (check == 1) { message = message + " \nEnter values again              ";	showMessage(message); 	} // if	
 			else {	// ------------------------ Recuperation des donnees existantes ---------------------------------------
-				open(path+"\\meta\\"+metafile);
+				open(chemmeta+metafile);
 				wait(100);
 				metadata = getInfo();
 				run('Close');
@@ -628,7 +657,7 @@ if (option == "edit") {
 				Profile_id = toLowerCase(Profile_id);
 				Ctdrosettefile = toLowerCase(Ctdrosettefile);
 				Comment = toLowerCase(Comment);
-				Firstimage= toString(Firstimage);
+				Firstimage= toString(round(Firstimage));
 				print(Cruise+";"+Ship+";"+Filename+";"+Profile_id+";"+Bottomdepth+";"+Ctdrosettefile+";"+Latitude+";"+Longitude+";"+Firstimage+";"+Imagevol+";"+Aa+";"+Expo+";"+Dn+";"+Winddir+";"+Windspeed+";"+Seastate+";"+Nebuloussness+";"+Comment+";"+Lastimage+";"+Yoyo_opt+";"+Stationid);
 				
 				// ---------------- Impression lignes suivantes ------------------------------
@@ -642,11 +671,11 @@ if (option == "edit") {
 				} // for
 				
 				// ---------------- Sauvegarde uvp5_header---------------------------------
-				sauve = "save=" + path+"\\meta\\"+metafile;
+				sauve = "save=" + chemmeta+metafile;
 				selectWindow("Log");
 				run("Text...",sauve);
 				run('Close');
-				message = message + path+"\\meta\\"+metafile+"\n";
+				message = message + chemmeta+metafile+"\n";
 				
 				// ---------------- Creation repertoire profil -------------------------------------------------
 				pathprofile = path+"\\work\\"+Profile_id+"\\";
@@ -889,7 +918,8 @@ if (option == "add") {
 					else {
 						images = split(macro_flag," ");
 						Firstimage = images[0];
-						img_max = images[1];
+//						img_max = images[1];
+						Lastimage = parseInt(images[1]);
 					}// else
 				}// if autoimag
 				
@@ -934,18 +964,14 @@ if (option == "add") {
 					Dialog.addChoice("LONGITUDE (E/W)    ",longitude_ew);
 					Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------");	
 					
-					Dialog.addNumber("First Image OK ",Firstimage);					
-					Dialog.addNumber("Last Image OK ",img_max);
+					Dialog.addNumber("First Image OK ",parseInt(Firstimage));					
+					Dialog.addNumber("Last Image OK ",parseInt(Lastimage));
 					if (Yoyo_opt == "N") {		Yoyo_opt = "Descent (First image & auto max depth)";}
 					else if (Yoyo_opt == "Y") {	Yoyo_opt = "Yoyo (Multiple casts in a unique sequence)";	}
 					else if (Yoyo_opt == "H") {	Yoyo_opt = "Other (needs First & Last Image)" ;	}
 					Yoyo_opt_mat = newArray(Yoyo_opt,"Descent (First image & auto max depth)","Yoyo (Multiple casts in a unique sequence)","Other (needs First & Last Image)");
 					Yoyo_opt_mat[0] = Yoyo_opt;
 					Dialog.addChoice("single Descent, Yoyo, Horizontal, single Ascent ",Yoyo_opt_mat);
-					//		Dialog.addNumber("Image volume ",Imagevol);
-					//
-					//					Dialog.addNumber("aa ",Aa);
-					//					Dialog.addNumber("Exp ",Expo);
 					aff = newArray("N","D","N");
 					aff[0] = Dn;
 					Dialog.addChoice("Day/Night       ",aff);
@@ -975,7 +1001,7 @@ if (option == "add") {
 					if (a==0) {message = message+ "ProfileId empty \n";	check = 1;		} // if
 					a= lengthOf(Profile_id);
 					if (a==0) {message = message+ "ProfileId empty \n";		check = 1;		} // if
-					if (a>=20) {message = message+ "ProfileId must be shorter than 20 characters. \n";		check = 1;		} // if
+					if (a>=30) {message = message+ "ProfileId must be shorter than 20 characters. \n";		check = 1;		} // if
 					Profile_id = replace(Profile_id," ","_"); 	
 					Profile_id = replace(Profile_id,";","_"); 
 					Profile_id = replace(Profile_id,".","_"); 
@@ -1048,14 +1074,6 @@ if (option == "add") {
 					else if (Yoyo_opt == "Yoyo (Multiple casts in a unique sequence)") {		Yoyo_opt = "Y";	} // if
 					else if (Yoyo_opt == "Other (needs First & Last Image)" ) {	Yoyo_opt = "H";	} // if
 					
-					//					Imagevol = Dialog.getNumber();
-					//					if (Imagevol == 0) { message = message + "Imagevol is not a number  or Imagevol set to 0   \n  "; check = 1;		} // if
-					
-					//					Aa = Dialog.getNumber();
-					//					if (Aa == 0) { message = message + "Aa is not a number  or Aa set to 0   \n  "; check = 1;		} // if
-					//					Expo = Dialog.getNumber();
-					//					if (Expo == 0) { message = message + "Exp is not a number  or Exp set to 0   \n  "; check = 1;		} // if
-					
 					Dn =  Dialog.getChoice();
 					
 					Winddir = Dialog.getNumber();
@@ -1081,13 +1099,13 @@ if (option == "add") {
 					if (a==0) { Comment = "no";		} // if
 					ind= indexOf(Comment," ");
 					if (ind != -1) { Comment  = replace(Comment," ","_"); 				 }
-					if (Profile_id == profile_id_done[h]) { check = getBoolean("Station Id : "+Profile_id+"  already used \nPress NO to keep station name\nPress YES to enter again station Id");	} // if
+					if (Profile_id == profile_id_done[h]) { check = getBoolean("The Sample/Profile Id : "+Profile_id+"  already used \n \nPress NO to keep the name (to be done if you just corrected some fill in mistakes)\nPress YES to enter a new Sample/profile Id");	} // if
 					profile_id_done[h] = Profile_id;
 					if (check == 1) { message = message + " \nEnter values again              ";		
 						showMessage(message); 	
 					} // if	
 					else {	// ------------------------ Recuperation des donnees existantes ---------------------------------------
-						open(path+"\\meta\\"+metafile);
+						open(chemmeta+metafile);
 						wait(100);
 						metadata = getInfo();
 						run('Close');
@@ -1111,7 +1129,7 @@ if (option == "add") {
 						Firstimage= toString(Firstimage);
 						print(Cruise+";"+Ship+";"+Filename+";"+Profile_id+";"+Bottomdepth+";"+Ctdrosettefile+";"+Latitude+";"+Longitude+";"+Firstimage+";"+Imagevol+";"+Aa+";"+Expo+";"+Dn+";"+Winddir+";"+Windspeed+";"+Seastate+";"+Nebuloussness+";"+Comment+";"+Lastimage+";"+Yoyo_opt+";"+Stationid);
 						// ---------------- Sauvegarde uvp5_header---------------------------------
-						sauve = "save=" + path+"\\meta\\"+metafile;
+						sauve = "save=" + chemmeta+metafile;
 						selectWindow("Log");
 						run("Text...",sauve);
 						run('Close');
@@ -1131,7 +1149,12 @@ if (option == "add") {
 				} // while
 				// --------------- Fermeture graph option --------------------
 				if (isOpen("UVP5_"+dirprofile+".jpg") == 1) {
+					"min_max_image"
 					selectImage("UVP5_"+dirprofile+".jpg");
+					close();
+				}// if
+				if (isOpen("min_max_image")) {
+					selectImage("min_max_image");
 					close();
 				}// if
 			} // if done
@@ -1147,13 +1170,17 @@ if (option == "add") {
 			flag=toString(macro_flag);
 			l= lengthOf(flag);
 			if (l==1)  { 	showMessage("Error message ''plot profiles'' process aborted.                       "); 	} // if
-
+			if (isOpen("min_max_image")) {
+				selectImage("min_max_image");
+				close();
+			}// if
+			
 			// ---------------- Sortie boucle saisie --------------------------
 			otherprofile = getBoolean("Enter another profile ?   ");
 		} // while otherprofile
 	} // else
 } // if				
-		
+
 
 // ---------------- FIN --------------------------------------------
 macro_flag = Filename+" "+Profile_id+" "+Firstimage+" "+Ctdrosettefile;

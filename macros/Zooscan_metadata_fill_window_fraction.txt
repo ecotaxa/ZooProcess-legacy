@@ -1,6 +1,6 @@
 // ------------------------- Zooscan_metadata_fill_window_fraction ----------------------------------------------
-version = "7.40";
-date = "2020/12/067";
+version = "8.03";
+date = "2021/12/15";
 requires("1.41o");
 
 // warning fracnb, test Motoda
@@ -45,7 +45,9 @@ while (check == true) {
 	Dialog.addMessage("---------------------------------------------------------------------------------------------------------------");
 	Dialog.addNumber("Fraction min mesh (µm) ",Fracmin);
 	Dialog.addNumber("Fraction max mesh (µm) ",Fracsup);
+	Dialog.addMessage("---------------------------------------------------------------------------------------------------------------");
 	Dialog.addNumber("Fraction spliting ratio x (1/x) ",Fracnb);
+	Dialog.addMessage("---------------------------------------------------------------------------------------------------------------");
 	Dialog.addString("Remark on fraction (no special char !) ",Observation);
 	Dialog.addString("SubMethod",Submethod);
 	Dialog.addMessage("---------------------------------------------------------------------------------------------------------------");

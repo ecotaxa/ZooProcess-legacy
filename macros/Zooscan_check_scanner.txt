@@ -1,0 +1,68 @@
+// -------------------------- Zooscan_check_scanner ----------------------
+version = "8.27";
+date = "2024/05/24";
+
+chemvue = 	getArgument();
+//chemvue = "C:\\VueScan\\";
+//chemvue = "C:\\Program_Files\\VueScan\\";
+scanner = "no";
+source = "0";
+findsource = false;
+chemvue = replace(chemvue,"_"," ");
+
+while (findsource == false) {
+	// ------------------ TEST de la Source dans Vuescan ----------------------------------
+	Dialog.create("CHECKING Zooscan model     version "+version);
+	Dialog.addMessage("----------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("The system will now help you to check that the Zooscan is \nrecognized by Vuescan 9.7.67");
+	Dialog.addMessage("Vuescan root folder : "+chemvue);
+	Dialog.addMessage("----------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("1) SWITCH ON the Zooscan");
+	Dialog.addMessage("2) LAUNCH ''Vuescan'' ");	
+	Dialog.addMessage("3) In the INPUT/SOURCE menu SELECT the connected scanner/Zooscan. ");
+	Dialog.addMessage("4) Press PREVIEW button and check that your Zooscan is running");
+	Dialog.addMessage("6) QUIT ''Vuescan'' ");
+	Dialog.addMessage("7) Press OK (only AFTER closing Vuescan) ");
+	Dialog.addMessage("----------------------------------------------------------------------------------------------------------------");
+	Dialog.addMessage("DO NOT PRESS CANCEL in any case !!!!!");
+	Dialog.addMessage("----------------------------------------------------------------------------------------------------------------");	
+	Dialog.show();
+	
+	// --------------- Lecture scanner dans vuescan.ini -----------------------------------------------------
+	open(chemvue +"\\vuescan.ini");
+	vueinfo = getInfo();
+	wait(100);
+	run('Close');
+	ligne = split(vueinfo,"\n");
+	for (k=0;k<ligne.length;k++) {
+		champ= ligne[k];
+		if (startsWith(champ,"[Crop-")) { champ = replace(champ,"rop-","rop ");	champ = replace(champ,"-Flat"," Flat"); tt = split(champ,"\ ");	scanner = tt[1];				}		 // if
+//		if (startsWith(champ,"Source=")) { champ = replace(champ,"="," ");	tt = split(champ,"\ ");	source = tt[1];		findsource = true;	}		 // if
+	} // for
+	// --------------- Version Zooscan --------------------------------------------------------------
+	zooscan = runMacro("Zooscan_define_zooscan_version.txt",scanner);
+	if (lengthOf(zooscan) == 1) { showMessage("WARNING !!! \nThere might be another scanner than the Zooscan connected to the computer. \nPlease disconnect this other scanner and never connect it again \nto avoid scanning issues !!!!"); }
+	else {	findsource = true;	}
+
+	/*
+	if (scanner == "no") {
+	for (k=0;k<ligne.length;k++) {
+	champ= ligne[k];
+	if (startsWith(champ,"Source=")) { champ = replace(champ,"="," ");	tt = split(champ,"\ ");	scanner = tt[1]+tt[2];	findsource = true;	}		 // if
+	if (startsWith(champ,"[Crop-")) { champ = replace(champ,"-"," ");	tt = split(champ,"\ ");	scanner = tt[1];	}		 // if
+	} // for
+	}
+	*/	
+	// ---------------- Affichage -------------------------------------------------------------------
+	//	if (findsource == false) {	
+	//		set = getBoolean("The source has not been set by Vuescan. \n \nPRESS OK to keep the default source "+source+" \n \nPRESS NO to manually enter new source number.");
+	//		if (set == 0) source = getNumber("Enter source number read in ''vuescan.ini'' ",source);
+	//	}//else
+	//	else {	showMessage("The source has been well detected. \nIt is now set to "+source);	}//if
+
+}
+showMessage("Scanner  : " + scanner + "\nZooscan  : "+zooscan+"\nSource # : " + source);
+
+// ------------------ Fin -----------------------
+ret = scanner + " " + source + " " + zooscan;
+return ret;

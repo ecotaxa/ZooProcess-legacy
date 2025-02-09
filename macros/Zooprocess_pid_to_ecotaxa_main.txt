@@ -1,12 +1,19 @@
 // ----------------------- Zooprocess_pid_to_ecotaxa_main --------------------
-version = "7.23";
-date = "2017/02/04";
+version = "8.28";
+date = "2025/01/09";
+
+// link : http://piqv.imev-mer.fr
+// mask = false
+// 8.28 : Exclusion des fichiers archives "before_reconstruction"
 
 arg = 		getArgument(); 
 array = 	split(arg," ");
-projfolder= 		array[0];
+projfolder= 	array[0];
 instrum = 	array[1];
-outlines = false;
+
+pathmeta = projfolder+"\\meta\\";
+
+mask = false;
 
 // ----------------- Choix répertoire de travail ---------------------
 options = newArray(2);
@@ -22,16 +29,15 @@ Dialog.addMessage("-------------------------------------------------------------
 Dialog.addMessage("SELECT OPTION :   ");
 Dialog.addChoice("       ", options);
 Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
-Dialog.addString("   Enter link to be added to the vignettes ","http://www.zooscan.obs-vlfr.fr//");
-Dialog.addCheckbox("Create additional vignette with B&W mask (valid ONLY for TSV from sorted vignettes) ",false);
+Dialog.addString("   Enter link to be added to the vignettes ","http://piqv.imev-mer.fr//");
+//Dialog.addCheckbox("Create additional vignette with B&W mask (valid ONLY for TSV from sorted vignettes) ",false);
 Dialog.addCheckbox("Set Status to ''prediced'' instead of ''Validated'' (for sorted vignettes imported from Zooprocess) ",true);
 Dialog.addMessage("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
 Dialog.show();
 option = 		Dialog.getChoice();
 link = 			Dialog.getString();
-outlines = 		Dialog.getCheckbox();
+//mask = 		Dialog.getCheckbox();
 status = 		Dialog.getCheckbox();
-
 //	if (option == options[0]) { 					path_job = getDirectory("SELECT FOLDER");		}// if
 if (option == options[1]) {					path_job = projfolder+"\\PID_process\\Pid_results\\Dat1_validated";	}
 else if (option == options[0] && instrum == "zooscan") {	path_job = projfolder+"\\Zooscan_scan\\_work";	
@@ -56,6 +62,22 @@ list_fold_comp = newArray(j+1);
 for (i = 0;i<j;i++) {	list_fold_comp[i] = list_fold[i];	}
 list_fold_comp[j] = path_job;
 
+// ------------------------- Upgrade metadata flowcam si necessaire ----------------------
+if (instrum == "flowcam") {
+	filelist  = 	getFileList(pathmeta);
+	//--------------- Selection des fichiers  -------------------
+	j = 0;
+	for (i=0; i<filelist.length ; i++) {	
+		if (endsWith(filelist[i],".txt") == true && startsWith(filelist[i],"Flowcam_header_") == true)	{ j = j + 1;		} // if
+	} // for	
+	//---------------------Test de la presence de fichiers dans le repertoire -----------------------------------------------------------------------	
+	if (j==0) { aa = getBoolean("There is no ''Flowcam_header'' file in the "+pathmeta+" folder. \n \nPress CANCEL to abort !");		} //
+	
+	// ----------------- Upgrade Metadata -------------------------
+	arg = instrum+" toto "+projfolder;
+	paramlist = runMacro("Zooprocess_flowcam_upgrade_metadata.txt",arg+" init");		
+if (lengthOf(toString(paramlist)) == 1) { aa = getBoolean("Zooprocess_flowcam_upgrade_metadata ABORTED \n \nPress CANCEL to END");	}}
+
 // -------------- Recherche des fichiers PID ou DAT1.txt dans le répertoire ----------
 for (k = 0; k < list_fold_comp.length ; k++) {
 	showProgress((k+1)/list_fold_comp.length);
@@ -68,19 +90,21 @@ for (k = 0; k < list_fold_comp.length ; k++) {
 		file =filelist[i];
 		pos_pid = endsWith(file,"dat1.pid");
 		pos_txt = endsWith(file,"dat1.txt");
-		if (pos_pid == true || pos_txt == true  )  {rr = filelist[i]; 	list[j] = rr; 	j++;			} // if
+		// ------------------ Exclusion des fichiers archives -------------------
+		before_flag = indexOf(file,"before_reconstruction");
+		if ((pos_pid == true || pos_txt == true) && before_flag < 1  )  {rr = filelist[i]; 	list[j] = rr; 	j++;			} // if
 	} // for
 	// -------------- Boucle sur les fichiers du répertoire ---------------------------
 	for (i = 0; i<j ;i++) {
 		if (instrum == "uvp5" || instrum == "flowcam" || instrum == "generic") {
 			if (endsWith(list[i],"dat1.pid")) {		process_opt = "pid";	} //if
 			else if (endsWith(list[i],"dat1.txt")) {	process_opt = "text";	} //if
-			ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",projfolder+" "+folder+" "+list[i]+" "+process_opt+" "+outlines+" "+status+" new "+link);
+			ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",projfolder+" "+folder+" "+list[i]+" "+process_opt+" "+mask+" "+status+" new "+link);
 		}// if
 		else if (instrum == "zooscan") {
 			if (endsWith(list[i],"dat1.pid")) {		process_opt = "pid";	} //if
 			else if (endsWith(list[i],"dat1.txt")) {	process_opt = "text";	} //if
-			ret = runMacro("Zooprocess_pid_to_ecotaxa_zooscan",projfolder+" "+folder+" "+list[i]+" "+process_opt+" "+outlines+" "+status+" new "+link);
+			ret = runMacro("Zooprocess_pid_to_ecotaxa_zooscan",projfolder+" "+folder+" "+list[i]+" "+process_opt+" "+mask+" "+status+" new "+link);
 		}// if
 		flag=toString(ret);
 		l= lengthOf(flag);

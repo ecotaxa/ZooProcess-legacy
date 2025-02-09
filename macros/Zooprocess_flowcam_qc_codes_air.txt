@@ -1,0 +1,18 @@
+// ------------------- Zooprocess_flowcam_qc_codes_air -------------------
+version = "8.27";
+date = "2024/08/29";
+
+
+// -------------------- QC codes -------------------------------------
+/*jar_air_qc_liste = newArray("not_documented","ok","nok","not_preserved","fresh_sample"); 
+jar_richness_liste = newArray("not_documented","normal","very_rich","quasi_empty","not_preserved","fresh_sample"); 
+jar_condition_liste = newArray("not_documented","good","dried","rotten","not_preserved","fresh_sample"); 
+jar_disturb_liste = newArray("not_documented","no","one_or_few","soup","not_preserved","fresh_sample"); 
+depth_qc_liste = newArray("not_documented","measured","calculated_from_cable_length","estimated");
+vol_qc_liste = newArray("not_documented","recorded_from_flowmeter","calculated_from_mean_other_nets","estimated_from_area_distance"); //,"0 : to be LATER documented");
+*/
+jar_air_qc_liste = "not_documented"+" "+"ok"+" "+"nok"+" "+"not_preserved"+" "+"fresh_sample"; 
+
+// ---------------- FIN ------------------
+ret = jar_air_qc_liste;
+return ret;

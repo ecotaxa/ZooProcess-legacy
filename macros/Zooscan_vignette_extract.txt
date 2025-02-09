@@ -1,6 +1,6 @@
 //---------------------------Zooscan_vignette_extract---------------------------
-version = "7.21";
-date = "2016/01/30";
+version = "8.13";
+date = "2022/06/20";
 if (isOpen("Results") ) { 	selectWindow("Results");	run("Close");		} // if
 
 args = getArgument();
@@ -10,8 +10,8 @@ resolution = 	arg[1];
 longline = 	arg[2];
 x1 = 		arg[3];
 
-titre = 		arg[5];
-titrered = 		arg[6];
+titre = 	arg[5];
+titrered = 	arg[6];
 No = 		arg[7];
 Bx = 		arg[8];
 By = 		arg[9];
@@ -22,7 +22,7 @@ contrast = 	arg[13];
 vignettetext = 	arg[14];
 masksave = 	arg[15];
 chemwork = 	arg[16];
-chemin =		arg[17];
+chemin =	arg[17];  
 
 // ----------------------- new options ------------------------------------------------
 format = "jpeg";
@@ -30,7 +30,6 @@ clean = "0";
 legend = "2";
 flip = "0";
 legendzooscan = false;
-upper = 243;
 if (arg.length > 18) {	format = arg[18];	clean = arg[19];	flip = arg[20];	legend = arg[21];	legendzooscan = arg[22];	upper = arg[23];	} // if
 upper = parseInt(upper);
 
@@ -106,46 +105,60 @@ if (clean == "1" || legend == "2") {
 	// ------------------- Copie de travail ---------------------------------
 	selectImage(nomvignette);
 	run("Duplicate...", "title=vignette_msk");
-
+	
 	// ------------------- Threshold ----------------------------------------
 	setThreshold(0, upper);
 	run("Convert to Mask");
-
+	
 	// ------------------- Nettoyage autour du plus gros objet --------
 	run("Set Measurements...", "area centroid bounding fit redirect=[vignette_msk] decimal=2");
 	run("Analyze Particles...", "size=30-Infinity circularity=0.00-1.00 show=Nothing exclude include record");
 	updateResults();
-
+	
 	// ------------------- Fermeture image segmentee ------------------------------------------
 	nbobj = nResults;
 	ligne = 0;		g = 0;		Ratio = 0;
 	// ---------------------- Si probleme de vignette blanche -----------------------------------
-	if (nbobj == 0) {
-		getBoolean("Blank vignette, press Cancel to ABORT !  ");
+	nbobj = nResults;
+	if (nbobj == 0) {					
+		selectImage("vignette_msk");
+		saveAs("Jpeg",chemwork+titrered+"_"+no+"_blank_vignette");
+		showMessage("BLANK VIGNETTE : \nIndex= "+i+"\nArea = "+area_vect[i]+"\nUpper = "+upper+"\nImage saved as "+titrered+"_"+no+"_blank_vignette.jpg \n \nPress YES to CONTINUE !  ");				
 	} //
-	// ---------------------- Detection Objet cible ------------------------------------------
-//	areainit = 	getResult("Area", ligne);
-//	ystart =	getResult("YStart", ligne);
-	Width = parseInt(Width);
-	Height = parseInt(Height);
-	while (g<nbobj) {		
+//	Width = parseInt(la_vect[i]);
+//	Height = parseInt(ha_vect[i]);
+	// --------------------- Recherche objet de même dimensions ---------------
+	ligne = 0;	g = 0;	vig = false;			
+	while (g < nbobj) {		
 		obj_largeur = false;
 		obj_hauteur = false;
-//		area = getResult("Area", g);	
 		ystart =	getResult("YStart", g);
 		obj_width = 	getResult("Width", g);
 		obj_height = 	getResult("Height", g);		
-//		aa = getBoolean(g+"  "+Width+" "+obj_width+" "+Height+" "+obj_height);
-		// --------------- Test si les dimensions concordent ---------------
-		if (obj_width > Width * 0.95  && obj_width < Width * 1.05) obj_largeur = true;
-		if (obj_height > Height * 0.95 && obj_height < Height * 1.05) obj_hauteur = true;
-		if (obj_largeur == true && obj_hauteur == true && ystart >= (Ya-Ymin) )	{ ligne = g; g = nbobj;	} 
-//		if (area > areainit && ystart>= (Ya-Ymin) ) ligne = g;
-//		areainit = maxOf(area,areainit);
+		// --------------- Test si les dimensions concordent exactement ---------------
+		if (obj_width == Width) obj_largeur = true;
+		if (obj_height == Height ) obj_hauteur = true;
+		if (obj_largeur == true && obj_hauteur == true )	{ ligne = g; g = nbobj;	vig = true;			} 				
 		g++;		
 	} // for
+	// -------------------- Si pas trouvé, on élargit la recherche --------------				
+	if (vig== false ) {	
+		ligne = 0;	g = 0;	Ratio = 0.05;	
+		while (g < nbobj) {		
+			obj_largeur = false;
+			obj_hauteur = false;
+			ystart =	getResult("YStart", g);
+			obj_width = 	getResult("Width", g);
+			obj_height = 	getResult("Height", g);		
+			// --------------- Test si les dimensions concordent approximativement ---------------
+			if (obj_width > Width * (1-Ratio)  && obj_width < Width * (1+Ratio)) obj_largeur = true;
+			if (obj_height > Height * (1-Ratio) && obj_height < Height * (1+Ratio)) obj_hauteur = true;
+			if (obj_largeur == true && obj_hauteur == true )	{ 		ligne = g; g = nbobj;				} 
+			g++;		
+		} // for
+	}
 	xstart = 	getResult("XStart", ligne);
-	ystart =	getResult("YStart", ligne);
+	ystart =	getResult("YStart", ligne);	
 	// --------------- nettoyage autour du plus gros objet -------------
 	selectImage("vignette_msk");
 	DEBX = xstart;

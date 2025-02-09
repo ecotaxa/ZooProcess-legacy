@@ -1,6 +1,6 @@
 // ------------------ uvp5_show_status_messages -----------------------
-version =	 "7.20";
-date =	 "2015/03/22";
+version =	 "8.27";
+date =	 "2024/09/25";
 
 // data en unites scientifiques
 
@@ -14,10 +14,11 @@ if (indexOf(ff,"C110") >= 0) {
 	// ------------- Affichage VC110 ---------------------------
 	ret = "ACQ : "+"------------------------------";
 	c110 = replace(ff,"*"," ");	c110 = replace(c110,"_"," ");		c110 = split(c110," ");
-	if (c110.length > 8) {
+	if (c110.length > 11) {
 		depth = c110[1+4];			neg = substring(depth,0,1);
 		angle = c110[2+4];			temp = c110[4+4];				voltage = c110[5+4];
-		data = c110[2];				factor= 1;
+		data_nb = c110[2];			data_size = c110[3];				data_grey = c110[4];	
+		fd_space = c110[1];			cam_temp = c110[11+4];				factor= 1;
 		if ( voltage != "aaaaa") {
 			if (neg ==  "-" )  {	depth = substring(depth,1,5); factor = -1;	}
 			depth = parseInt(depth);	depth = factor * depth/10;		depth = toString(depth); //	if (indexOf(depth,".") <1) depth = depth+".0";
@@ -27,18 +28,22 @@ if (indexOf(ff,"C110") >= 0) {
 			if (lengthOf(voltage) < 3) voltage = voltage+".0";
 			if (lengthOf(voltage) == 4) voltage = voltage+"0";
 			temp = parseInt(temp);		temp = toString(temp);
-			ret = "ACQ : "+angle+"°   "+temp+"°C   "+voltage+"V   "+depth+"m   "+data;
+			cam_temp = parseFloat(cam_temp);
+			cam_temp = round(cam_temp/100)/10;
+			cam_temp = toString(cam_temp);
+			cam_temp = substring(cam_temp,0,lengthOf(cam_temp));
+			ret = angle+" "+temp+" "+voltage+" "+depth+" "+data_nb+" "+data_size+" "+data_grey+" "+fd_space+" "+cam_temp;
 		}
 	}
 }
 else if (indexOf(ff,"V092DATA")>=0) {
 	// ------------- Affichage V092 ---------------------------
-	v092 = replace(ff,"*"," ");	v092 = replace(v092,"_"," ");	v092 = split(v092," ");
-	if (v092.length > 13) {
-		depth = v092[1];		neg = substring(depth,0,1);
-		angle = v092[2];		temp = v092[4];			voltage = v092[5];		time = v092[13];
+	v092 = replace(ff,"*"," ");	v092 = replace(v092,"_"," ");	v092_splited = split(v092," ");
+	if (v092_splited.length > 13) {
+		depth = v092_splited[1];		neg = substring(depth,0,1);
+		angle = v092_splited[2];		temp = v092_splited[4];			voltage = v092_splited[5];		time = v092_splited[13];
 		MM = substring(time,0,2);	DD = substring(time,2,4);	hh = substring(time,4,6);	mm = substring(time,6,8);
-		ss = substring(time,8,10);	factor= 1;
+		ss = substring(time,8,10);	cam_temp = v092_splited[11];		factor= 1;
 		if (neg ==  "-" )  {	depth = substring(depth,1,5); factor = -1;	}
 		depth = parseInt(depth);	depth = factor * depth/10;		depth = toString(depth);	//	if (indexOf(depth,".") <1) depth = depth+".0";
 		angle = substring(angle,2,5);
@@ -46,7 +51,11 @@ else if (indexOf(ff,"V092DATA")>=0) {
 		if (lengthOf(voltage) > 3) voltage = substring(voltage,0,4);
 		if (lengthOf(voltage) < 3) voltage = voltage+".0";
 		temp = parseInt(temp);		temp = toString(temp);
-		ret = "SURV : "+MM+"/"+DD+" "+hh+":"+mm+":"+ss+"     "+angle+"°   "+temp+"°C   "+voltage+"V   "+depth+"m";
+		cam_temp = parseFloat(cam_temp);
+		cam_temp = round(cam_temp/100)/10;
+		cam_temp = toString(cam_temp);
+		cam_temp = substring(cam_temp,0,lengthOf(cam_temp));
+		ret = "SURV: "+MM+"/"+DD+" "+hh+":"+mm+":"+ss+"  "+angle+"° "+temp+"°C "+voltage+"V "+depth+"m "+cam_temp+"°C";
 	} // if
 }				
 

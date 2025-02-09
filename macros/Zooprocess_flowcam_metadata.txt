@@ -1,206 +1,381 @@
 // -------------------------Zooprocess_flowcam_metadata --------------------
-version = "7.28";
-date = "2019/05/10";
+version = "8.27";
+date = "2024/08/28";
 
-// Suppression du Pumped Volume
-// Update all option implémentée
-// Concentrated/Diluted
-// Format LAT/LON
-
+// récupération des données du summary si tronquées dans PID
+// et du ctx
+// MAJ directe des TSV via macro specifique
 
 arg = 		getArgument(); 
 array = 	split(arg," ");
 instrum = 	array[0];
 option= 	array[1];
-path= 		array[2]; 	
+path= 		array[2]; 
 
-// cell types
-// latitude et longitude 7.24)
+// ----------------- Path -------------------------------------
+path_meta = path+"\\meta\\";
+path_raw = path+"\\raw\\";
 
+// ----------------- Initialisation ---------------------------
 maxgg = 100000;
-paramlist = "project;ship;filename;sampleid;otherreffile;latitude;longitude;samplinggear;zmin;zmax;volconc;volpump;celltype;comment;datetime";
 
-// ----------------- Metafile pour Flowcam --------------------------------	
-filelist  = 	getFileList(path+"\\meta\\");
-
-//--------------- Selection des fichiers  -------------------
-j = 0;
-list = newArray(filelist.length);
-for (i=0; i<filelist.length ; i++) {	
-	ctrl = endsWith(filelist[i],".txt");
-	ctrl1 = startsWith(filelist[i],"Flowcam_header_");
-	if (ctrl == 1 && ctrl1 == 1)	{rr = filelist[i]; 	list[j] = rr;	j = j + 1;		} // if
-} // for	
-//---------------------Test de la presence de fichiers dans le repertoire -----------------------------------------------------------------------	
-if (j==0) { configpres = 0;
-	getBoolean("No metadata file in the selected project. \nPress YES to create an empty table and start adding profiles !          ");
-	option = "create";
-} //
-else if (j == 1) {		metafile = list[0];		} // else if
-else { 	configpres = 1;
-	// ---------------------Purger les fichiers vides de la liste ! -------------------------------------
-	listaff = newArray(j);
-	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
-	Dialog.create("METADATA FILE          version : "+version);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	Dialog.addMessage("Project :  "+path);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	message = "SELECT Metadata FILE to COMPLETE or EDIT         " ;
-	Dialog.addMessage(message);
-	Dialog.addChoice("       ", listaff);
-	Dialog.show();
-	metafile = Dialog.getChoice();
-} // else
-long = lengthOf(path);
-a = indexOf(path,"_");
-Project  = substring(path,a+1,long);	
-print("A purger");	selectWindow("Log");	run('Close');
-// ------------------ CREATE empty -----------------
-if (option == "create") {
-	print(paramlist);
-	metafile = "Flowcam_header_"+Project+".txt";
-	sauve = "save=" + path+"\\meta\\"+metafile;
-	selectWindow("Log");
-	run("Text...",sauve);
+// ----------------- Upgrade Metadata -------------------------
+paramlist = runMacro("Zooprocess_flowcam_upgrade_metadata.txt",instrum+" init "+path+" init");		
+if (lengthOf(toString(paramlist)) == 1) { aa = getBoolean("Zooprocess_flowcam_upgrade_metadata ABORTED \n \nPress CANCEL to END");		}
+if (option != "upgrade") {
+	// ----------------------------- OUVERTURE META ----------------------------------
+	long = lengthOf(path);
+	a = indexOf(path,"_");
+	Project  = substring(path,a+1,long);
+	metafile = "Flowcam_header_"+Project+".txt";	
+	open(path_meta+metafile);
+	wait(100);
+	metadata = getInfo();
 	run('Close');
-} // 
+	if (indexOf(metadata,";") < 0 ) {	aa = getBoolean("The "+metafile+" has been modified outside of Zooprocess and is now TAB separated instead of dot-coma. \n \nPress Cancel to abort. \nCorrect your file\nRestart the process !");	}
+	array = split(metadata,"\n");
+	arrayrec = split(metadata,"\n");
+	liste = newArray(array.length-1);
+}
 
-// ----------------------------- ADD EDIT ----------------------------------
-open(path+"\\meta\\"+metafile);
-wait(100);
-metadata = getInfo();
-run('Close');
-array = split(metadata,"\n");
-arrayrec = split(metadata,"\n");
-liste = 			newArray(array.length-1);
-// ---------------------- metadata -------------------------------------------
-project = 		newArray(array.length);
-ship = 			newArray(array.length);
-filename = 		newArray(array.length);
-stationname =		newArray(array.length);
-otherreffile =		newArray(array.length);
-latitude =		newArray(array.length);
-longitude =		newArray(array.length);
-samplinggear =		newArray(array.length);
-zmin =	newArray(array.length);
-zmax =	newArray(array.length);
-volconc = 			newArray(array.length);
-volpump =		newArray(array.length);
-lens = 			newArray(array.length);
-imagesurf =		newArray(array.length);
-celltype =		newArray(array.length);
-freqimage =		newArray(array.length);
-duration =		newArray(array.length);
-stopcriteria =		newArray(array.length);
-comment =		newArray(array.length);
-datetime = 		newArray(array.length);
-stationdone = 		newArray(maxgg);
-nbstationdone = 	array.length;
+// ------------------------ Si seulement une ligne d'entete -------------------
+//if (liste.length == 0) {aa = getBoolean("The "+metafile+" does not contain any metadata line. \n \nPress CANCEL to end and delete it before continuing and fill in new sample metadata.");	}
 
-// ---------------- Valeurs initiales -----------------------------
-Cruise = 		"PointB";
-Ship = 			"Sagitta";
-Ffilename = 		00;
-Stationname =		"xx";
-Otherreffile =		"xx";
-Latitude =		0;
-Longitude =		0;
-Samplinggear =	"Niskin";
-Zmin =			0;
-Zmax =			0;
-Volconc = 		1;
-Volpump = 		1;
-Celltype =		"100microns";
-Comment =		"xx";
-Datetime = 		"20000101-1200";
-print(paramlist);
-
-if (option != "create" ) {
-	for (i=1; i<array.length ; i++) { 
-		// ----------------- Impression des premieres lignes -----------------
-		print(array[i]);
-		//		aa = getBoolean(i+"    "+array[i]);		
-		ligne = replace(array[i],";"," ");
-		ligne = split(ligne,"\ ");
-		Project = 		ligne[0];
-		Ship = 			ligne[1];
-		Filename = 		ligne[2];
-		Stationname =		ligne[3];
-		Otherreffile =		ligne[4];
-		Latitude =		ligne[5];
-		Longitude =		ligne[6];
-		Samplinggear =	ligne[7];
-		Zmin =			ligne[8];
-		Zmax =			ligne[9];
-		Volconc =		ligne[10];
-		Volpump  =		ligne[11];
-		Celltype =		ligne[12];
-		Comment = 		ligne[13];
-		if (ligne.length == 14) 	{	Datetime = 	"20000101_1200";		} // if
-		else {				Datetime = 	ligne[14];			} // else
-		project[i]=		Project;
-		ship[i] =		Ship;
-		filename[i]=		Filename;
-		stationname[i]=	Stationname;
-		otherreffile[i]=		Otherreffile;
-		latitude[i]=		Latitude;
-		longitude[i]=		Longitude;
-		samplinggear[i]=	Samplinggear;
-		zmin[i]=			Zmin;
-		zmax[i]=		Zmax;
-		volconc[i]=		Volconc;
-		volpump[i]=		Volpump;
-		celltype[i]=		Celltype;
-		comment[i]=		Comment;
-		datetime[i]=		Datetime;
-		stationdone[i] =	Stationname;
-		liste[i-1] = 	Filename;	//	+" "+Stationname;	
-	} // for
-}// if
-
+// -------------------- EDITION -----------------------------------------------------------------
+if (option == "edit") {
+	if (liste.length == 0) {showMessage("The "+metafile+" does not contain any sample to edit. \n \nAdd samples first !");	}
+	else{	// ------------------------ LISTE des sample -------------------------
+		for (i=1; i<array.length ; i++) { 
+			ligne_txt = replace(array[i],";"," ");
+			ligne = split(ligne_txt," ");
+			Filename = 	ligne[2];
+			SampleId =	ligne[3];
+			liste[i-1] = 	SampleId;	
+		}
+		end = 1;
+		while (end==1) {
+			Dialog.create("FLOWCAM sample selector        version : "+version);
+			Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
+			Dialog.addMessage("Project :  "+path);
+			Dialog.addMessage("Metadatafile = "+metafile);
+			Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
+			Dialog.addMessage("SELECT the sample to EDIT  or press CANCEL  "); 
+			Dialog.addMessage("     SampleId    "); 
+			Dialog.addChoice("       ", liste);
+			Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
+			Dialog.show();
+			profile = Dialog.getChoice();
+			index = 0;
+			for (i=1; i<array.length ; i++) { 
+				// ----------------- Détection de la ligne à corriger -----------------
+				ligne = replace(array[i],";"," ");
+				ligne = split(ligne," ");
+				Filename = 		ligne[2];
+				SampleId =		ligne[3];
+				//			filename[i]=		Filename;
+				if (profile == SampleId ) { index = i;	}
+			} // for
+			ligne_txt = replace(array[index],";"," ");
+			ligne = split(ligne_txt," ");
+			Project = 		ligne[0];
+			Ship = 			ligne[1];
+			Filename = 		ligne[2];
+			SampleId =		ligne[3];
+			Other_ref =		ligne[4];
+			Latitude =		ligne[5];
+			Longitude =		ligne[6];
+			Samplinggear =		ligne[7];
+			Zmin =			ligne[8];
+			Zmax =			ligne[9];
+			Conc_vol_ml =		ligne[10];
+			Initial_col_vol_m3  =	ligne[11];
+			Celltype =		ligne[12];
+			Comment = 		ligne[13];
+			Datetime = 		ligne[14];
+			StationId = 		ligne[15];
+			Depth = 		ligne[16];
+			Ctdref = 		ligne[17];
+			Townb = 		ligne[18];
+			Towtype = 		ligne[19];
+			Nettype = 		ligne[20];
+			Netmesh = 		ligne[21];
+			Netsurf = 		ligne[22];
+			Vol_qc = 		ligne[23];
+			Depth_qc = 		ligne[24];
+			Sample_qc = 		ligne[25];
+			Barcode = 		ligne[26];
+			Latitude_end = 		ligne[27];
+			Longitude_end = 	ligne[28];
+			Net_duration = 		ligne[29];
+			Ship_speed_knots = 	ligne[30];
+			Cable_length = 		ligne[31];
+			Cable_angle = 		ligne[32];
+			Cable_speed = 		ligne[33];
+			Nb_jar = 		ligne[34];
+			Sieve_min = 		ligne[35];
+			Sieve_max = 		ligne[36];
+			Fixative = 		ligne[37];
+			Flow_start = 		ligne[38];
+			Flow_end = 		ligne[39];
+			Flow_type = 		ligne[40];
+			Dilution_method = 	ligne[41];
+			Cruise = 		ligne[42];
+			Operator_acq = 		ligne[43];
+			Operator_sample = 	ligne[44];
+			
+			// ------------------------- Page edition --------------------------------------------------
+			datatext1 = Project+";"+Ship+";"+Filename+";"+SampleId+";"+Other_ref+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Conc_vol_ml+";"+Initial_col_vol_m3+";"+Celltype+";"+Comment+";"+Datetime;
+			datatext2 = StationId+";"+Depth+";"+Ctdref+";"+Townb+";"+Towtype+";"+Nettype+";"+Netmesh+";"+Netsurf+";"+Vol_qc+";"+Depth_qc+";"+Sample_qc+";"+Barcode+";"+Latitude_end+";"+Longitude_end;
+			datatext3 = toString(Net_duration)+";"+Ship_speed_knots+";"+Cable_length+";"+Cable_angle+";"+Cable_speed+";"+Nb_jar+";"+Sieve_min+";"+Sieve_max+";"+Fixative+";"+Flow_start+";"+Flow_end+";"+Flow_type+";"+Dilution_method+";"+Cruise+";"+Operator_acq+";"+Operator_sample;
+			
+			datatext = runMacro("Zooprocess_flowcam_metadata_windows.txt",datatext1+";"+datatext2+";"+datatext3+";edit");		
+			if (lengthOf(toString(datatext)) == 1) {  showMessage("Zooprocess_flowcam_metadata_windows ABORTED");		}
+			else {
+				// ------------------------ Recuperation des donnees existantes ---------------------------------------
+				open(path+"\\meta\\"+metafile);
+				wait(100);
+				metadata = getInfo();
+				run('Close');
+				DATA = split(metadata,"\n");
+				// ---------------- Message ---------------------------------------------------------------------
+				message = "Files modified : \n";
+				
+				// ----------------- Impression des premieres lignes -----------------
+				if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+				print(paramlist);
+				for (b=1;b<index ; b++) { 	print(DATA[b]);	} // for
+				
+				// ----------------- Ajout de la ligne -------------------------------------
+				print(datatext);
+				
+				// ---------------- Impression lignes suivantes ------------------------------
+				for (b=index+1;b<DATA.length ; b++) { 	print(DATA[b]);	} // for
+				
+				// ---------------- Sauvegarde flowcam_header---------------------------------
+				sauve = "save=" + path+"\\meta\\"+metafile;
+				selectWindow("Log");
+				run("Text...",sauve);
+				run('Close');
+				message = message + path+"\\meta\\"+metafile+"\n";
+				
+				// ---------------- Sauvegarde fichier individuel dans repertoire profil ---------------
+				if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+				print(paramlist);
+				print(datatext);
+				pathprofile = path+"\\work\\"+SampleId+"\\";
+				sauve = "save=" + pathprofile+SampleId+"_meta.txt";
+				selectWindow("Log");
+				run("Text...",sauve);
+				run('Close');
+				message = message + pathprofile+SampleId+"_meta.txt"+"\n";
+				
+				// ---------------------- Mise à jour des données dans l'architecture projet -----------
+				pidfile = 	SampleId+"_dat1.pid";
+				dat1file = 	SampleId+"_dat1.txt";
+				path_work_sample = path+"\\"+"\\work\\"+SampleId+"\\";
+				pathresults = 		path+"\\"+"\\results";
+				pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
+				pathpidpredicted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Pid_predicted\\";
+				pathdat1validatted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Dat1_validated\\";
+				// ---------------------- Fichiers PID -----------------------------------------------------------
+				data = replace(datatext,";"," ");
+				datameta = split(data," ");
+				field = arrayrec[0];
+				field = replace(field,";"," ");
+				field = split(field," ");
+				// --------------------- SSI PID existe ----------------------------------------------------------
+				if (File.exists(path_work_sample+pidfile)) {
+					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+					open(path_work_sample+pidfile);
+					wait(100);
+					data = getInfo();
+					run('Close');
+					data = split(data,"\n");
+					for (p=0;p<data.length;p++) {
+						dataligne = data[p];
+						if (dataligne == "[Run_Summary]") summaryligne = p;
+					} // for
+					// ---------------- Debut -------------------------------------------------------------	
+					print("PID");
+					print(" ");
+					// ---------------- Metatdata ---------------------------------------------------------
+					print("[Metadata]");
+					for (t=0;t<datameta.length;t++) {	print(field[t]+"= "+datameta[t]);				} // for
+					print(" ");
+					// ---------------- Suite ----------------------------------------------------------------
+					for (p=summaryligne;p<data.length;p++) {		print(data[p]);				} // for
+					// ---------------- PID dans WORK SAMPLE --------------------------------------------------
+					sauve = "save=" + path_work_sample+pidfile;
+					selectWindow("Log");
+					run("Text...",sauve);
+					message = message + path_work_sample+pidfile+"\n";
+					
+					// ---------------- PID dans RESULTS --------------------------------------------------
+					if (File.exists(pathresults+pidfile)) {
+						sauve = "save=" + pathresults+pidfile;
+						selectWindow("Log");
+						run("Text...",sauve);
+						message = message + pathresults+pidfile+"\n";
+					} // if
+					// ---------------- PID dans PID RESULTS --------------------------------------------------
+					if (File.exists(pathpidresults+pidfile)) {
+						sauve = "save=" + pathpidresults+pidfile;
+						selectWindow("Log");
+						run("Text...",sauve);
+						message = message + pathpidresults+pidfile+"\n";
+					} // if
+					// ---------------- PID dans PREDICTED --------------------------------------------------
+					if (File.exists(pathpidpredicted+pidfile)) {
+						sauve = "save=" + pathpidpredicted+pidfile;
+						selectWindow("Log");
+						run("Text...",sauve);
+						message = message + pathpidpredicted+pidfile+"\n";	
+					} // if
+					run('Close');
+					
+					// ------------ Ecotaxa settings ------------------
+					oo = indexOf(pidfile,".");
+					pid_file = substring(pidfile,0,oo-5);
+					status = false;
+					process_opt = "pid";
+					outlines = false;
+					
+					// --------------------- ECOTAXA --------------------------------------------
+					if (File.exists(path_work_sample+pidfile)) {
+						// --------------- MAJ du TSV à partir du PID (ne doit pas être fait pour les échantillons divisés) --------------------------
+						//macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+path_work_sample+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+						//if (lengthOf(toString(macro_flag)) > 1) message = message+path_work_sample+"ecotaxa_"+pid_file+".tsv"+"\n";
+						
+						// --------------- MAJ du TSV à directe (convient pour les échantillons divisés) --------------------------
+						macro_flag = runMacro("Zooprocess_flowcam_maj_tsv",path+";"+path_work_sample+";"+pid_file+";"+datatext);
+						if (lengthOf(toString(macro_flag)) > 1) message = message+path_work_sample+"ecotaxa_"+pid_file+"*.tsv"+"\n";
+					}
+					else if (File.exists(pathresults+pidfile)) {
+						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+						if (lengthOf(toString(macro_flag)) > 1) message = message+pathresults+"ecotaxa_"+pid_file+".tsv"+"\n";
+					}
+					else if (File.exists(pathpidresults+pidfile)) {
+						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+						if (lengthOf(toString(macro_flag)) > 1) message = message+pathpidresults+"ecotaxa_"+pid_file+".tsv"+"\n";
+					}
+					else if (File.exists(pathpidpredicted+pidfile)) {
+						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidpredicted+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+						if (lengthOf(toString(macro_flag)) > 1) message = message+pathpidpredicted+"ecotaxa_"+pid_file+".tsv"+"\n";
+					}
+					
+					
+				} // if exists
+				// ---------------------- Fichiers DAT1.TXT -----------------------------------------------------------
+				if (File.exists(pathdat1validatted+dat1file)) {
+					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+					open(pathdat1validatted+dat1file);
+					wait(100);
+					data = getInfo();
+					run('Close');
+					data = split(data,"\n");
+					// ---------------- Debut -------------------------------------------------------------	
+					print("PID");
+					print(" ");
+					// ---------------- Metatdata ---------------------------------------------------------
+					print("[Metadata]");
+					for (t=0;t<datameta.length;t++) {	print(field[t]+"= "+datameta[t]);				} // for
+					print(" ");
+					// ---------------- Suite ----------------------------------------------------------------
+					for (p=summaryligne;p<data.length;p++) {		print(data[p]);				} // for
+					// ---------------- PID dans PREDICTED --------------------------------------------------
+					sauve = "save=" + pathdat1validatted+dat1file;
+					selectWindow("Log");
+					run("Text...",sauve);
+					message = message + pathdat1validatted+dat1file+"\n";	
+					run('Close');
+				} // if exists
+				//				showMessage(message+"\n \n THERE MIGHT BE OTHER FILES NOT CORRECTED in other locations !..       ");
+				array[index] = datatext;
+				end = getBoolean(message+"\n \n THERE MIGHT BE OTHER FILES NOT CORRECTED in other locations !..       \n \nEDIT ANOTHER PROFILE ? ");
+				
+			}
+		} // while
+	} // select
+}
 // ------------------------ UPDATE ALL ------------------------------------------
-if (option == "update_all" ) {
+else if (option == "update_all" ) {
 	message = "UPDATED Files : \n";
 	field = arrayrec[0];
 	field = replace(field,";"," ");
-	field = split(field," ");
+	field = split(field,"\ ");
 	for (pp=1; pp<array.length ; pp++) { 		
 		ligne = replace(array[pp],";"," ");		
 		//		aa = getBoolean(ligne);
-		ligne = split(ligne,"\ ");		
+		ligne = split(ligne,"\ ");	
 		Project = 		ligne[0];
 		Ship = 			ligne[1];
 		Filename = 		ligne[2];
-		Stationname =		ligne[3];
-		Otherreffile =		ligne[4];
+		SampleId =		ligne[3];
+		Other_ref =		ligne[4];
 		Latitude =		ligne[5];
 		Longitude =		ligne[6];
-		Samplinggear =	ligne[7];
+		Samplinggear =		ligne[7];
 		Zmin =			ligne[8];
 		Zmax =			ligne[9];
-		Volconc =		ligne[10];
-		Volpump  =		ligne[11];
+		Conc_vol_ml =		ligne[10];
+		Initial_col_vol_m3  =	ligne[11];
 		Celltype =		ligne[12];
 		Comment = 		ligne[13];
-		if (ligne.length == 14) 	{	Datetime = 	"20000101_1200";		} // if
-		else {				Datetime = 	ligne[14];			} // else
+		Datetime = 		ligne[14];
+		StationId = 		ligne[15];
+		Depth = 		ligne[16];
+		Ctdref = 		ligne[17];
+		Townb = 		ligne[18];
+		Towtype = 		ligne[19];
+		Nettype = 		ligne[20];
+		Netmesh = 		ligne[21];
+		Netsurf = 		ligne[22];
+		Vol_qc = 		ligne[23];
+		Depth_qc = 		ligne[24];
+		Sample_qc = 		ligne[25];
+		Barcode = 		ligne[26];
+		Latitude_end = 		ligne[27];
+		Longitude_end = 	ligne[28];
+		Net_duration = 		ligne[29];
+		Ship_speed_knots = 	ligne[30];
+		Cable_length = 		ligne[31];
+		Cable_angle = 		ligne[32];
+		Cable_speed = 		ligne[33];
+		Nb_jar = 		ligne[34];
+		Sieve_min = 		ligne[35];
+		Sieve_max = 		ligne[36];
+		Fixative = 		ligne[37];
+		Flow_start = 		ligne[38];
+		Flow_end = 		ligne[39];
+		Flow_type = 		ligne[40];
+		Dilution_method = 	ligne[41];
+		Cruise = 		ligne[42];
+		Operator_acq = 		ligne[43];
+		Operator_sample = 	ligne[44];     
 		
-		// ---------------- Sauvegarde fichier individuel dans repertoire profil ---------------
-		if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-		pathprofile = path+"\\work\\"+Stationname+"\\";
+		// ------------------- ligne entête ------------------------------------
 		print(paramlist);
-		datatext = Project+";"+Ship+";"+Filename+";"+Stationname+";"+Otherreffile+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Volconc+";"+Volpump+";"+Celltype+";"+Comment+";"+Datetime;
+		
+		// ------------------------- MAJ --------------------------------------------------
+		datatext1 = Project+";"+Ship+";"+Filename+";"+SampleId+";"+Other_ref+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Conc_vol_ml+";"+Initial_col_vol_m3+";"+Celltype+";"+Comment+";"+Datetime;
+		datatext2 = StationId+";"+Depth+";"+Ctdref+";"+Townb+";"+Towtype+";"+Nettype+";"+Netmesh+";"+Netsurf+";"+Vol_qc+";"+Depth_qc+";"+Sample_qc+";"+Barcode+";"+Latitude_end+";"+Longitude_end;
+		datatext3 = toString(Net_duration)+";"+Ship_speed_knots+";"+Cable_length+";"+Cable_angle+";"+Cable_speed+";"+Nb_jar+";"+Sieve_min+";"+Sieve_max+";"+Fixative+";"+Flow_start+";"+Flow_end+";"+Flow_type+";"+Dilution_method+";"+Cruise+";"+Operator_acq+";"+Operator_sample;
+		datatext = datatext1+";"+datatext2+";"+datatext3;
 		print(datatext);
-		sauve = "save=" + pathprofile+Stationname+"_meta.txt";
+		
+		// ----------------------- Enregistrement --------------------------
+		pathprofile = path+"\\work\\"+SampleId+"\\";
+		sauve = "save=" + pathprofile+SampleId+"_meta.txt";
 		selectWindow("Log");
 		run("Text...",sauve);
 		run('Close');
-		message = message + pathprofile+Stationname+"_meta.txt"+"\n";
+		message = message + pathprofile+SampleId+"_meta.txt"+"\n";
 		
 		// ---------------------- Mise à jour des données dans l'architecture projet -----------
-		pidfile = 	Stationname+"_dat1.pid";
-		dat1file = 	Stationname+"_dat1.txt";
-		pathworksample = path+"\\"+"\\work\\"+Stationname+"\\";
+		pidfile = 	SampleId+"_dat1.pid";
+		dat1file = 	SampleId+"_dat1.txt";
+		path_work_sample = 	path+"\\"+"\\work\\"+SampleId+"\\";
+		path_raw_sample = 	path_raw+"flowcam_"+Filename+"\\";
 		pathresults = 		path+"\\"+"\\results";
 		pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
 		pathpidpredicted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Pid_predicted\\";
@@ -209,32 +384,140 @@ if (option == "update_all" ) {
 		data = replace(datatext,";"," ");
 		datameta = split(data," ");
 		
-		// --------------------- SSI PID existe ----------------------------------------------------------
-		if (File.exists(pathworksample+pidfile)) {
+		// --------------------- SSI PID existe dans work\sample ------------------------------------------------
+		if (File.exists(path_work_sample+pidfile)) {
 			if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-			open(pathworksample+pidfile);
+			open(path_work_sample+pidfile);
 			wait(100);
-			data = getInfo();
-			
+			data = getInfo();			
 			run('Close');
 			arrayrec = split(data,"\n");
 			summaryligne = 0;
+			ctxligne = 999999;
+			processligne = 999999;
 			//			array = split(data,"\n");
 			for (p=0;p<arrayrec.length;p++) {
 				dataligne = arrayrec[p];
-				if (dataligne == "[Run_Summary]") summaryligne = p;
+				if (dataligne == "[Run_Summary]") 		summaryligne = p;
+				if (indexOf(dataligne, "ctx_filename") >= 0) 	ctxligne = p;
+				if (indexOf(dataligne, "[Process]") >= 0) 	processligne = p;
 			} // for
+
 			// ---------------- Debut -------------------------------------------------------------	
 			print("PID");
 			print(" ");
-			// ---------------- Metatdata ---------------------------------------------------------
+			// ---------------- Sample Metadata ---------------------------------------------------------
 			print("[Metadata]");
 			for (t=0;t<datameta.length;t++) {	print(field[t]+"= "+datameta[t]);				} // for
 			print(" ");
-			// ---------------- Suite ----------------------------------------------------------------
-			for (p=summaryligne;p<arrayrec.length;p++) {		print(arrayrec[p]);				} // for
+			
+			// ---------------- Suite des metadata ----------------------------------------------------------------
+			nb_images_processed_flowcam = 9999999;
+			fluid_volume_imaged = 9999999;
+			for (p=summaryligne;p<arrayrec.length;p++) {
+				if (indexOf(toLowerCase(arrayrec[p]),"total") > -1 && indexOf(toLowerCase(arrayrec[p]),"total") < 3) { 					
+					aa = replace(arrayrec[p],":"," ");  
+					aa = replace(aa,":  "," ");
+					aa = replace(aa,"  "," ");
+					aa = replace(aa,","," ");
+					aa = replace(aa,"= ","=");
+					aa = replace(aa,"="," ");
+					bb = split(aa,"\ ");					
+					nb_images_processed_flowcam = parseInt(bb[1]);		
+				}				
+				if (indexOf(toLowerCase(arrayrec[p]),"fluid_volume_imaged") > -1 && indexOf(toLowerCase(arrayrec[p]),"fluid_volume_imaged") < 3) {
+					aa = replace(arrayrec[p],":"," ");  
+					aa = replace(aa,":  "," ");
+					aa = replace(aa,"  "," ");
+					aa = replace(aa,","," ");
+					aa = replace(aa,"= ","=");
+					aa = replace(aa,"="," ");
+					bb = split(aa,"\ ");	
+					fluid_volume_imaged = parseInt(bb[1]);	
+				}
+			}
+			// ------------------ Si lecture TOTAL et FLUID IMAGED OK et ctx ok on reprend PID à l'identique -----------------------
+			if (nb_images_processed_flowcam != 9999999 && fluid_volume_imaged != 9999999 && ctxligne != 999999) {
+				for (p=summaryligne;p<arrayrec.length;p++) {		print(arrayrec[p]);				} // for
+			}
+			else {	// ---------------------- SINON, récupération à partir du summary et du CTX --------------
+				filelist_raw  = getFileList(path_raw_sample);
+				search_sum = true;
+				search_ctx = true;
+				ctxfile = "unknown";
+				k = 0;
+				while ((search_sum == true || search_ctx == true) || k == filelist_raw.length -1 ) {
+					if (endsWith(filelist_raw[k],"_run_summary.txt") == true || endsWith(filelist_raw[k],"summary.csv"))	{
+						// ------------------- Vérification de la présence de "Total" ------------------
+						open(path_raw_sample+"\\"+filelist_raw[k]);
+						wait(100);
+						summary = getInfo();
+						run("Close");
+						if (indexOf(summary,"Total") > 0 ) {
+							search_sum = false;
+							print("[Run_Summary]");
+							// --------------- nettoyage --------------------
+							summary = replace(summary,",,,,,","");
+							summary = replace(summary,",,,,","");
+							summary = replace(summary,",,,","");
+							summary = replace(summary,",,","");
+							summary = replace(summary,"= ","=");
+							summary = replace(summary," =","=");
+							summary = replace(summary,"%","");
+							summary = replace(summary,":","=");
+							summary = replace(summary,",","=");
+							summary = replace(summary," ","_");
+							summary = replace(summary,"__","_");
+							summary = replace(summary,"=_","+");
+							conf  = split(summary,"\n");
+							// ------------------ Ecriture du Summary reformaté pour TSV -----------------
+							for (i=0; i<conf.length; i++) {
+								text = toString(conf[i]);
+								// ---------- Retrait "=" en fin de ligne -------------
+								if (lengthOf(text) > 2) {		
+									if (endsWith(text,"=")) text = substring(text,0,lengthOf(text)-1);
+								}
+								bb = split(text,"\+");	
+								if (bb.length > 1) {
+									// ----------- Retrait unités en fin de ligne ------
+									cc = split(bb[1],"\_");
+									ee = bb[0] + "= " + cc[0];
+								}
+								else { ee = text;	}
+								// --------------- Retrait lignes blanches ---------
+								if (lengthOf(ee) > 1) 	print(ee);
+							} // for
+							
+						} // if
+						else {	// ---------------- NO metadata found ------------------------
+							aa = getBoolean("WARNING : \n \nThe summary file of sample "+Filename+" does not contain the necessary metadata. \n \nPress Cancel to abort and check the sample.");							
+						}
+					}
+					// ------------------- Fichier CTX ----------------------------------
+					if (endsWith(filelist_raw[k],".ctx") == true )	{ ctxfile = filelist_raw[k];	search_ctx = false; } // if
+					k++;
+				}
+				print(" ");
+				// ----------------- Si pas de section ctx dans le PID chargement -------------
+				if (ctxligne == 999999 && search_ctx == false) {
+					open (path_raw_sample+ctxfile);
+					wait(100);
+					ctx_settings = getInfo();
+					run("Close");
+					print("ctx_filename= "+ctxfile);
+					print(ctx_settings);
+					print(" ");
+					// ---------------- Process et data ------------------
+					for (p=processligne ;p<arrayrec.length ;p++) {		print(arrayrec[p]);				} // for
+				}
+				else if (ctxligne != 999999){	// ------------------ PROCESS -------------------
+					for (p=ctxligne;p<arrayrec.length;p++) {		print(arrayrec[p]);				} // for
+				}
+				else { aa = getBoolean("The "+path_raw_sample+ctxfile+" file does not exists. \n \nPress Cancel and check the dataset !");	}
+			}
+
 			// ---------------- PID dans WORK SAMPLE --------------------------------------------------
-			sauve = "save=" + pathworksample+pidfile;
+			sauve = "save=" + path_work_sample+pidfile;
 			selectWindow("Log");
 			run("Text...",sauve);
 			// ------------ Ecotaxa settings ------------------
@@ -262,21 +545,30 @@ if (option == "update_all" ) {
 				run("Text...",sauve);	
 			} // if
 			run('Close');
+			
 			// --------------------- ECOTAXA --------------------------------------------
-			macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathworksample+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-			if (macro_flag == "ok") message = message+pathworksample+"ecotaxa_"+pid_file+".tsv"+"\n";
-			if (File.exists(pathresults+pidfile)) {
-				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-				if (macro_flag == "ok") message = message+pathresults+"ecotaxa_"+pid_file+".tsv"+"\n";
+			if (File.exists(path_work_sample+pidfile)) {
+				// --------------- MAJ du TSV à partir du PID (ne doit pas être fait pour les échantillons divisés) --------------------------
+				//macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+path_work_sample+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+				//if (lengthOf(toString(macro_flag)) > 1) message = message+path_work_sample+"ecotaxa_"+pid_file+".tsv"+"\n";
+								
+				// --------------- MAJ du TSV à directe (convient pour les échantillons divisés) --------------------------
+				macro_flag = runMacro("Zooprocess_flowcam_maj_tsv",path+";"+path_work_sample+";"+pid_file+";"+datatext);
+				if (lengthOf(toString(macro_flag)) > 1) message = message+path_work_sample+"ecotaxa_"+pid_file+".tsv"+"\n";
 			}
-			if (File.exists(pathpidresults+pidfile)) {
-				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-				if (macro_flag == "ok") message = message+pathpidresults+"ecotaxa_"+pid_file+".tsv"+"\n";
+			else if (File.exists(pathresults+pidfile)) {
+				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+				if (lengthOf(toString(macro_flag)) > 1) message = message+pathresults+"ecotaxa_"+pid_file+".tsv"+"\n";
 			}
-			if (File.exists(pathpidpredicted+pidfile)) {
-				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidpredicted+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-				if (macro_flag == "ok") message = message+pathpidpredicted+"ecotaxa_"+pid_file+".tsv"+"\n";
+			else if (File.exists(pathpidresults+pidfile)) {
+				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+				if (lengthOf(toString(macro_flag)) > 1) message = message+pathpidresults+"ecotaxa_"+pid_file+".tsv"+"\n";
 			}
+			else if (File.exists(pathpidpredicted+pidfile)) {
+				macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidpredicted+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://piqv.imev-mer.fr//");
+				if (lengthOf(toString(macro_flag)) > 1) message = message+pathpidpredicted+"ecotaxa_"+pid_file+".tsv"+"\n";
+			}
+			
 		} // if exists
 		// ---------------------- Fichiers DAT1.TXT -----------------------------------------------------------
 		if (File.exists(pathdat1validatted+dat1file)) {
@@ -316,368 +608,71 @@ if (option == "update_all" ) {
 	showMessage("WARNING",message);
 }// update_all
 
-
-// -------------------- SELECT -----------------------------------------------------------------
-if (option == "edit") {
-	end = 1;
-	while (end==1) {
-		Dialog.create("FLOWCAM sample selector        version : "+version);
-		Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
-		Dialog.addMessage("Project :  "+path);
-		Dialog.addMessage("Metadatafile = "+metafile);
-		Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
-		Dialog.addMessage("SELECT sample to EDIT    "); 
-		Dialog.addMessage("     Filename    "); 
-		Dialog.addChoice("       ", liste);
-		Dialog.addMessage("---------------------------------------------------------------------------------------------------------");
-		Dialog.show();
-		profile = Dialog.getChoice();
-		index = 0;
-		for (i=1; i<array.length ; i++) { 
-			// ----------------- Détection de la ligne à corriger -----------------
-			ligne = replace(array[i],";"," ");
-			ligne = split(ligne,"\ ");
-			Filename = 		ligne[2];
-			filename[i]=		Filename;
-			if (profile == Filename)  index = i;	
-		} // for
-		ligne = replace(array[index],";"," ");
-		ligne = split(ligne,"\ ");
+else if (option == "add") {
+	// ----------------- Vectorisation metafile -----------------------
+	filename = 	newArray(array.length);
+	sample_names = Project;
+	for (i=1; i<array.length ; i++) { 
+		ligne_txt = replace(array[i],";"," ");
+		ligne = split(ligne_txt,"\ ");
+		filename[i] = ligne[2];
+	}
+	if (array.length > 1 ){
+		// -------------------------- Récupération des données sample précédent ----------------------
+		//		ligne_txt = replace(array[array.length-1],";"," ");
+		ligne = split(array[array.length-1],"\;");
 		Project = 		ligne[0];
 		Ship = 			ligne[1];
 		Filename = 		ligne[2];
-		Stationname =		ligne[3];
-		Otherreffile =		ligne[4];
+		SampleId =		ligne[3];
+		Other_ref =		ligne[4];
 		Latitude =		ligne[5];
 		Longitude =		ligne[6];
-		Samplinggear =	ligne[7];
+		Samplinggear =		ligne[7];
 		Zmin =			ligne[8];
 		Zmax =			ligne[9];
-		Volconc =		ligne[10];
-		Volpump  =		ligne[11];
+		Conc_vol_ml =		ligne[10];
+		Initial_col_vol_m3  =	ligne[11];
 		Celltype =		ligne[12];
 		Comment = 		ligne[13];
-		if (ligne.length == 14) 	{	Datetime = 	"20000101_1200";		} // if
-		else {				Datetime = 	ligne[14];			} // else
-		project[index]=		Project;
-		ship[index] =		Ship;
-		filename[index]=	Filename;
-		stationname[index]=	Stationname;
-		otherreffile[index]=	Otherreffile;
-		latitude[index]=		Latitude;
-		longitude[index]=	Longitude;
-		samplinggear[index]=	Samplinggear;
-		zmin[index]=		Zmin;
-		zmax[index]=		Zmax;
-		volconc[index]=	Volconc;
-		volpump[index]=	Volpump;
-		celltype[index]=	Celltype;
-		comment[index]=	Comment;
-		datetime[index]=	Datetime;
-		stationdone[index] =	Stationname;
-		check =1;
-		// ------------------------------------------------ Correction des données ------------------------------------------------------------------------------------------------------------
-		while (check ==1) {check= 0;
-			message = "Warning : \n";
-			Dialog.create("EDIT   METADATA    ");
-			Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-			Dialog.addMessage("Filename =                   "+Filename);					
-			Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-			Dialog.addString("Project ",Project);
-			Dialog.addString("Ship ",Ship);
-			Dialog.addString("Sample Id (must start with alphanumeric characters) ",Filename);
-			Dialog.addString("Station Id or Sample barcode",Otherreffile);
-			Dialog.addString("UTC Sampling date (YYYYMMDD-HHMM) ",Datetime);
-			Dialog.addMessage("CHECK CAREFULLY HOW TO FILL IN THE POSITION !!!!");
-			LATITUDE = parseFloat(latitude[index]);
-			latitude_ns = newArray("N","S");
-			if (LATITUDE < 0) { latitude_ns = newArray("S","N");	}
-			LATITUDE = abs(LATITUDE);
-			latitude_deg = floor(LATITUDE);
-			latitude_min = 100*(LATITUDE - latitude_deg);
-			Dialog.addNumber("LATITUDE (degree) ",latitude_deg);
-			Dialog.addNumber("LATITUDE (minute) ",latitude_min);
-			Dialog.addChoice("LATITUDE (N/S)    ",latitude_ns);
-			
-			LONGITUDE = parseFloat(longitude[index]);
-			longitude_ew = newArray("E","W");
-			if (LONGITUDE < 0) { longitude_ew = newArray("W","E");	}
-			LONGITUDE = abs(LONGITUDE);
-			longitude_deg = floor(LONGITUDE);
-			longitude_min = 100*(LONGITUDE - longitude_deg);	
-			Dialog.addNumber("LONGITUDE (degree) ",longitude_deg);
-			Dialog.addNumber("LONGITUDE (minute) ",longitude_min);
-			Dialog.addChoice("LONGITUDE (E/W)    ",longitude_ew);
-			aff = newArray(Samplinggear,"Niskin","Bucket","Net","Continuous","Vivaflow");
-			aff[0] = Samplinggear;
-			Dialog.addChoice("Sampling gear       ",aff);
-			Dialog.addNumber("Zmin (m) ",Zmin);
-			Dialog.addNumber("Zmax (m) ",Zmax);
-			Dialog.addString("Initial collected volume (ml) ",Comment);
-			Dialog.addNumber("Concentrated/Diluted water volume (from initial) (ml) ",Volconc);
-			Dialog.addMessage('Pumped volume is no longer usefull. \nThe imaged volume is to be calculated using the :\n- Total images \n- fluid_imaged volume \n- Image_processed. \nThese data are recorded in the PID and the TSV file for Ecotaxa.');
-			//		Dialog.addNumber("         Pumped water volume (run) (ml) ",Volpump);
-			aff = newArray(Celltype,"100microns","200microns","300microns","800microns");
-			aff[0] = Celltype;
-			Dialog.addChoice("Cell type       ",aff);
-			Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-			Dialog.show;
-			
-			Project = Dialog.getString();
-			a= lengthOf(Project);
-			if (a==0) {message = message+ "Project empty \n";	check = 1;		} // if
-			ind= indexOf(Project," ");
-			if (ind != -1) { Project = replace(Project," ","_"); 				 }
-			Ship = Dialog.getString();
-			a= lengthOf(Ship);
-			if (a==0) {message = message+ "Zooscan Operator empty \n";	check = 1;		} // if
-			ind= indexOf(Ship," ");
-			if (ind != -1) { Ship = replace(Ship," ","_"); 						 }
-			Stationname = Dialog.getString();
-			// ------------------------------- Verifier si n'existe pas deja -----------------------------------------------------------------------------------
-			for (h = 1;h< nbstationdone;h++) {
-				//			print(Stationname+"  "+stationdone[h]);
-				if (Stationname == stationdone[h] && Stationname != Filename ) { message = message+ "Sample Id allready used \n";		check = 1;	} // if
-			} // while
-			stationdone[h] = Stationname;
-			a= lengthOf(Stationname);
-			if (a==0) {message = message+ "Sample Id empty \n";		check = 1;		} // if
-			ind= indexOf(Stationname," ");
-			if (ind != -1) { Stationname = replace(Stationname," ","_"); 					 }
-			Otherreffile = Dialog.getString();
-			a= lengthOf(Comment);
-			if (a==0) { Otherreffile = "no";		} // if
-			ind= indexOf(Otherreffile," ");
-			if (ind != -1) { Otherreffile  = replace(Otherreffile," ","_"); 				 }
-			Datetime = Dialog.getString();
-			a= lengthOf(Datetime);
-			if (a==0) {message = message+ "Date empty \n";		check = 1;			} // if
-			if (a!=13) {message = message+ "Date incorrect \n";			check = 1;			} // if
-			ind= indexOf(Datetime," ");
-			if (ind != -1) { Datetime = replace(Datetime," ","-"); 				}
-			latitude_deg = Dialog.getNumber();
-			if (indexOf(toString(latitude_deg),".") >= 0) {message = message + "Latitude (degree) is not an integer \n "; check = 1; }
-			if (latitude_deg > 90) {message = message + "Latitude (degree) > 90 \n "; check = 1; }
-			if (latitude_deg < 0) {message = message + "Latitude (degree) must not be signed \n "; check = 1; }
-			
-			latitude_min = Dialog.getNumber();
-			if (latitude_min > 60) {message = message + "Latitude (minute) > 60 \n "; check = 1; }
-			if (latitude_min > floor(latitude_min) ) {
-				aa = toString(latitude_min,5);
-				data = split(aa,".");
-				aaa = data[0];
-				if (lengthOf(aaa) == 1) {latitude_min = "0"+aaa+data[1];}
-				else { latitude_min = aaa+data[1];}
-			}// if
-			Latitude = toString(latitude_deg)+"."+latitude_min;
-			
-			latitude_ns = Dialog.getChoice();
-			if (latitude_ns == "S") Latitude = "-"+Latitude;
-			
-			longitude_deg = Dialog.getNumber();
-			if (indexOf(toString(longitude_deg),".") >= 0) {message = message + "Longitude (degree) is not an integer \n "; check = 1; }
-			if (longitude_deg > 180) {message = message + "Longitude (degree) > 180 \n "; check = 1; }
-			if (longitude_deg < 0) {message = message + "Longitude (degree) must not be signed \n "; check = 1; }		
-			
-			longitude_min = Dialog.getNumber();
-			if (longitude_min > 60) {message = message + "Latitude (minute) > 60 \n "; check = 1; }
-			if (longitude_min > floor(longitude_min) ) {
-				aa = toString(longitude_min,5);
-				data = split(aa,".");
-				aaa = data[0];
-				if (lengthOf(aaa) == 1) {longitude_min = "0"+aaa+data[1];}
-				else { longitude_min = aaa+data[1];}
-			}// if
-			Longitude = toString(longitude_deg)+"."+longitude_min;
-			
-			longitude_ew = Dialog.getChoice();	
-			if (longitude_ew == "W") Longitude = "-"+Longitude;
-			Samplinggear =  Dialog.getChoice();
-			Zmin = Dialog.getNumber();
-			
-			Zmax = Dialog.getNumber();
-			if (Zmax < Zmin) { message = message + "Zmin > Zmax !   \n  "; check = 1;		} // if
-			
-			Volconc = Dialog.getNumber();
-			if (Volconc < 0) { message = message + "Concentrated water volume (ml) < 0 !   \n  "; check = 1;		} // if
-			if (Volconc == 0) { message = message + "''Concentrated water volume (ml)'' is not a number  or set to 0   \n  "; check = 1;		} // if
-			//		Volpump = Dialog.getNumber();
-			//		if (Volpump < 0) { message = message + "Pumped water volume (ml) < 0 !   \n  "; check = 1;		} // if
-			//		if (Volpump == 0) { message = message + "''Pumped water volume (ml)'' is not a number  or set to 0   \n  "; check = 1;		} // if
-			
-			Celltype =  Dialog.getChoice();
-			
-			Comment = Dialog.getString();
-			a= lengthOf(Comment);
-			if (a==0) { Comment = "no";		} // if
-			ind= indexOf(Comment," ");
-			if (ind != -1) { Comment  = replace(Comment," ","_"); 				 }
-			
-			if (check == 1) { message = message + " \nEnter values again              ";		showMessage(message); 			} // if	
-			else {	// ------------------------ Recuperation des donnees existantes ---------------------------------------
-				open(path+"\\meta\\"+metafile);
-				wait(100);
-				metadata = getInfo();
-				run('Close');
-				DATA = split(metadata,"\n");
-				// ---------------- Message ---------------------------------------------------------------------
-				message = "Files modified : \n";
-				
-				// ----------------- Impression des premieres lignes -----------------
-				if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-				print(paramlist);
-				for (b=1;b<index ; b++) { 	print(DATA[b]);	} // for
-				// ----------------- Ajout de la ligne -------------------------------------
-				Filename= toString(Filename);
-				Project = toLowerCase(Project);
-				Ship = toLowerCase(Ship);
-				Stationname = toLowerCase(Stationname);
-				Comment = toLowerCase(Comment);
-				print(Project+";"+Ship+";"+Filename+";"+Stationname+";"+Otherreffile+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Volconc+";"+Volpump+";"+Celltype+";"+Comment+";"+Datetime);
-				
-				// ---------------- Impression lignes suivantes ------------------------------
-				for (b=index+1;b<DATA.length ; b++) { 	print(DATA[b]);	} // for
-				
-				// ---------------- Sauvegarde flowcam_header---------------------------------
-				sauve = "save=" + path+"\\meta\\"+metafile;
-				selectWindow("Log");
-				run("Text...",sauve);
-				run('Close');
-				message = message + path+"\\meta\\"+metafile+"\n";
-				
-				// ---------------- Creation repertoire profil -------------------------------------------------
-				pathprofile = path+"\\work\\"+Stationname+"\\";
-				File.makeDirectory(pathprofile);
-				
-				// ---------------- Sauvegarde fichier individuel dans repertoire profil ---------------
-				if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-				print(paramlist);
-				datatext = Project+";"+Ship+";"+Filename+";"+Stationname+";"+Otherreffile+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Volconc+";"+Volpump+";"+Celltype+";"+Comment+";"+Datetime;
-				print(datatext);
-				sauve = "save=" + pathprofile+Stationname+"_meta.txt";
-				selectWindow("Log");
-				run("Text...",sauve);
-				run('Close');
-				message = message + pathprofile+Stationname+"_meta.txt"+"\n";
-				
-				// ---------------------- Mise à jour des données dans l'architecture projet -----------
-				pidfile = 	Stationname+"_dat1.pid";
-				dat1file = 	Stationname+"_dat1.txt";
-				pathworksample = path+"\\"+"\\work\\"+Stationname+"\\";
-				pathresults = 		path+"\\"+"\\results";
-				pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
-				pathpidpredicted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Pid_predicted\\";
-				pathdat1validatted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Dat1_validated\\";
-				// ---------------------- Fichiers PID -----------------------------------------------------------
-				data = replace(datatext,";"," ");
-				datameta = split(data," ");
-				field = arrayrec[0];
-				field = replace(field,";"," ");
-				field = split(field," ");
-				// --------------------- SSI PID existe ----------------------------------------------------------
-				if (File.exists(pathworksample+pidfile)) {
-					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-					open(pathworksample+pidfile);
-					wait(100);
-					data = getInfo();
-					run('Close');
-					data = split(data,"\n");
-					for (p=0;p<data.length;p++) {
-						dataligne = data[p];
-						if (dataligne == "[Run_Summary]") summaryligne = p;
-					} // for
-					// ---------------- Debut -------------------------------------------------------------	
-					print("PID");
-					print(" ");
-					// ---------------- Metatdata ---------------------------------------------------------
-					print("[Metadata]");
-					for (t=0;t<datameta.length;t++) {	print(field[t]+"= "+datameta[t]);				} // for
-					print(" ");
-					// ---------------- Suite ----------------------------------------------------------------
-					for (p=summaryligne;p<data.length;p++) {		print(data[p]);				} // for
-					// ---------------- PID dans WORK SAMPLE --------------------------------------------------
-					sauve = "save=" + pathworksample+pidfile;
-					selectWindow("Log");
-					run("Text...",sauve);
-					message = message + pathworksample+pidfile+"\n";
-					
-					// ---------------- PID dans RESULTS --------------------------------------------------
-					if (File.exists(pathresults+pidfile)) {
-						sauve = "save=" + pathresults+pidfile;
-						selectWindow("Log");
-						run("Text...",sauve);
-						message = message + pathresults+pidfile+"\n";
-					} // if
-					// ---------------- PID dans PID RESULTS --------------------------------------------------
-					if (File.exists(pathpidresults+pidfile)) {
-						sauve = "save=" + pathpidresults+pidfile;
-						selectWindow("Log");
-						run("Text...",sauve);
-						message = message + pathpidresults+pidfile+"\n";
-					} // if
-					// ---------------- PID dans PREDICTED --------------------------------------------------
-					if (File.exists(pathpidpredicted+pidfile)) {
-						sauve = "save=" + pathpidpredicted+pidfile;
-						selectWindow("Log");
-						run("Text...",sauve);
-						message = message + pathpidpredicted+pidfile+"\n";	
-					} // if
-					run('Close');
-					// ------------ Ecotaxa settings ------------------
-					oo = indexOf(pidfile,".");
-					pid_file = substring(pidfile,0,oo-5);
-					status = false;
-					process_opt = "pid";
-					outlines = false;
-					// --------------------- ECOTAXA --------------------------------------------
-					macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathworksample+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-					if (macro_flag == "ok") message = message+pathworksample+"ecotaxa_"+pid_file+".tsv"+"\n";
-					if (File.exists(pathresults+pidfile)) {
-						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-						if (macro_flag == "ok") message = message+pathresults+"ecotaxa_"+pid_file+".tsv"+"\n";
-					}
-					if (File.exists(pathpidresults+pidfile)) {
-						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidresults+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-						if (macro_flag == "ok") message = message+pathpidresults+"ecotaxa_"+pid_file+".tsv"+"\n";
-					}
-					if (File.exists(pathpidpredicted+pidfile)) {
-						macro_flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathpidpredicted+" "+pid_file+"_dat1.pid "+process_opt+" "+outlines+" "+status+" maj http://www.zooscan.obs-vlfr.fr//");
-						if (macro_flag == "ok") message = message+pathpidpredicted+"ecotaxa_"+pid_file+".tsv"+"\n";
-					}
-					
-				} // if exists
-				// ---------------------- Fichiers DAT1.TXT -----------------------------------------------------------
-				if (File.exists(pathdat1validatted+dat1file)) {
-					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-					open(pathdat1validatted+dat1file);
-					wait(100);
-					data = getInfo();
-					run('Close');
-					data = split(data,"\n");
-					// ---------------- Debut -------------------------------------------------------------	
-					print("PID");
-					print(" ");
-					// ---------------- Metatdata ---------------------------------------------------------
-					print("[Metadata]");
-					for (t=0;t<datameta.length;t++) {	print(field[t]+"= "+datameta[t]);				} // for
-					print(" ");
-					// ---------------- Suite ----------------------------------------------------------------
-					for (p=summaryligne;p<data.length;p++) {		print(data[p]);				} // for
-					// ---------------- PID dans PREDICTED --------------------------------------------------
-					sauve = "save=" + pathdat1validatted+dat1file;
-					selectWindow("Log");
-					run("Text...",sauve);
-					message = message + pathdat1validatted+dat1file+"\n";	
-					run('Close');
-				} // if exists
-//				showMessage(message+"\n \n THERE MIGHT BE OTHER FILES NOT CORRECTED in other locations !..       ");
-				array[index] = datatext;
-				end = getBoolean(message+"\n \n THERE MIGHT BE OTHER FILES NOT CORRECTED in other locations !..       \n \nEDIT ANOTHER PROFILE ? ");
-			} // else
-		}
-	} // while
-} // select
-if (option == "add") {
+		Datetime = 		ligne[14];
+		StationId = 		ligne[15];
+		Depth = 		ligne[16];
+		Ctdref = 		ligne[17];
+		Townb = 		ligne[18];
+		Towtype = 		ligne[19];
+		Nettype = 		ligne[20];
+		Netmesh = 		ligne[21];
+		Netsurf = 		ligne[22];
+		Vol_qc = 		ligne[23];
+		Depth_qc = 		ligne[24];
+		Sample_qc = 		ligne[25];
+		Barcode = 		ligne[26];
+		Latitude_end = 		ligne[27];
+		Longitude_end = 	ligne[28];
+		Net_duration = 		ligne[29];
+		Ship_speed_knots = 	ligne[30];
+		Cable_length = 		ligne[31];
+		Cable_angle = 		ligne[32];
+		Cable_speed = 		ligne[33];
+		Nb_jar = 		ligne[34];
+		Sieve_min = 		ligne[35];
+		Sieve_max = 		ligne[36];
+		Fixative = 		ligne[37];
+		Flow_start = 		ligne[38];
+		Flow_end = 		ligne[39];
+		Flow_type = 		ligne[40];
+		Dilution_method = 	ligne[41];
+		Cruise = 		ligne[42];
+		Operator_acq = 		ligne[43];
+		Operator_sample = 	ligne[44];
+		sample_names = sample_names +";"+SampleId;
+		datatext1 = Project+";"+Ship+";"+Filename+";"+SampleId+";"+Other_ref+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Conc_vol_ml+";"+Initial_col_vol_m3+";"+Celltype+";"+Comment+";"+Datetime;
+		datatext2 = StationId+";"+Depth+";"+Ctdref+";"+Townb+";"+Towtype+";"+Nettype+";"+Netmesh+";"+Netsurf+";"+Vol_qc+";"+Depth_qc+";"+Sample_qc+";"+Barcode+";"+Latitude_end+";"+Longitude_end;
+		datatext3 = toString(Net_duration)+";"+Ship_speed_knots+";"+Cable_length+";"+Cable_angle+";"+Cable_speed+";"+Nb_jar+";"+Sieve_min+";"+Sieve_max+";"+Fixative+";"+Flow_start+";"+Flow_end+";"+Flow_type+";"+Dilution_method+";"+Cruise+";"+Operator_acq+";"+Operator_sample;	
+		datatext = datatext1+";"+datatext2+";"+datatext3;
+	}
+	
 	// --------------- Saisie d'un nouveau profile ------------------------------------------------
 	filelist  = 	getFileList(path+"\\raw\\");
 	// --------------- Selection des fichiers  -----------------------------------
@@ -687,20 +682,13 @@ if (option == "add") {
 		test = 0;		exist = 0;
 		long = lengthOf( filelist[i]);
 		file = substring(filelist[i],0,long-1);
-		ctrl = startsWith(file,"flowcam");
-		if (ctrl == 1) {
-			//			getBoolean(file+"    "+array.length );
+		if (startsWith(file,"flowcam") == true) {
 			// ----------------- EXCLURE les profils deja dans la liste -------------------------------
 			for (m=1; m<array.length ; m++) { 	Filename = filename[m];
-				//				getBoolean(Filename+" " +filename[m]);
-				if (endsWith(file,Filename) == true ) {	
-					exist = 1;	
-					//					getBoolean(file+"    "+Filename);
-				} // if
+				if (endsWith(file,Filename) == true ) {		exist = 1;		} // if
 			} // for
 		} // if FlowCam
-		//		getBoolean(file+"    "+exist);
-		if ( exist == 0 && ctrl == 1 )	{		list[j] = file;  j = j + 1;		} // if
+		if ( exist == 0 && startsWith(file,"flowcam") == true )	{		list[j] = file;  j = j + 1;		} // if
 	} // for	
 	
 	//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
@@ -712,225 +700,100 @@ if (option == "add") {
 		listaff = newArray(j);
 		for (k=0;k<listaff.length ;k++) {	rr = list[k];	listaff[k] = rr;	 } // for
 		otherprofile = 1;
+		nb_profiles = array.length;
 		while (otherprofile == 1) {
-			nbstationdone++;
-			Dialog.create("METADATA           version : "+version);
+			// ------------------- AJOUT récusrsif de profils ------------------------------------
+			Dialog.create("FLOWCAM METADATA           version : "+version);
 			Dialog.addMessage("--------------------------------------------------------------------------------   ");
 			Dialog.addMessage("Project :  "+path);
+			Dialog.addMessage("Metadatafile = "+metafile);
 			Dialog.addMessage("--------------------------------------------------------------------------------   ");
-			message = "SELECT Sample to add            " ;
-			Dialog.addMessage(message);
+			Dialog.addMessage("SELECT Sample to add  or press CANCEL to end ");
 			Dialog.addChoice("       ", listaff);
 			Dialog.show();
 			dirprofile = Dialog.getChoice();
 			// --------------------------------------------- Suppression deja traites -------------------------------------
 			for (i=0; i<listaff.length ; i++) {	
 				rr = list[i];
-				//				showMessage(rr+"  "+dirprofile);
 				if (rr == dirprofile) {	aa = listaff[i];	listaff[i] = aa+" - (done)";	
-					//	showMessage("Removed="+rr+"  "+listaff[i]);
 				} // if
 			} // for	
-			
-			if (endsWith(dirprofile,"(done)") == false) {
-				// ------------------ Suppression HDR -----------------------------
+			if (endsWith(dirprofile,"(done)") == false) {								
+				// ------------------------- Recuperation Filename -----------------------------------------
 				long = lengthOf(dirprofile);
 				Filename = substring(dirprofile,8,long);
-				check= 1;
-				// ------------------------------------------- SAISIE des DONNEES -----------------------------------------------------------------------------------
-				while (check ==1) {check= 0;
-					message = "Warning : \n";
-					Dialog.create("METADATA    ");
-					Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-					Dialog.addMessage("Filename =                   "+Filename);					
-					Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-					Dialog.addString("Project ",Project);
-					Dialog.addString("Ship ",Ship);
-					Dialog.addString("Sample Id (must start with alphanumeric characters) ",Filename);
-					Dialog.addString("UTC Sampling date (YYYYMMDD-HHMM) ",Datetime);
-					Dialog.addString("Other reference ",Otherreffile);
-					Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-					latitude = parseFloat(Latitude);
-					latitude_ns = newArray("N","S");
-					if (latitude < 0) { latitude_ns = newArray("S","N");	}
-					latitude = abs(latitude);
-					latitude_deg = floor(latitude);
-					latitude_min = 100*(latitude - latitude_deg);
-					Dialog.addNumber("LATITUDE (degree) ",latitude_deg);
-					Dialog.addNumber("LATITUDE (minute) ",latitude_min);
-					Dialog.addChoice("LATITUDE (N/S)    ",latitude_ns);
-					
-					longitude = parseFloat(Longitude);
-					longitude_ew = newArray("E","W");
-					if (longitude < 0) { longitude_ew = newArray("W","E");	}
-					longitude = abs(longitude);
-					longitude_deg = floor(longitude);
-					longitude_min = 100*(longitude - longitude_deg);	
-					Dialog.addNumber("LONGITUDE (degree) ",longitude_deg);
-					Dialog.addNumber("LONGITUDE (minute) ",longitude_min);
-					Dialog.addChoice("LONGITUDE (E/W)    ",longitude_ew);
-					Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");	
-					
-					aff = newArray(Samplinggear,"Niskin","Bucket","Net","Continuous","Vivaflow");
-					aff[0] = Samplinggear;
-					Dialog.addChoice("Sampling gear       ",aff);
-					Dialog.addNumber("Zmin (m) ",Zmin);
-					Dialog.addNumber("Zmax (m) ",Zmax);
-					Dialog.addString("Initial collected volume (ml) ",Comment);
-					Dialog.addNumber("Concentrated/Diluted water volume (from Initial) (ml) ",Volconc);
-					Dialog.addMessage('Pumped volume is no longer usefull. \nThe imaged volume is to be calculated using the :\n- Total images \n- fluid_imaged volume \n- Image_processed. \nThese data are recorded in the PID and the TSV file for Ecotaxa.');
-					//			Dialog.addNumber("         Pumped water volume (Run) (ml) ",Volpump);
-					aff = newArray(Celltype,"100microns","200microns","300microns","800microns");
-					aff[0] = Celltype;
-					Dialog.addChoice("Cell type       ",aff);
-					
-					Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------");
-					Dialog.show;
-					
-					Project = Dialog.getString();
-					a= lengthOf(Project);
-					if (a==0) {message = message+ "Project empty \n";	check = 1;		} // if
-					ind= indexOf(Project," ");
-					if (ind != -1) { Project = replace(Project," ","_"); 				 }
-					Ship = Dialog.getString();
-					a= lengthOf(Ship);
-					if (a==0) {message = message+ "Zooscan Operator empty \n";	check = 1;		} // if
-					ind= indexOf(Ship," ");
-					if (ind != -1) { Ship = replace(Ship," ","_"); 						 }
-					
-					Stationname = Dialog.getString();
-					// ------------------------------- Verifier si n'existe pas deja -----------------------------------------------------------------------------------
-					for (h = 1;h< nbstationdone;h++) {
-						if (Stationname == stationdone[h]) { message = message+ "Sample Id allready used \n";		check = 1;	} // if
-					} // for
-					stationdone[h] = Stationname;
-					a= lengthOf(Stationname);
-					if (a==0) {message = message+ "Sample Id empty \n";		check = 1;		} // if
-					ind= indexOf(Stationname," ");
-					if (ind != -1) { Stationname = replace(Stationname," ","_"); 					 }
-					
-					Datetime = Dialog.getString();
-					a= lengthOf(Datetime);
-					if (a==0) {message = message+ "Date empty \n";	
-						check = 1;
-					} // if
-					if (a!=13) {message = message+ "Date incorrect \n";	
-						check = 1;
-					} // if
-					ind= indexOf(Datetime," ");
-					if (ind != -1) { Datetime = replace(Datetime," ","-"); 
+				
+				// ------------------------ Saisie controlee du SampleId -------------------------------------
+				SampleId = runMacro("Zooprocess_sampleid_fill.txt",Filename+";"+sample_names);
+				if (lengthOf(toString(SampleId)) == 1) { aa = getBoolean("Zooprocess_sampleid_fill ABORTED \n \nPress CANCEL to END");		}
+
+				if (nb_profiles == 1) {	// ------------------------- Si premier sample du header => valeurs par défaut + SampleId ------------
+					datatext = runMacro("Zooprocess_flowcam_upgrade_metadata.txt",arg+" "+SampleId);
+					if (lengthOf(toString(datatext)) == 1) { aa = getBoolean("Zooprocess_flowcam_upgrade_metadata ABORTED \n \nPress CANCEL to END");		}
+					else { // ------------------- Recuperation du Filename ---------------------
+						data = split(datatext,";");
+						datatext = data[0];
+						for (i=1; i < data.length; i++) {
+							if (i == 2) data[i] = Filename;
+							datatext = datatext + ";"+ data[i];
+						}
 					}
+				}
+				else {	// -------------- Ajout du SampleId ------------
+					data = split(datatext,";");
+					datatext = data[0];
+					for (i=1; i < data.length; i++) {
+						if (i == 2) data[i] = Filename;
+						if (i == 3) data[i] = SampleId;
+						datatext = datatext + ";"+ data[i];
+					}
+				}
+				
+				// ------------------------- Page edition --------------------------------------------------				
+				datatext = runMacro("Zooprocess_flowcam_metadata_windows",datatext+";add");		
+				if (lengthOf(toString(datatext)) == 1) {  showMessage("Zooprocess_flowcam_metadata_windows ABORTED");		}
+				else {
+					// ------------------------ Recuperation des donnees existantes ---------------------------------------
+					open(path+"\\meta\\"+metafile);
+					wait(100);
+					metadata = getInfo();
+					run('Close');
+					data = split(metadata,"\n");
+					// ----------------- Impression des premieres lignes -----------------
+					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+					print(paramlist);
+					for (b=1;b<data.length ; b++) { 	print(data[b]);	} // for
+					// ----------------- Ajout de la ligne -------------------------------------
+					print(datatext);
 					
-					Otherreffile = Dialog.getString();
-					a= lengthOf(Comment);
-					if (a==0) { Otherreffile = "no";		} // if
-					ind= indexOf(Otherreffile," ");
-					if (ind != -1) { Otherreffile  = replace(Otherreffile," ","_"); 				 }
+					// ---------------- Sauvegarde flowcam header---------------------------------
+					sauve = "save=" + path+"\\meta\\"+metafile;
+					selectWindow("Log");
+					run("Text...",sauve);
+					run('Close');
+					// ---------------- Creation repertoire profil -------------------------------------------------
+					pathprofile = path+"\\work\\"+SampleId+"\\";
+					File.makeDirectory(pathprofile);
 					
+					// ---------------- Sauvegarde fichier individuel dans repertoire profil ---------------
+					if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+					print(paramlist);						
+					print(datatext);						
+					sauve = "save=" + pathprofile+SampleId+"_meta.txt";
+					//							getBoolean(sauve);
+					selectWindow("Log");
+					run("Text...",sauve);
+					run('Close');
 					
-					latitude_deg = Dialog.getNumber();
-					if (indexOf(toString(latitude_deg),".") >= 0) {message = message + "Latitude (degree) is not an integer \n "; check = 1; }
-					if (latitude_deg > 90) {message = message + "Latitude (degree) > 90 \n "; check = 1; }
-					if (latitude_deg < 0) {message = message + "Latitude (degree) must not be signed \n "; check = 1; }
-					
-					latitude_min = Dialog.getNumber();
-					if (latitude_min > 60) {message = message + "Latitude (minute) > 60 \n "; check = 1; }
-					if (latitude_min > floor(latitude_min) ) {
-						aa = toString(latitude_min,5);
-						data = split(aa,".");
-						aaa = data[0];
-						if (lengthOf(aaa) == 1) {latitude_min = "0"+aaa+data[1];}
-						else { latitude_min = aaa+data[1];}
-					}// if
-					Latitude = toString(latitude_deg)+"."+latitude_min;
-					
-					latitude_ns = Dialog.getChoice();
-					if (latitude_ns == "S") Latitude = "-"+Latitude;
-					
-					longitude_deg = Dialog.getNumber();
-					if (indexOf(toString(longitude_deg),".") >= 0) {message = message + "Longitude (degree) is not an integer \n "; check = 1; }
-					if (longitude_deg > 180) {message = message + "Longitude (degree) > 180 \n "; check = 1; }
-					if (longitude_deg < 0) {message = message + "Longitude (degree) must not be signed \n "; check = 1; }		
-					
-					longitude_min = Dialog.getNumber();
-					if (longitude_min > 60) {message = message + "Latitude (minute) > 60 \n "; check = 1; }
-					if (longitude_min > floor(longitude_min) ) {
-						aa = toString(longitude_min,5);
-						data = split(aa,".");
-						aaa = data[0];
-						if (lengthOf(aaa) == 1) {longitude_min = "0"+aaa+data[1];}
-						else { longitude_min = aaa+data[1];}
-					}// if
-					Longitude = toString(longitude_deg)+"."+longitude_min;
-					
-					longitude_ew = Dialog.getChoice();	
-					if (longitude_ew == "W") Longitude = "-"+Longitude;
-					
-					Samplinggear =  Dialog.getChoice();
-					Zmin = Dialog.getNumber();
-					
-					Zmax = Dialog.getNumber();
-					if (Zmax < Zmin) { message = message + "Zmin > Zmax !   \n  "; check = 1;		} // if
-					
-					Volconc = Dialog.getNumber();
-					if (Volconc < 0) { message = message + "Concentrated water volume (ml) < 0 !   \n  "; check = 1;		} // if
-					if (Volconc == 0) { message = message + "''Concentrated water volume (ml)'' is not a number  or set to 0   \n  "; check = 1;		} // if
-					
-					//				Volpump = Dialog.getNumber();
-					//				if (Volpump < 0) { message = message + "Pumped water volume (ml) < 0 !   \n  "; check = 1;		} // if
-					//				if (Volpump == 0) { message = message + "''Pumped water volume (ml)'' is not a number  or set to 0   \n  "; check = 1;		} // if
-					
-					Celltype =  Dialog.getChoice();
-					
-					Comment = Dialog.getString();
-					a= lengthOf(Comment);
-					if (a==0) { Comment = "no";		} // if
-					ind= indexOf(Comment," ");
-					if (ind != -1) { Comment  = replace(Comment," ","_"); 				 }
-					if (check == 1) { message = message + " \nEnter values again              ";			showMessage(message); 		} // if	
-					else {	// ------------------------ Recuperation des donnees existantes ---------------------------------------
-						open(path+"\\meta\\"+metafile);
-						wait(100);
-						metadata = getInfo();
-						run('Close');
-						data = split(metadata,"\n");
-						// ----------------- Impression des premieres lignes -----------------
-						if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-						print(paramlist);
-						for (b=1;b<data.length ; b++) { 	print(data[b]);	} // for
-						// ----------------- Ajout de la ligne -------------------------------------
-						Filename= toString(Filename);
-						Project = toLowerCase(Project);
-						Ship = toLowerCase(Ship);
-						Stationname = toLowerCase(Stationname);
-						Comment = toLowerCase(Comment);
-						print(Project+";"+Ship+";"+Filename+";"+Stationname+";"+Otherreffile+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Volconc+";"+Volpump+";"+Celltype+";"+Comment+";"+Datetime);
-						// ---------------- Sauvegarde uvp5_header---------------------------------
-						sauve = "save=" + path+"\\meta\\"+metafile;
-						selectWindow("Log");
-						run("Text...",sauve);
-						run('Close');
-						// ---------------- Creation repertoire profil -------------------------------------------------
-						pathprofile = path+"\\work\\"+Stationname+"\\";
-						File.makeDirectory(pathprofile);
-						
-						// ---------------- Sauvegarde fichier individuel dans repertoire profil ---------------
-						if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-						print(paramlist);
-						print(Project+";"+Ship+";"+Filename+";"+Stationname+";"+Otherreffile+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Volconc+";"+Volpump+";"+Celltype+";"+Comment+";"+Datetime);
-						sauve = "save=" + pathprofile+Stationname+"_meta.txt";
-						//							getBoolean(sauve);
-						selectWindow("Log");
-						run("Text...",sauve);
-						run('Close');
-					} // else	
-				} // while
-			} // if done
-			else if (endsWith(dirprofile,"(done)") == true) {
-				otherprofile = getBoolean("Profile in database !    \n  \nEnter another profile ?   ");
-			} // else if
-			else {	otherprofile = getBoolean("Enter another profile ?   ");	} // else
-		} // while otherprofile
+					nb_profiles++;
+				} // else	
+			} // while
+		} // if done
+		else if (endsWith(dirprofile,"(done)") == true) {
+			otherprofile = getBoolean("Profile in database !    \n  \nEnter another profile ?   ");
+		} // else if
+		else {	otherprofile = getBoolean("Enter another profile ?   ");	} // else
+		
 	} // if add
 } // if
 

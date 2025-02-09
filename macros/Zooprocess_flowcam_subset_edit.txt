@@ -1,0 +1,89 @@
+// -------------------------- Zooprocess_flowcam_subset_edit --------------------------
+version = "8.28";
+date = "2025/01/07";
+
+
+args = 	getArgument();
+
+//args = "C:\\flowcam_test_vs5 test_ptb_02";
+arg = 	split(args," ");
+projfolder = 			arg[0];
+config_folder = projfolder + "\\config\\";
+
+nb_object_low_in_config= 1;
+nb_object_high_in_config= 1;
+subset_esd_in_config= 50;
+percent_object_low_in_config= 1;
+percent_object_high_in_config= 1;
+
+// --------------- Repertoires --------------------------
+if (File.exists(config_folder+"\\subset_settings.txt")) {
+	// -------------- Lecture des paramètres ----------------------------------
+	open(config_folder+"\\subset_settings.txt");	
+	wait(100);
+	config_data = getInfo();
+	run("Close");
+	conf_data  = split(config_data,"\n");
+	for (hh=0;hh<conf_data.length;hh++){
+		data_conf = replace(conf_data[hh],"= "," ");
+		dat_conf = split(data_conf," ");		
+		if (startsWith(dat_conf[0],"subset_nb_max_low"))	nb_object_low_in_config = parseInt(dat_conf[1]);
+		if (startsWith(dat_conf[0],"subset_nb_max_high"))	nb_object_high_in_config = parseInt(dat_conf[1]);	
+		if (startsWith(dat_conf[0],"subset_esd_um"))		subset_esd_in_config = parseInt(dat_conf[1]);
+		if (startsWith(dat_conf[0],"subset_percent_low"))	percent_object_low_in_config = parseFloat(dat_conf[1]);
+		if (startsWith(dat_conf[0],"subset_percent_high"))	percent_object_high_in_config = parseFloat(dat_conf[1]);
+		
+	}// for
+	showMessage("The existing ''subset_settings.txt'' file is edited.");
+}
+else { showMessage("The ''subset_settings.txt'' file will now be created.");	}
+
+process = true;
+while (process == true) {
+	// ----------------------------- SAISIE ---------------------------------------------
+	Dialog.create("Edit subset settings            version :  "+version);
+	Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addMessage("Instrument :  FlowCam");
+	Dialog.addMessage("Project :        "+projfolder);
+	Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addMessage("You can set either a percentage of vignettes or a maximum number of vignettes for each fraction.");
+	Dialog.addMessage("Zooprocess will create the subset using the parameter which will provide subsets with less vignettes.");	
+	Dialog.addMessage("---- LOWER -----------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addNumber("        MAXIMUM percentage of vignettes for the lower fraction ( 0 < M <= 1 ) =       ",percent_object_low_in_config);
+	Dialog.addNumber("        MAXIMUM number of vignettes for the lower fraction ( > 0 ) =       ",nb_object_low_in_config);
+	Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addNumber("  MAXIMUM Equivalent Spherical Diameter for the lower fraction [µm] = ",subset_esd_in_config);
+	Dialog.addMessage("---- HIGHER ----------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addNumber("        MAXIMUM percentage of vignettes for the upper fraction ( 0 < M <= 1 ) =       ",percent_object_high_in_config);
+	Dialog.addNumber("        MAXIMUM number of vignettes for the upper fraction ( > 0 ) =       ",nb_object_high_in_config);
+	Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.addMessage("Zooprocess will create the subset using the parameter which will provide subsets with LESS vignettes.");
+	Dialog.addMessage(" If you want to get a unique fraction the sample, set the ESD to a value larger than the ESD of the larger object \n and define the % or MAXIMUM number for the LOWER fraction.");
+	Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+	Dialog.show;
+	percent_object_low_in_config = Dialog.getNumber();
+	nb_object_low_in_config = Dialog.getNumber();
+	subset_esd_in_config = Dialog.getNumber();
+	percent_object_high_in_config = Dialog.getNumber();
+	nb_object_high_in_config = Dialog.getNumber();
+	process = false;
+	if (percent_object_low_in_config > 1 || percent_object_high_in_config > 1 || percent_object_low_in_config < 0 || percent_object_high_in_config < 0) {
+		process = true;
+		showMessage("WARNING : \n \nThe percentages are either negative or above 1. \nEnter the value again after pressing OK.");
+	}		
+}
+
+// ---------------------------- Enregistrement ---------------------------------
+if (isOpen("Log")) {	selectWindow("Log");		run('Close');	}
+print("subset_percent_low= "+percent_object_low_in_config);
+print("subset_percent_high= "+percent_object_high_in_config);
+print("subset_nb_max_low= "+nb_object_low_in_config);
+print("subset_nb_max_high= "+nb_object_high_in_config);
+print("subset_esd_um= "+subset_esd_in_config);
+sauve = "save=" + config_folder+"\\subset_settings.txt";
+selectWindow("Log");
+run("Text...",sauve);
+
+// ----------------------------- FIN ----------------------------------------------
+ret = "OK";
+return ret;

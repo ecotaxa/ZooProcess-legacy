@@ -1,3 +1,3 @@
-showMessage("OPERATING MESSAGE","Vuescan must be CLOSED when you PRESS OK !      ");
+showMessage("OPERATING MESSAGE","QUIT Vuescan application (when scan ends) \n \nPRESS OK then !!!!!!      ");
 ret = "1";
 return ret;

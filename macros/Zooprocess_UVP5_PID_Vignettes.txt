@@ -1,16 +1,16 @@
 // -------------------------- Zooprocess_UVP5_PID_Vignettes --------------------------
-version = "7.30";
-date = "2019/09/07";
+version = "7.45";
+date = "2021/09/24";
 
 // Gestion du cas MIXT et CHOICE > 1
 // Gestion HD
 // TSV en standard
 // Exposure HD
 // Correction first & last_img
+// Recherche vignettes dans les sous repertoires (cas HD et téléchargement manuel des images)
 
 args = 	getArgument();
 arg = 	split(args," ");
-
 path = 			arg[0];
 profileprocessed = 	arg[1];
 profileprocesseddat = 	arg[1]+"_datfile.txt";
@@ -25,6 +25,8 @@ option_list_rep = false;		// permet d'éviter la fonction "getFileList" dans le c
 
 // ---------------------- Mode TEST ----------------------
 test_deb = false;
+batch =		true;
+test = 		"0";
 
 if (test_deb == true) {	aa = getBoolean("endimg= "+endimg);	}//
 if (arg.length == 8) 	{	endimg = parseInt(arg[6]);	yoyo_opt = arg[7];		} // if
@@ -53,8 +55,6 @@ if (test_deb == true) {
 // L'aire initiale n'est calculée que si "process_option = advancedi" et non "process_option = advanced"
 
 // --------------------------------------------------------- Mode TEST ----------------------------------------------------------------
-batch =		true;
-test = 		"0";
 if (test == "1")  { batch =		"false";	getBoolean("MODE TEST ! Continue ?");	} // if
 print("A purger");	selectWindow("Log");		run("Close");
 run("Colors...", "foreground=black background=white selection=red");
@@ -342,6 +342,7 @@ if (image_end_text == "not_defined") { image_end = substring(vigname,0,15);	imag
 nbimgsource = vignumber;
 //	if (vignumber == 0) aa = getBoolean("BRU file not processed ! \n \nPRESSS CANCEL to ABORT !");
 
+// ------------------- Test sur la présence de vignettes ------------------
 if (option_list_rep == true) {
 	// -------------------- Verification liste des vignettes -----------------------------
 	filelist = getFileList(pathrawvig);
@@ -439,12 +440,27 @@ if ( process_type != "B" ) {
 	Raw_img_hhmmss = 	newArray(nbblobs);
 	Raw_img_ms = 		newArray(nbblobs);
 	Raw_img_index = 	newArray(nbblobs);
+
+	// -------------------- Vérifier présence des sous répertoires contenant des vignettes (cas HD, téléchargement manuel) -------------------------
+	pathimg_list = newArray(100);
+	rep_vig_max = 0;
+	pathimg_list[0] = pathrawvig+"\\";
+	for (rep_vig = 0; rep_vig < 100; rep_vig++) {		
+		if (rep_vig >= 0 &&	rep_vig < 10) 	{ 	pathimg = pathrawvig+"\\0"+toString(rep_vig);	}
+		else if (rep_vig > 9 )			{	pathimg = pathrawvig+"\\" +toString(rep_vig);	}
+		if (File.exists(pathimg)) {			pathimg_list[rep_vig+1] = pathimg;	rep_vig_max++;	}
+	}
+	pathimg_list_final = newArray(rep_vig_max + 1);
+	for(i = 0; i < rep_vig_max + 1 ; i++) { pathimg_list_final[i] = pathimg_list[i];			}
+	
+	if (test_deb == true) { aa = getBoolean("max vig rep = "+ rep_vig_max);	}	
 	
 	// -------------------- BOUCLE PRINCIPALE sur les vignettes ------------------------------------------------------------------------------------
 	setBatchMode(batch);
 	totalvig = 0;
 	indexvignette = 0;
 	precimage = "debut_traitement_image_uvp5";
+	rep_vig = 0;
 //	i = 0;
 //	while (i < nbimgsource ) {
 	for (i=0; i<nbimgsource; i++) {
@@ -462,8 +478,19 @@ if ( process_type != "B" ) {
 
 		precimage = substring(image,0,18);
 		
-		pathimg = pathrawvig+"\\"+image;
-	
+		// ------------ Recherche dans sous répertoires si vignette pas présente (cas HD et téléchargement manuel) ---------------
+		pathimg = pathimg_list_final[rep_vig]+"\\"+image;
+		
+		// ------------ Test dans repertoire courant --------------
+		while (File.exists(pathimg) == false && rep_vig < rep_vig_max) {
+			// --------- Recherche dans suivant ----------------
+			rep_vig++;
+			pathimg = pathimg_list_final[rep_vig]+"\\"+image;
+		}
+		// ------------ Si la vignette n'est pas trouvée, on revient au repertoire d'origine ---------
+		if (File.exists(pathimg) == false ) {	rep_vig = 0; pathimg = pathimg_list_final[rep_vig]+"\\"+image;		}
+//	aa = getBoolean("pathimg = "+pathimg+ " SUITE   "+ File.exists(pathimg) );
+			
 		// ------------ Recherche de la profondeur -------------
 		vignette_short = substring(image, 0, 18);
 		flag = 0;

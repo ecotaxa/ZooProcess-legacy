@@ -77,7 +77,7 @@ while (i < data.length) {
 	if (startsWith(data[i],"[Data]")) { data_deb = i+1; 	i = data.length; 	}//if
 	i++;
 }// while
-if (annotation_list_C[3] == "marc picheral" ) annotation_list_C[4] = "marc.picheral@obs-vlfr.fr";
+if (annotation_list_C[3] == "marc picheral" ) annotation_list_C[4] = "marc.picheral@imev-mer.fr";
 
 // ------------ si pas PID et pas Validated ----------------------
 if (annotation_list_C[5] == "NaN" ) annotation_list_C[5] = "predicted";

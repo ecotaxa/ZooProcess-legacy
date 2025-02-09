@@ -1,8 +1,8 @@
 //--------------------------Zooscan_vignettes-----------------------------------
 // RESULTS DOIT ETRE OUVERT !
 nbblobs = nResults;
-version = "7.21";
-date = "2016/01/30";
+version = "8.09";
+date = "2022/01/24";
 
 //-------------------INITIALISATION-----------------------------------------
 arg = getArgument(); 
@@ -13,6 +13,7 @@ chemscan= array[12]; 	chemwork1= array[13];	savevig= array[14];	savezip= array[1
 vis=array[19];		maskvis= array[20];		scan= array[21];	resolution=array[22];	savetag= array[23];
 
 setBatchMode(true);
+code_text = true;
 // ---------------- Option par défaut pour le néttoyage des vignettes => nettoyage général --------------------
 legend = "2";
 
@@ -22,18 +23,18 @@ openconfig = chemconfig +configfile;
 open(openconfig);
 wait(100);
 config = getInfo();
-	array = split(config,"\n");
-	for (i=0; i<array.length; i++)	{
-		texte = array[i];
-		ssarray = split(texte," ");
-		array[i] = ssarray[1];
-		}
-	enhance = array[1]		vuescanrep = array[2]; 	jpeg = array[3];
-	zip = array[4];		greycor = array[5];		// resolution = array[6];
-	xminref = array[7];		yminref = array[8];		doyofset = array[9];		doxpos = array[10];	xdimref = array[11];
-	ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
-	voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
-	doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];	contrast= array[32];
+array = split(config,"\n");
+for (i=0; i<array.length; i++)	{
+	texte = array[i];
+	ssarray = split(texte," ");
+	array[i] = ssarray[1];
+}
+enhance = array[1]		vuescanrep = array[2]; 	jpeg = array[3];
+zip = array[4];		greycor = array[5];		// resolution = array[6];
+xminref = array[7];		yminref = array[8];		doyofset = array[9];		doxpos = array[10];	xdimref = array[11];
+ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
+voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
+doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];	contrast= array[32];
 
 // -------------------- Fermeure de la fenetre config ----------------------
 selectWindow(configfile);
@@ -50,7 +51,10 @@ run("Input/Output...",text);
 maskout = 	0;
 maskclear = 	1;
 masksave = 	1;
-gamma = 	parseFloat(contrast);				
+gamma = 	parseFloat(contrast);	
+x1 = "10";
+footer = "31";
+image_name = "Source";
 
 //-------------------FIN INITIALISATION-------------------------------------
 if (param == "1") {	
@@ -72,14 +76,12 @@ if (param == "1") {
 	maskout = 	Dialog.getCheckbox();
 	maskclear = 	Dialog.getCheckbox();
 }  // if
-ret = "0";
-x1 = 10;
+
 resolution= 	parseInt(resolution);
 longline = 	parseFloat(longline);
 if (resolution <= 300) { longline = longline*2;		} // if
-vignettetext = 	longline;
-longline = 	longline * resolution/25.4;
-x2 = 		x1+longline;
+vignettetext = 	toString(longline);
+longline = 	toString(longline * resolution/25.4);
 
 //---------------- Extraction des vignettes et sauvegarde en utilisant le RESULT--------------------------
 print("Vignettes_BackUp= YES");	
@@ -139,7 +141,7 @@ if (maskout == 1  && legend != "2") {
 	Larg = getWidth();
 	Haut = getHeight();
 } // if
-rename("Source");
+rename(image_name);
 run("Colors...", "foreground=red background=white selection=black");
 setColor(0);
 setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
@@ -154,8 +156,8 @@ by_vect = newArray(nbblobs);
 area_vect = newArray(nbblobs);
 for (i=0; i<nbblobs; i++) {
 	tag_vect[i] = getResult("Tag",i); 
-	la_vect[i] = getResult("Width", i);
-	ha_vect[i] = getResult("Height", i);
+	la_vect[i] = getResult("Width", i)/voxelwidth;
+	ha_vect[i] = getResult("Height", i)/voxelwidth;
 	bx_vect[i] = getResult("BX", i)/voxelwidth;
 	by_vect[i] = getResult("BY", i)/voxelheigth;
 	area_vect[i] = getResult("Area", i);
@@ -174,131 +176,31 @@ for (i=0; i<la_vect.length; i++) {
 	else { tagval = tag_vect[i]; 
 		// Il devrait y avoir des valeurs dans le RESULTS 
 	} // else 
-	if (tagval==1 || savetag==1) { // Sauvegarde de la vignette
-		La = la_vect[i];
-		L = La/voxelwidth;
-		Ha = ha_vect[i];
-		H = Ha/voxelheigth;
-		larg = L;
-		haut = H;
-		Bx = bx_vect[i];
-		By = by_vect[i];
-
-		//-----------------------------Creation de la vignette--------------------------------
-		Xmin = 	Bx-L/5;
-		//---------------Cas Xmin < 0--------------------
-		if ( Xmin <0 ) { 	Xa = 0;		L=	maxOf(L*1.2+Bx,longline+2*x1);	} // if
-		else { 		Xa = Xmin;	L=	maxOf(L*1.4,longline+2*x1);		} // else	
-		Xmax = Xmin+L;
-		// ---------------Cas Xmax > Larg---------------
-		if (Xmax > Larg) {	La = Larg - Xa;		} // if
-		else {		La = L;			} // else
-		//---------------------20 est l'espace pour ecriture de la reference de taille 10 mm
-		Ymin = 	By-H/5;
-		// ----------------Cas Ymin <0--------------------
-		if ( Ymin <0 ) { 	Ya = 0;		H=	(H*1.2)+By+31;	} // if
-		else { 		Ya = Ymin;	H=	(H*1.4)+31;	} // else
-		Ymax = Ymin + H;
-		//-----------------Cas Ymax > Haut--------------
-		if (Ymax > Haut) {	Ha = Haut - Ya;		} // if
-		else {		Ha = H;			} // else
-		y1 = 	H-5;
-		//------------------------ Il faut que l'image source soit active
-		selectImage("Source");
-		makeRectangle(Xa,Ya,La,Ha);
-		run("Copy");
-		no = i+1;
+	if (tagval==1 || savetag==1) { 		
+		no = toString(i+1);
+		// nom vignette à sauver
 		nomvignette =titrered+"_"+no;
-		newImage(nomvignette, "8-bit White",L, H, 1);
-		makeRectangle(Xa-Xmin,Ya-Ymin,La,Ha);
-		run("Paste");			
-		if (legend == "1")  {
-			//---------------------Rehaussement du contraste-----------------
-			if (enhance=="yes") { 
-				if (gamma < 0.5) { selectImage(nomvignette);		valeur = "saturated="+gamma;	run("Enhance Contrast", valeur);	} // if enhance
-				else { selectImage(nomvignette);	textgamma = 	"value="+gamma;	run("Gamma...", textgamma);	} // else if
-			} // if enhance
-			else {			gamma = 1;		} // else
-			//-------------------Ajoute de coins de delimitation de l'objet-----------
-			setLineWidth(1);
-			drawLine(larg/5,haut/5,larg/5+10,haut/5);
-			drawLine(larg/5,haut/5,larg/5,haut/5+10);
-			drawLine(larg+larg /5,haut+haut/5,larg+larg/5-10,haut+haut/5);
-			drawLine(larg+larg/5,haut+haut/5,larg+larg/5,haut+haut/5-10);
-			//--------------------- Ecriture de la legende
-			setFont("SansSerif", 9);
-			drawString(vignettetext+" mm   gma= "+gamma,10,H-8);
-		}// if
-		else if (legend == "2") {
-			// -------------- Nettoyage -------------------
-			// ------------------- Copie de travail ---------------------------------
-			selectImage(nomvignette);
-			run("Duplicate...", "title=vignette_msk");
-
-			// ------------------- Threshold ----------------------------------------
-			setThreshold(0, upper);
-			run("Convert to Mask");
-
-			// ------------------- Nettoyage autour du plus gros objet --------
-			run("Set Measurements...", "area centroid bounding fit redirect=[vignette_msk] decimal=2");
-			lim_inf = area_vect[i] * 0.7;
-			text_settings = "size="+lim_inf+"-Infinity circularity=0.00-1.00 show=Nothing exclude include record";
-			run("Analyze Particles...", text_settings);
-			updateResults();
-
-			// ------------------- Fermeture image segmentee ------------------------------------------
-			nbobj = nResults;
-			ligne = 0;		g = 0;		Ratio = 0;
-			// ---------------------- Si probleme de vignette blanche -----------------------------------
-			if (nbobj == 0) {	aa = getBoolean("Blank vignette, press Cancel to ABORT !  ");			} //
-			Width = parseInt(la_vect[i]);
-			Height = parseInt(ha_vect[i]);
-
-			while (g<nbobj) {		
-				obj_largeur = false;
-				obj_hauteur = false;
-				ystart =	getResult("YStart", g);
-				obj_width = 	getResult("Width", g);
-				obj_height = 	getResult("Height", g);		
-				// --------------- Test si les dimensions concordent ---------------
-				if (obj_width > Width * 0.95  && obj_width < Width * 1.05) obj_largeur = true;
-				if (obj_height > Height * 0.95 && obj_height < Height * 1.05) obj_hauteur = true;
-				if (obj_largeur == true && obj_hauteur == true && ystart >= (Ya-Ymin) )	{ ligne = g; g = nbobj;	} 
-				g++;		
-			} // for
-			xstart = 	getResult("XStart", ligne);
-			ystart =	getResult("YStart", ligne);
-
-			// --------------- nettoyage autour du plus gros objet -------------
-			selectImage("vignette_msk");
-			doWand(xstart,ystart);
-			run("Clear Outside");
-			run("Select None");	
-			run("Invert");
-			run("Image Calculator...", "image1="+nomvignette+" operation=Add image2=vignette_msk");
-			selectImage("vignette_msk");
-			close();
-			//--------------------- Ecriture de la legende --------------
-			selectImage(nomvignette);
-			setFont("SansSerif", 9);
-			drawString(vignettetext+" mm",x1,H-8);
-			selectWindow("Results");	run("Close");	
-		} // else
-		//---------------------Trace de l'echelle dans la vignette ---------
-		setLineWidth(2);
-		drawLine(x1,y1,x2,y1);
-		//-------------------------------Sauvegarde des vignettes-----------
-		selectImage(nomvignette);
-		saveAs("Jpeg",chemwork+nomvignette);
-		//------------------------------Fermeture de la vignette -----------
-		close();
+		
+		// Dimensions
+		L_vignette = toString(la_vect[i]);
+		H_vignette = toString(ha_vect[i]);	
+		Bx = toString(bx_vect[i]);
+		By = toString(by_vect[i]);
+		area = toString(area_vect[i]);
+		
+		// --------------- Process UNE vignette --------------------
+		argum = chemwork+" "+nomvignette+" "+Bx+" "+By+" "+footer+" "+longline+" "+x1+" "+L_vignette+" "+H_vignette+" "+image_name+" "+upper+" "+area+" "+vignettetext;
+		ret = runMacro("Zooscan_vignettes_extract_unique",argum);
+		flag=toString(ret);
+		if (lengthOf(flag) ==1)  { 	showMessage("Error message : "+nomvignette+" vignette extraction failed.        "); 		} // if
+		
 		//----------------------------Suivi de la progression --------------
 		showProgress(i/la_vect.length);
 		ind++;
-		} // if tagval ==1
-	} // for
+	} // if tagval ==1
+} // for
 // ------------------- Fermeture de l'image ----------------------------
-selectImage("Source");
+selectImage(image_name);
 close();
 print("Vignettes_extracted= ",ind);
 

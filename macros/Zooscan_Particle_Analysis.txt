@@ -1,7 +1,9 @@
 //-----------------------------Zooscan_Particle_Analysis----------------
-version = "7.10";
-date = "2012/06/23";
+version = "8.13";
+date = "2022/10/17";
 imagejversion = "1.41o";
+
+// LOGS
 
 batch = "0";
 Wlimit = 	20000;
@@ -11,7 +13,6 @@ nansum = 0;
 
 // ------------------- Test mode --------------------------------------
 testdeb = 1;
-
 
 for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
 //-----------------PARTICLE ANALYSIS--------------------------------
@@ -30,6 +31,17 @@ sep= array[5]; 		tag= array[6]; 		meta= array[7];  	par= array[8]; 	maskop= arra
 chemscan= array[12]; 	chemwork1= array[13];	savevig= array[14];	savezip= array[15];	maskod= array[16];	ident= array[17];	maskident= array[18];
 vis=array[19];		maskvis= array[20];		xxx= array[21];	resolution=array[22];	zzz= array[23];
 
+// ---------------------- Suppression des info de type de fichier ----------------------
+long = lengthOf(titre);
+titrered = substring(titre, 0, long-4);
+
+// ---------------------- Repertoires -----------------------------------------
+chemwork = chemwork1+titrered+"\\";
+chemtemp = chem + "Zooscan_temp\\";
+sauve_suivi = "save=" + chemtemp +"Suivi_log.txt";
+sauve_temp = "save=" + chemtemp + "temp_log.txt";
+sauve_analysis = "save=" + chemtemp + "analysis_log.txt";
+
 // -------------------------- Ouverture et chargement des configurations -------------------------
 // -----------Le fichier config est defini (choisi) dans la macro Zooscan_trt_1.txt
 openconfig = chemconfig +configfile;
@@ -46,11 +58,6 @@ doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];
 selectWindow(configfile);
 run("Close");
 
-// ---------------------- Suppression des info de type de fichier ----------------------
-long = lengthOf(titre);
-titrered = substring(titre, 0, long-4);
-chemwork = chemwork1+titrered+"\\";
-chemtemp = chem + "Zooscan_temp\\";
 
 // ----------------------- Pixel size ---------------------------------------------------------
 pixel = 25.4/resolution;
@@ -72,11 +79,13 @@ if (File.exists(optionfile)) {	open(optionfile);
 //	option = "A";	// option ="A";   // used to force the A option!
 if (param == "2") batch = "1";
 //-------------------FIN INITIALISATION-------------------------------------
+// ------------------Print dans le LOG -------------------------------------
 if (option != "B")	print("Analysis_Method= from_thumbnail_images_fractalA_skeleton_Slope_Histcum_Mg5_Complexity_Symetry");
 else { 	print("Analysis_Method= from_thumbnail_images_fractalA_skeleton");	} // else
 
 //--------------------Sauvegarde temporaire du log-----------------------
-selectWindow("Log");	sauve = "save=" + chemtemp + "temp_log.txt";		run("Text...",sauve);	run("Close");
+if (isOpen("Log")) {	selectWindow("Log");		run("Text...",sauve_temp);	run("Close");	}
+else {	showMessage("Log error in Zooscan_Particle_Analysis.txt "+chemtemp + "temp_log.txt");	}
 
 //================= 1ere ANALYSE, DEFINITION de la MATRICE des OBJETS ======================================================
 //-----------------------L'image vis1 est ouverte------------------------------------------------
@@ -105,7 +114,7 @@ getHistogram(values, counts, nBins);
 Black = 	counts[0];
 White =	 counts[255];
 bwratiomeas = Black/White;	
-if (bwratiomeas > bwratio/100)	getBoolean("WARNING : \n \nMore than "+bwratio+"% of the segmented image are black ! \n \nPress Cancel to abort or YES to continue !   ");
+if (bwratiomeas > bwratio/100)	getBoolean("WARNING : \n \nMore than "+bwratio+"% of the segmented image is black ! \nThe associated background image maybe NOK. \n \nPress Cancel to abort or YES to continue !   ");
 run("8-bit");
 saveAs("Gif",chemwork+titrered+"_msk1");
 saveAs("Tif",chemtemp+"temp_msk1");
@@ -124,6 +133,9 @@ else { 	close();
 	rename(titrered);
 } // else
 
+print("bwratiomeas = "+bwratiomeas);
+if (isOpen("Log")) {	selectWindow("Log");		run("Text...",sauve_analysis);	run("Close");	}
+
 //parametres1 =  "area bounding area_fraction limit display redirect="+titrered+" decimal=2";	
 parametres1 =  "area bounding area_fraction limit redirect="+titrered+" decimal=2";	
 
@@ -132,11 +144,15 @@ run("Set Measurements...",parametres1);
 analysis1 =  "minimum=" + Spmin + " maximum=" + Spmax + " circularity=0.00-1.00 bins=20 show=Outlines include exclude flood record";
 run("Analyze Particles...",analysis1);
 
+print("Analysis #1");
+if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_analysis);	}
+
 //----------------Fermeture image msk--------------------------------
 selectImage(titrered);		close();
 
 //--------------------Renommer l'image des contours, sauvegarde et fermeture ----------------
-selectImage("Drawing of "+titrered);
+if (isOpen("Drawing of "+titrered) == false ) { aa = getBoolean("The min ESD setting must be to high. \nNo object could be detected in the image. \n \nPress Cancel to abort !");	}
+else {	selectImage("Drawing of "+titrered);	}
 setThreshold(0, 129);
 run("Threshold", "thresholded remaining black");
 run("8-bit");
@@ -234,6 +250,8 @@ for (i=0; i<nbblobs0; i++) {
 } // for
 
 //	showMessage("end of frame 1");
+print("Analysis #2");
+if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_analysis);	}
 
 // ----------------------- Cas traitement en 2 images -------------------------------------
 if (looptrt == 2) {
@@ -332,6 +350,8 @@ if (looptrt == 2) {
 	selectImage("right");
 	close();
 	for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
+	print("Analysis #3");
+	if (isOpen("Log")) {	selectWindow("Log");		run("Text...",sauve_analysis);	}
 } // if
 
 // -------------------------------- Sauvegarde du SUIVI ----------------------------
@@ -347,7 +367,8 @@ if (param == "2") {
 	if (looptrt == 2) print("Splitted analysis");
 	print("Analyse1= "+nbblobs);
 	print("B/W ratio= "+bwratiomeas);
-	selectWindow("Log");	sauve = "save=" + chemtemp +"Suivi_log.txt";		run("Text...",sauve);	run("Close");
+	if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_suivi);	run("Close");	}
+	else {	showMessage("Log error in Zooscan_Particle_Analysis.txt for "+chemtemp +"Suivi_log.txt");	}
 } // if
 
 //==================== 2e analyse pour les niveaux de gris =======================================================
@@ -362,9 +383,12 @@ rename("Source");
 setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
 parametres2 = "area mean standard modal min centroid center perimeter bounding fit circularity feret's integrated median skewness kurtosis area_fraction limit redirect="+titrered+" decimal=2";
 parametres3 = "centroid center redirect=vignette decimal=0";
+print("Analysis #4");
+
+if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_analysis);	}
 
 // ---------------------- Boucle sur les objets ------------------------
-for (i=0; i<nbblobs; i++) {
+for (i=0; i<nbblobs; i++) {	
 	showProgress(i/nbblobs);
 	width= 	WIDTH[i];
 	width= 	parseInt(width);
@@ -841,9 +865,6 @@ for (i=0; i<nbblobs; i++) {
 		if (option == "C") {			saveAs("Tif",chemwork+titrered+"_"+i+"_A3");			rename(titrered+"-1");		} // if
 		run("Set Measurements...", "area limit redirect=None decimal=0");
 		run("Analyze Particles...", "size=5-1095635 circularity=0.00-1.00 show=Nothing exclude include");
-
-
-
 //		updateResults();
 		if (isOpen("Results")) { 
 			// ++++++++++++++++++++++++++
@@ -929,7 +950,7 @@ for (i=0; i<nbblobs; i++) {
    	run("Clear Results");
   	selectImage("edm1");
   	run("Set Measurements...", "area limit decimal=3");
-  	if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
+ // 	if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
   	lg = 0;  	counter=0;	iterations = 40;	sumg = 0;	suma = 0;	index = 0;
 	Lg = newArray(iterations);
 	Aire = newArray(iterations);
@@ -968,15 +989,21 @@ for (i=0; i<nbblobs; i++) {
 	if (i/50 == floor(i/50) && i !=0 && param != "2" ) {	p = i+1;		showStatus("Item  : "+p+" /"+nbblobs+"  => Release PC now ");	
 		for (b=0;b<4;b++)	{	run("free memory");		wait(1000);	} // for	
 	} // if
+	
+	print("object : "+i+"/"+nbblobs+"   processed");
+	if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_analysis);	}
+	
 }  // for i
+// ---------------- Fermeture du log process ------------------------------------
+print("End of process");
+
 selectImage("Source");		close();
 for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
 
+print("Analysis #5");
+if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_analysis);	run("Close");	}
+
 //====================  creer le tableau RESULTS =======================================================
-
-
-
-
 //	updateResults();
 selectWindow("Results");
 run("Close");
@@ -1052,13 +1079,17 @@ open(chemtemp+"temp_vis1.tif");
 rename(titrered);
 setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
 updateResults();
+wait(200);
 //--------------------Recuperation du log-----------------------
 opentemp = chemtemp +"temp_log.txt";
 open(opentemp);
+wait(200);
 config = getInfo();
 array = split(config,"\n");
+selectWindow("temp_log.txt");	run("Close");
+
+//--------------------Impression dans Log ----------------------------------
 for (i=0; i<array.length; i++)	{	print(array[i]);	} // for
-//--------------------Impression----------------------------------
 print("B/W_ratio= "+bwratiomeas);
 texteparam1 = 	replace(parametres1," ","_");
 print("Analyse_param_1= "+texteparam1);
@@ -1068,10 +1099,13 @@ texteparam2 = 	replace(parametres2," ","_");
 print("Analyse_param_2= "+texteparam2);
 if (looptrt == 2) print("Splitted analysis");
 print("nansum= "+nansum);
-selectWindow("temp_log.txt");
-run("Close");
+
+// -------------------- Sauvegarde encore ---------------
+if (isOpen("Log")) {	selectWindow("Log");	run("Text...",sauve_temp); 	}
+
+// --------------- Seul le LOG est ouvert --------------------
+//showMessage("PAUSE");
 
 // ------------------------------ FIN -----------------------------------------------------------
-
 ret = toString(nbblobs);
 return ret;

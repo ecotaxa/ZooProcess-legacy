@@ -1,8 +1,9 @@
 //------------Zooscan_manual_measure_all_5------------------------------------------------
-version = "7.21";
-date = "2015/09/07";
+version = "8.03";
+date = "2021/12/10";
 
 // v800
+// scanner
 
 args = getArgument();
 arg = split(args," ");
@@ -42,7 +43,7 @@ while (check == 0) {
 		j = 0;	flagframe = 0;
 		list = newArray(filelist.length);
 		for (i=0; i<filelist.length ; i++) {	  
-			 rr = filelist[i]; 
+			rr = filelist[i]; 
 			identlong = 	lengthOf(rr);
 			rr = 		substring(rr,0,identlong-1);	
 			//--------------- Recherche du fichier image en ZIP ou en JPG ----------
@@ -67,7 +68,7 @@ while (check == 0) {
 		else {	// ---------------------------Purger les lignes vides  ----------------------
 			listaff = newArray(j);
 			for (i=0; i<listaff.length ; i++) {	rr = list[i]; 	listaff[i] = rr;		} // for	
-
+			
 			// -------------------------- Selection de l'image a traiter ----------------------------
 			if (contrast < 0.5) contrast = 1.5;
 			Dialog.create("Manual Measurements v. "+version+"                    ");
@@ -91,7 +92,7 @@ while (check == 0) {
 			Dialog.addNumber("                      SET Mouse roll ",broll);
 			Dialog.addNumber("                      SET Mouse right ",bright);
 			Dialog.addMessage( "-------------------------------------------------------------------------------");
-
+			
 			Dialog.show();
 			maskerase = 	Dialog.getCheckbox();
 			gamma =		Dialog.getNumber();
@@ -103,7 +104,7 @@ while (check == 0) {
 			bleft= Dialog.getNumber();
 			broll= Dialog.getNumber();
 			bright= Dialog.getNumber();
-
+			
 			check = 1;
 		}// else
 	} // if workfolder
@@ -159,7 +160,7 @@ while (check == 0) {
 		} // if	
 		else { message = "No msk1.gif  file available for the selected image.              " ;	print(message);		} // else	
 	} // if
-
+	
 	//---------------------AJOUT des outlines -----------------------------------------
 	if (maskout == true) {
 		openfile = chemwork1+ titrered+"_out1.gif";
@@ -195,11 +196,11 @@ while (check == 0) {
 		if (ctrl1>=0) { Deb=i+1;							} // if
 		ctrl2 = indexOf(pid[i],"Resolution");
 		if (ctrl2==0) { texte = pid[i];	res = split(texte,"\ ");		resolution = res[1];		} // if
-		//-------------------------------Type Hardware----------------
+		//-------------------------------Type scanner----------------
 		champ = pid[i];
 		// Conversion des mesures faites pour 4800 dpi par VUESCAN !
 		pos = indexOf(champ,"[Input-");
-		if (pos>=0) { 	fin = lastIndexOf(champ,"]");		Hardware= substring(champ,pos+7,fin);		} // if
+		if (pos>=0) { 	aa = replace(champ,"-"," ");	info = split(aa,"\ ");	scanner= info[1];		} // if
 		posr = indexOf(champ,"TIFFSizeReduction");
 		if (posr>=0 ) {	deb= indexOf(champ,"=");		reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
 		//-------------------------------Unite----------------
@@ -207,7 +208,7 @@ while (check == 0) {
 		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
 	} // for
 	for (i=0; i<Deb; i++) {		champ = pid[i];
-		if (Unit==0 && (Hardware == "Perfection4990-Flatbed" || Hardware == "Perfection4490-Flatbed")) { unit= "pixel"; } //
+		if (Unit==0 && (scanner == "Perfection4990" || scanner == "Perfection4490")) { unit= "pixel"; } //
 		//-------------------------------Unite----------------
 		pos = indexOf(champ,"AutoOffset");
 		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
@@ -241,31 +242,12 @@ while (check == 0) {
 			if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);		YSize=parseInt(val);				} // if
 		} // if	
 	} // for
-	resolution = toString(resolution);
-	// --------------------------- Biotom - Hydroptic v1 ----------------------------------------------
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="300" ) { reduction = 16; };
-
-	// -------------------------- Hydroptic v2 -----------------------------------------------------------
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="300" ) { reduction = 16; };
 	
-	// -------------------------- Hydroptic v3 -----------------------------------------------------------
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="300" ) { reduction = 16; };
+	// ------------------- Reduction --------------------------------
+	resolution = toString(resolution);		
+	reduction = runMacro("Zooscan_define_reduction.txt",scanner+" "+resolution);
+	reduction = parseInt(reduction);
 	
-	// -------------------------- Hydroptic v4 -----------------------------------------------------------
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="300" ) { reduction = 16; };
-
 	// --------------------Correction du RATIO car ERREUR VUESCAN ------------------------------
 	PreviewXOffset= PreviewXOffset/reduction;
 	PreviewYOffset= PreviewYOffset/reduction;
@@ -293,7 +275,7 @@ x = 	newArray(2);	y = 	newArray(2);
 
 colarea = 0;	colbx = 0;	colby = 0;	colwidth = 0;	colheight = 0;
 colno = 0;	coltag = 0;	colxstart = 0;	colystart = 0;	colmajor = 0;	colminor = 0;
-	
+
 //------------------Detection des N° de colonnes pour les champs-------------
 colfractal = 0;
 a= replace(pid[deb],";"," ");
@@ -537,7 +519,7 @@ while (lig < nbval) {
 						coord[lig] ="0 0 0 0";	setColor(0);
 					} // else if
 					else { wait(300);		} // else
-				if (keyd == 1) { wait(500)	} // if
+					if (keyd == 1) { wait(500)	} // if
 				} // else
 			} // if
 			//-------------------------- Si la vignette est fermee par l'operateur--------------------------------

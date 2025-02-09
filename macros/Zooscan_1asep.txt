@@ -1,17 +1,20 @@
 //----------------------Zooscan_1asep--------------------------------------------------
 //----------------------Traitement d'image----------------------------------------------
-version = "7.21";
-date = "2016/01/16";
+version = "8.03";
+date = "2021/12/10";
 
 // v800
 // Detection AUTO de la resolution du Blanc
+// Gestion des logs
+// Ajout wait apres ouverture fichiers
+// scanner
 
 //--------------Constantes------------------
 overlap = 	0.07;			// VOIR dans Zooscan_scan. Les valeurs doivent etre identiques !
 blancres = 	300;
 Oldback =	" ";
-border = 		1;
-batch = 		"1";
+border = 	1;
+batch = 	"1";
 nb = 		4;
 duration =	1000;
 run("Colors...", "foreground=black background=white selection=red");
@@ -82,18 +85,23 @@ if (param == "2") {
 	if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if	
 	opensuivi = chemtemp +"Suivi_log.txt";
 	open(opensuivi);
+	wait(100);
 	suivi = getInfo();
 	run("Close");
 	array = split(suivi,"\n");
 	for (i=0; i<array.length; i++) {	print(array[i]);		} // for
 	if (method == "neutral") { 	print("Image_Process= natural");	} // if
 	else {			print("Image_Process= "+method);	} // else
-	selectWindow("Log");	sauve = "save=" + chemtemp +"Suivi_log.txt";	run("Text...",sauve);	run("Close");
+	if (isOpen("Log")) {
+		selectWindow("Log");	sauve = "save=" + chemtemp +"Suivi_log.txt";	run("Text...",sauve);	run("Close");
+	}
+	else {	showMessage("Log error in Zooscan_1asep.txt for "+chemtemp +"Suivi_log.txt");	}
 } // if
 
 // --------------------------- Recuperation log temporaire -------------------
 opensuivi = chemtemp + "temp_log.txt";
 open(opensuivi);
+wait(100);
 suivi = getInfo();
 run("Close");
 array = split(suivi,"\n");
@@ -133,7 +141,7 @@ else {	print("Raw_Image_BackUp_as_ZIP= NO");	} // else
 run("8-bit");
 print("Final_Image= 8bits");
 
- //-----------Cas "BCZ" Crop Image------------------
+//-----------Cas "BCZ" Crop Image------------------
 if (proj == "bcz" && calibration == "Calibrage_CNRS" ) {
 	// Lecture de la taille de l'image
 	largeurcor = 	getWidth()/8;
@@ -164,7 +172,7 @@ else {	cropx = getWidth();
 } // else
 
 //------------------------- Lecture LOG ---------------------------------------------------------------------
-Hardware= "none";
+scanner= "none";
 Unit= 0;
 reduction=1;
 YOffset= 0;
@@ -172,110 +180,73 @@ PreviewYOffset=1;
 PreviewXOffset=1;
 logfile = File.exists(chemwork+titrered+"_log.txt");
 if (logfile==1) { 	open(chemwork+titrered+"_log.txt");
-			data = getInfo();
-			ligne = split(data,"\n");
-			reduction= 1;
-			run("Close");	
-			for (p=0;p<ligne.length;p++) { 
-				champ = ligne[p];
-				//-------------------------------Type Hardware----------------
-				// Conversion des mesures faites pour 4800 dpi par VUESCAN !
-				pos = indexOf(champ,"[Input-");
-				if (pos>=0) {fin = lastIndexOf(champ,"]");	Hardware= substring(champ,pos+7,fin);		} // if
-				posr = indexOf(champ,"TIFFSizeReduction");
-				if (posr>=0 ) { deb= indexOf(champ,"=");	reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
-				// ------------------------------ Background -------------------
-				pos = indexOf(champ,"Background_correct_using");
-				if (pos>=0) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	Oldback = parseInt(val);	} // if
-				//-------------------------------Unite----------------
-				pos = indexOf(champ,"CropUnits");
-				if (pos>=0) {deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
-				if (Unit==0 && (Hardware == "Perfection4990-Flatbed" || Hardware == "Perfection4490-Flatbed")) { unit= "pixel"; } //
-				//-------------------------------Unite----------------
-				pos = indexOf(champ,"AutoOffset");
-				if (pos>=0) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
-				//----------------- PreviewXOffset
-				pos1 = indexOf(champ,"PreviewXOffset");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
-				//----------------- X Offset
-				pos1 = indexOf(champ,"XOffset");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	
-					if (deb < 8)  { long= lengthOf(champ);	val = substring(champ,deb+1,long);	XOffset=parseInt(val);	} // if
-				} // if	
-				//----------------- X Size
-				pos1 = indexOf(champ,"XSize");
-				if (pos1>=0 ) {deb= indexOf(champ,"=");
-					if (deb < 8) {long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSize=parseInt(val);	} // if
-				} // if
-				//----------------- XSpacing
-				pos1 = indexOf(champ,"XSpacing");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSpacing=parseInt(val);		} // if		
-				//----------------- PreviewYOffset
-				pos1 = indexOf(champ,"PreviewYOffset");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYOffset=parseInt(val);	} // if	
-				//----------------- Y Offset
-				pos1 = indexOf(champ,"YOffset");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");
-					if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);	YOffset=parseInt(val);	} // if
-				} // if
-				//----------------- Y Size
-				pos1 = indexOf(champ,"YSize");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");
-					if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);	YSize=parseInt(val);	} // if
-				} // if	
-				//----------------- PreviewXSize --------------------------
-				pos1 = indexOf(champ,"PreviewXSize");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXSize=parseInt(val);	} // if	
-				//----------------- PreviewYSize --------------------------
-				pos1 = indexOf(champ,"PreviewYSize");
-				if (pos1>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYSize=parseInt(val);	} // if	
-			} // for
-
-			resolution = toString(resolution);
-			// --------------------------- Biotom - Hydroptic v1 ----------------------------------------------
-			if (Hardware== "Perfection4990-Flatbed" && resolution=="2400" ) { reduction = 2; };
-			if (Hardware== "Perfection4990-Flatbed" && resolution=="1200" ) { reduction = 4; };
-			if (Hardware== "Perfection4990-Flatbed" && resolution=="600" ) { reduction = 8; };
-			if (Hardware== "Perfection4990-Flatbed" && resolution=="300" ) { reduction = 16; };
-
-			// -------------------------- Hydroptic v2 -----------------------------------------------------------
-			if (Hardware== "Perfection4490-Flatbed" && resolution=="2400" ) { reduction = 2; };
-			if (Hardware== "Perfection4490-Flatbed" && resolution=="1200" ) { reduction = 4; };
-			if (Hardware== "Perfection4490-Flatbed" && resolution=="600" ) { reduction = 8; };
-			if (Hardware== "Perfection4490-Flatbed" && resolution=="300" ) { reduction = 16; };
-
-			// -------------------------- Hydroptic v3 -----------------------------------------------------------
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="2400" ) { reduction = 2; };
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="1200" ) { reduction = 4; };
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="800" ) { reduction = 6; };
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="600" ) { reduction = 8; };
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="400" ) { reduction = 12; };
-			if (Hardware== "Perfectionv700-Flatbed" && resolution=="300" ) { reduction = 16; };
-			// -------------------------- Hydroptic v4 -----------------------------------------------------------
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="4800" ) { reduction = 1; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="2400" ) { reduction = 2; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="1200" ) { reduction = 4; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="800" ) { reduction = 6; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="600" ) { reduction = 8; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="400" ) { reduction = 12; };
-			if (Hardware== "Perfectionv800-Flatbed" && resolution=="300" ) { reduction = 16; };
-
-			// --------------------Correction du RATIO car ERREUR VUESCAN ------------------------------
-			PreviewXOffset= PreviewXOffset/reduction;
-			PreviewYOffset= PreviewYOffset/reduction;
-			XOffset = XOffset/reduction;
-			XSize = XSize/reduction;
-			XSpacing = XSpacing/reduction;
-			YOffset = YOffset/reduction;
-			YSize = YSize/reduction;
-			PreviewXSize = 	PreviewXSize/reduction;
-			PreviewYSize = 	PreviewYSize/reduction;
-
-			// ------------------------------On prend les valeurs REELLES de l'image ! -----------------------
-			YSize = getWidth();
-			XSize = getHeight();		
-			resolution = parseInt(resolution);
-			max = resolution*8.5; 		// 8.5 inches sur la verticale
+	wait(100);
+	data = getInfo();
+	ligne = split(data,"\n");
+	reduction= 1;
+	run("Close");	
+	for (p=0;p<ligne.length;p++) { 
+		champ = ligne[p];
+		//-------------------------------Type scanner----------------
+		// Conversion des mesures faites pour 4800 dpi par VUESCAN !
+		if (indexOf(champ,"[Input-")>=0) {aa = replace(champ,"-"," ");	info = split(aa,"\ ");	scanner= info[1];						} // if;
+		if (indexOf(champ,"TIFFSizeReduction")>=0 ) { deb= indexOf(champ,"=");	reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
+		// ------------------------------ Background -------------------
+		if (indexOf(champ,"Background_correct_using")>=0) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	Oldback = parseInt(val);	} // if
+		//-------------------------------Unite----------------
+		if (indexOf(champ,"CropUnits")>=0) {deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
+		if (Unit==0 && (scanner == "Perfection4990" || scanner == "Perfection4490")) { unit= "pixel"; } //
+		//-------------------------------Unite----------------
+		if (indexOf(champ,"AutoOffset")>=0) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
+		//----------------- PreviewXOffset
+		if (indexOf(champ,"PreviewXOffset")>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
+		//----------------- X Offset
+		if (indexOf(champ,"XOffset")>=0 ) { deb= indexOf(champ,"=");	
+			if (deb < 8)  { long= lengthOf(champ);	val = substring(champ,deb+1,long);	XOffset=parseInt(val);	} // if
+		} // if	
+		//----------------- X Size
+		if (indexOf(champ,"XSize")>=0 ) {deb= indexOf(champ,"=");
+			if (deb < 8) {long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSize=parseInt(val);	} // if
+		} // if
+		//----------------- XSpacing
+		if (indexOf(champ,"XSpacing")>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSpacing=parseInt(val);		} // if		
+		//----------------- PreviewYOffset
+		if (indexOf(champ,"PreviewYOffset")>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYOffset=parseInt(val);	} // if	
+		//----------------- Y Offset
+		if (indexOf(champ,"YOffset")>=0 ) { deb= indexOf(champ,"=");
+			if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);	YOffset=parseInt(val);	} // if
+		} // if
+		//----------------- Y Size
+		if (indexOf(champ,"YSize")>=0 ) { deb= indexOf(champ,"=");
+			if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);	YSize=parseInt(val);	} // if
+		} // if	
+		//----------------- PreviewXSize --------------------------
+		if (indexOf(champ,"PreviewXSize")>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXSize=parseInt(val);	} // if	
+		//----------------- PreviewYSize --------------------------
+		if (indexOf(champ,"PreviewYSize")>=0 ) { deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYSize=parseInt(val);	} // if	
+	} // for
+	
+	// ------------------- Reduction --------------------------------
+	resolution = toString(resolution);		
+	reduction = runMacro("Zooscan_define_reduction.txt",scanner+" "+resolution);
+	reduction = parseInt(reduction);
+	
+	// --------------------Correction du RATIO car ERREUR VUESCAN ------------------------------
+	PreviewXOffset= PreviewXOffset/reduction;
+	PreviewYOffset= PreviewYOffset/reduction;
+	XOffset = XOffset/reduction;
+	XSize = XSize/reduction;
+	XSpacing = XSpacing/reduction;
+	YOffset = YOffset/reduction;
+	YSize = YSize/reduction;
+	PreviewXSize = 	PreviewXSize/reduction;
+	PreviewYSize = 	PreviewYSize/reduction;
+	
+	// ------------------------------On prend les valeurs REELLES de l'image ! -----------------------
+	YSize = getWidth();
+	XSize = getHeight();		
+	resolution = parseInt(resolution);
+	max = resolution*8.5; 		// 8.5 inches sur la verticale
 } // if
 else if (logfile != 1 && param != "2") { showMessage ("Error message :  "+titrered+"_log.txt file does'nt exists, process aborted     "); 	} // else
 else { print("Image_process= ABORTED");		} // else
@@ -310,30 +281,30 @@ if (maskod==1&& greycor>0) { print("Grey_Level_Adjustement= YES");
 	} // if greycor==1
 	// ----------------------Deux frames, position d'apres le LOG....-------------------------------
 	if (greycor>1) { //----------------Vertical position-------------------------------------------------
-			ydimref = 		parseFloat(ydimref);	
-			ydimref = 		ydimref * resolution;
-			positionx = parseFloat(doyabspos);
-			posx = resolution*positionx;	
-			// print("calcul de la position en utilisant le decalage");
-			Ax = max - posx;
-			C = Ax - XOffset - PreviewXOffset;
-			yminref = XSize - C- ydimref/2;
-			posx = max - posx;
-			yminref = XSize + XOffset + PreviewXOffset  - posx  - ydimref/2    ;
-			//-------------------Horizontal position--------------------------------------------
-			xdimref = 		parseFloat(xdimref);
-			xdimref = 		xdimref * resolution;
-			positiony = 	parseFloat(doxabspos);
-			posy = 		resolution*positiony;
-			posy = 		posy - PreviewYOffset - YOffset;			// reference a droite de l'image
-			xminref = 		YSize - posy - xdimref/2;
-			xminref = parseInt(xminref);
-			yminref = parseInt(yminref);
-			print("Resolution= ",resolution);
-			print("ODxminref= ",xminref);
-			print("ODyminref= ",yminref);
-			print("ODxdimref= ",xdimref);
-			print("ODydimref= ",ydimref);	
+		ydimref = 		parseFloat(ydimref);	
+		ydimref = 		ydimref * resolution;
+		positionx = parseFloat(doyabspos);
+		posx = resolution*positionx;	
+		// print("calcul de la position en utilisant le decalage");
+		Ax = max - posx;
+		C = Ax - XOffset - PreviewXOffset;
+		yminref = XSize - C- ydimref/2;
+		posx = max - posx;
+		yminref = XSize + XOffset + PreviewXOffset  - posx  - ydimref/2    ;
+		//-------------------Horizontal position--------------------------------------------
+		xdimref = 		parseFloat(xdimref);
+		xdimref = 		xdimref * resolution;
+		positiony = 	parseFloat(doxabspos);
+		posy = 		resolution*positiony;
+		posy = 		posy - PreviewYOffset - YOffset;			// reference a droite de l'image
+		xminref = 		YSize - posy - xdimref/2;
+		xminref = parseInt(xminref);
+		yminref = parseInt(yminref);
+		print("Resolution= ",resolution);
+		print("ODxminref= ",xminref);
+		print("ODyminref= ",yminref);
+		print("ODxdimref= ",xdimref);
+		print("ODydimref= ",ydimref);	
 	} // greycor>1
 	makeRectangle(xminref, yminref, xdimref, ydimref);
 	wait(5000);
@@ -561,8 +532,8 @@ if (Background_process=="select" || Background_process=="last" || Background_pro
 	frametypeback = 	"unknown";
 	if (largback >= 0) 	frametypeback = 	"large";
 	if (narrback >= 0) 	frametypeback = 	"narrow";
-//	print("Resolution= "+resolution+"dpi");
-
+	//	print("Resolution= "+resolution+"dpi");
+	
 	setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
 	L = getWidth()*backratio;
 	H = getHeight()*backratio;
@@ -572,16 +543,16 @@ if (Background_process=="select" || Background_process=="last" || Background_pro
 	LM = L * 1.05;
 	Hm = H * 0.95;
 	HM = H * 1.05;
-
+	
 	// -------------------- Verification des dimensions, si fond = large imageratio=+/- 1.6, si narrow : 2.3 -----------------------
 	// On ne teste pas la hauteur car l'image a peut etre ete divisee
 	imageratio = 	PreviewYSize/PreviewXSize;
 	frametypeimg = 	"unknown";
 	if (imageratio >= 1.3 && imageratio <= 1.9) 	frametypeimg = "large";
 	if (imageratio >= 2    && imageratio <= 2.6) 	frametypeimg = "narrow";
-//	getBoolean("LM="+LM+" Lm= "+Lm+" cropx= "+cropx+" cropy= "+cropy+" Lfond= "+L+" Hfond= "+H+" frametypeimg= "+frametypeimg+" frametypeback= "+frametypeback+" imageratio= "+imageratio+" PreviewYSize= "+PreviewYSize+" PreviewXSize= "+PreviewXSize);
+	//	getBoolean("LM="+LM+" Lm= "+Lm+" cropx= "+cropx+" cropy= "+cropy+" Lfond= "+L+" Hfond= "+H+" frametypeimg= "+frametypeimg+" frametypeback= "+frametypeback+" imageratio= "+imageratio+" PreviewYSize= "+PreviewYSize+" PreviewXSize= "+PreviewXSize);
 	// -------------------------------- Les dimensions sont probablement equivalentes ------------------------------
-//	if ( cropx <= LM && cropx >= Lm && frametypeback == frametypeimg && frametypeback != "unknown" ) { 
+	//	if ( cropx <= LM && cropx >= Lm && frametypeback == frametypeimg && frametypeback != "unknown" ) { 
 	if ( cropx <= LM && cropx >= Lm ) { // Modifié le 23/11/2010 pour autoriser "narrow4800dpi";
 		//----------------------Ajustement des dimensions du fond-----------------------------------------------
 		if (frame=="_1") { // L'image n'est pas forcement divisée !
@@ -802,9 +773,10 @@ saveAs("Tiff", chemtemp+"temp_vis1.tif");
 print("Vis_image_save= YES");
 
 // --------------------- Sauvegarde du LOG ------------------------------------------------------
-selectWindow("Log");
-sauve = "save=" + chemwork+titrered+"_log.txt";
-run("Text...",sauve);
+if (isOpen("Log")) {
+	selectWindow("Log"); 	sauve = "save=" + chemwork+titrered+"_log.txt"; 	run("Text...",sauve);
+}
+else {	showMessage("Log error in Zooscan_1asep.txt for "+titrered);	}
 
 selectImage("temp_vis1.tif"); 
 

@@ -1,9 +1,10 @@
 // ---------------------------------Zooscan_1d -------------------------------
 // LECTURE des entetes
-version= "7.27";
-date = "2018/08/26";
+version= "8.03";
+date = "2021/11/28";
 
 // Correction pour ajout "nouveaux" metadata
+// index new metadata de 29 à 30
 
 args = getArgument();
 arg = 	split(args," ");
@@ -34,7 +35,7 @@ if (metafile==1) {
 	Fracmin = array[20]; 		Fracsup = array[21]; 		Fracnb = array[22]; 		Observation = array[23];
 	Code= array[24];		SubMethod= array[25]; 		CellPart= array[26];		Replicates= array[27]; 
 	VolIni= array[28]; 		VolPrec= array[29]; 		
-	if (array.length > 29 ) { 	
+	if (array.length > 30 ) { 	
 		sample_comment = array[30];
 		vol_qc = array[31];			depth_qc = array[32];		sample_qc = array[33]; 			barcode = array[34];
 		latitude_end = array[35];		longitude_end = array[36];	net_duration = array[37];		ship_speed_knots = array[38];

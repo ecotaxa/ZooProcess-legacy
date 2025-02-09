@@ -1,7 +1,11 @@
 //--------------------------Zooscan_separation_analyse-----------------------------------
 // L'image VIS est OUVERTE, Results est fermee a chaque fois qu''on relance l'analyse des particules (s'il est ouvert !)
-version = "6.15";
-date = "2009/10/25";
+version = "8.13";
+date = "2022/10/17";
+
+// LOGS
+// Wait après ouverture fichiers
+// Error message précisé
 
 print("Version= "+version+"_"+date+"_Picheral_CNRS");
 run("free memory");
@@ -22,20 +26,21 @@ vis=array[19];		maskvis= array[20];		scan= array[21];	resolution=array[22];	save
 // Le fichier config est defini (choisi) dans la macro Zooscan_trt_1.txt
 openconfig = chemconfig +configfile;
 open(openconfig);
+wait(200);
 config = getInfo();
-	array = split(config,"\n");
-	for (i=0; i<array.length; i++)	{
-		//print("i= ",i,"  ",array[i]);
-		texte = array[i];
-		ssarray = split(texte," ");
-		array[i] = ssarray[1];
-		}
-	calibration = array[2]; 	jpeg = array[3];
-	zip = array[4];		greycor = array[5];		 // resolution = array[6];		
-	xminref = array[7];		yminref = array[8];		doyofset = array[9];		doxpos = array[10];	xdimref = array[11];
-	ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
-	voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
-	doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];	contrast= array[32];
+array = split(config,"\n");
+for (i=0; i<array.length; i++)	{
+	//print("i= ",i,"  ",array[i]);
+	texte = array[i];
+	ssarray = split(texte," ");
+	array[i] = ssarray[1];
+}
+calibration = array[2]; 	jpeg = array[3];
+zip = array[4];		greycor = array[5];		 // resolution = array[6];		
+xminref = array[7];		yminref = array[8];		doyofset = array[9];		doxpos = array[10];	xdimref = array[11];
+ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
+voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
+doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];	contrast= array[32];
 
 //--------------------Impression des donnees du CONFIG--------------------------------
 data = "ConfigDataP= ";
@@ -97,36 +102,37 @@ if (sep==1 && maskident==1 && maskop==0 ) {crol = 1;
 
 // ------------------------- Si on a decide de ne pas se servir du masque qu'il existe ou pas -----------------
 if (maskop==0 || (param==2 && sep==0) )	{ 
-		// ----------------------------- Test existence d'un masque -----------------------------------
-		testsep = File.exists(chemwork+titrered+"_sep.gif");
-		if (testsep == 1) {	print("Separation_Mask= NOT_REPROCESSED");	} // if
-		else { 		print("Separation_Mask= UNUSED");			} //else
-		print("Particle_Analysis= YES");
-		// ---------------------------- fermeture du RESULTS ------------------------------------------
-		test= isOpen("Results");
-		if (test==1) { selectWindow("Results");		run("Close");		} // test
-		setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
-		selectImage("temp_vis1.tif");
-		rename(titrered);
-		ret = runMacro("Zooscan_Particle_Analysis.txt",arg);
-		if (isOpen("Log")== false) {	opentemp = chemtemp +"temp_log.txt";
-			open(opentemp);
-			config = getInfo();
-			array = split(config,"\n");
-			for (i=0; i<array.length; i++)	{	print(array[i]);		} // for
-			selectWindow("temp_log.txt");
-			run("Close");
-		} // if
-		// -------------------------- RESULTS est sauvee pour "securite" dans le repertoire "temp" ---------------------
-		selectWindow("Results");
-		saveAs("measurements",chemtemp+"measurementsA.txt");
-		nbblobs = parseInt(ret);
-		if (nbblobs==0) { print("Particle Analysis ABORTED");  		} // if nbblobs
-		print("Analysed_Objects= ",nbblobs);
-		selectImage(titrered);
-		run("Close");
-		// ---------------------------- Affichage des RESULTS --------------------------------------------
-		updateResults();
+	// ----------------------------- Test existence d'un masque -----------------------------------
+	testsep = File.exists(chemwork+titrered+"_sep.gif");
+	if (testsep == 1) {	print("Separation_Mask= NOT_REPROCESSED");	} // if
+	else { 			print("Separation_Mask= UNUSED");			} //else
+	print("Particle_Analysis= YES");
+	// ---------------------------- fermeture du RESULTS ------------------------------------------
+	test= isOpen("Results");
+	if (test==1) { selectWindow("Results");		run("Close");		} // test
+	setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
+	selectImage("temp_vis1.tif");
+	rename(titrered);
+	ret = runMacro("Zooscan_Particle_Analysis.txt",arg);
+	if (isOpen("Log")== false) {	opentemp = chemtemp +"temp_log.txt";
+		open(opentemp);
+		wait(200);
+		config = getInfo();
+		array = split(config,"\n");
+		for (i=0; i<array.length; i++)	{	print(array[i]);		} // for
+		if (isOpen("Log")) {	selectWindow("temp_log.txt");	run("Close");	}
+		else {	showMessage("Log error in Zooscan_Separation_analyse.txt for temp_log.txt");	}
+	} // if
+	// -------------------------- RESULTS est sauvee pour "securite" dans le repertoire "temp" ---------------------
+	selectWindow("Results");
+	saveAs("measurements",chemtemp+"measurementsA.txt");
+	nbblobs = parseInt(ret);
+	if (nbblobs==0) { print("Particle Analysis ABORTED");  		} // if nbblobs
+	print("Analysed_Objects= ",nbblobs);
+	selectImage(titrered);
+	run("Close");
+	// ---------------------------- Affichage des RESULTS --------------------------------------------
+	updateResults();
 } // if
 else { 	print("Separation_Mask= INCLUDE");
 	openmask= 0;
@@ -161,7 +167,7 @@ else { 	print("Separation_Mask= INCLUDE");
 				open( chemtemp+"temp_vis1.tif");
 			} // if
 			rename("Zooplankton");
-
+			
 			// --------------------Ouverture de l'image du masque -------------------------------------------------
 			if (openmask==1) { 	open(chemtemp+"temp_sep.tif"); 	 } // if
 			else { open(chemwork+titrered+"_sep.gif");  		saveAs("Tiff", chemtemp+"temp_sep"); 	openmask = 1;	} // else
@@ -173,8 +179,7 @@ else { 	print("Separation_Mask= INCLUDE");
 			run("Invert");
 			updateResults();
 			nbblobs = 	nResults;
-			test= isOpen("Results");
-			if (test==1) { selectWindow("Results"); 	run("Close");	} // test
+			if (isOpen("Results")) { selectWindow("Results"); 	run("Close");	} // test
 			print("Separation_lines= "+nbblobs);
 			
 			// ---------------- AJOUT ---------------------------------
@@ -186,9 +191,12 @@ else { 	print("Separation_Mask= INCLUDE");
 			saveAs("Tiff", chemtemp+"temp_vis1.tif"); 
 			rename(titrered);
 			ret = runMacro("Zooscan_Particle_Analysis.txt",arg);
+			ret = toString(ret);
+			if (lengthOf(ret)== 1) { showMessage("Zooscan_Particle_Analysis.txt aborted. \n Case #1 \nPress CANCEL to end.");	}
 			if (isOpen("Log")== false) {	opentemp = chemtemp +"temp_log.txt";
 				open(opentemp);
-				config = getInfo();
+				wait(200)
+				config = getInfo();;
 				array = split(config,"\n");
 				for (i=0; i<array.length; i++)	{	print(array[i]);		} // for
 				selectWindow("temp_log.txt");
@@ -211,7 +219,7 @@ else { 	print("Separation_Mask= INCLUDE");
 			selectImage("Contours");
 			rename(titrered);
 			setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
-				ret = runMacro("Zooscan_dialog_save_contours");
+			ret = runMacro("Zooscan_dialog_save_contours");
 			flagc = parseInt(ret);
 			// -------------------------Sauvegarde des contours et du zoo-------------------------
 			if (flagc==1) { 	saveAs("zip",chemwork+titrered+"_zoocont");		rename(titrered);		} // if
@@ -255,8 +263,11 @@ else { 	print("Separation_Mask= INCLUDE");
 				saveAs("Tiff",chemtemp+"temp_vis1");
 				rename(titrered);
 				ret = runMacro("Zooscan_Particle_Analysis.txt",arg);
+				ret = toString(ret);
+				if (lengthOf(ret)== 1) { showMessage("Zooscan_Particle_Analysis.txt aborted. \n Case #2 \nPress CANCEL to end.");	}
 				if (isOpen("Log")== false) {	opentemp = chemtemp +"temp_log.txt";
 					open(opentemp);
+					wait(200);
 					config = getInfo();
 					array = split(config,"\n");
 					for (i=0; i<array.length; i++)	{	print(array[i]);		} // for
@@ -264,7 +275,7 @@ else { 	print("Separation_Mask= INCLUDE");
 					run("Close");
 				} // if
 				nbblobs = parseInt(ret);
-				if (nbblobs==0) { print("Particle Analysis ABORTED");     } // if flag
+//				if (nbblobs==0) { print("Particle Analysis ABORTED");     } // if flag
 				print("Analysed_Objects= ",nbblobs);
 				selectImage(titrered);
 				run("Close");
@@ -285,10 +296,13 @@ else { 	print("Separation_Mask= INCLUDE");
 				selectImage("temp_sep.tif");
 				run("Close");
 				//--------------------Sauvegarde temporaire du log-----------------------
-				selectWindow("Log");
-				sauve = "save=" + chemtemp + "temp_log.txt";
-				run("Text...",sauve);
-				run("Close");
+				if (isOpen("Log")) {	selectWindow("Log");
+					sauve = "save=" + chemtemp + "temp_log.txt";
+					run("Text...",sauve);
+					run("Close");
+				}
+				else {	showMessage("Log error in Zooscan_Separation_analyse.txt for temp_log.txt");	}
+				
 				// ----------------------On calcule une nouvelle image VIS avec la routine asep....
 				runMacro("Zooscan_1asep",arg);
 				//--------------------Recuperation du log-----------------------
@@ -296,6 +310,7 @@ else { 	print("Separation_Mask= INCLUDE");
 				print("A purger");		selectWindow("Log");		run("Close");
 				opentemp = chemtemp +"temp_log.txt";
 				open(opentemp);
+				wait(200);
 				config = getInfo();
 				array = split(config,"\n");
 				for (i=0; i<array.length; i++)	{	print(array[i]);			} // for
@@ -334,18 +349,15 @@ else { 	print("Separation_Mask= INCLUDE");
 		//	saveAs("Tiff", chemtemp+"temp_sep.tif"); 
 		rename("Separation");
 		// -------------------- Comptage du nombre de traits ------------------------------
-			run("Set Measurements...", "area redirect=None decimal=0");
-			run("Invert");
-			run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing display");
-			run("Invert");
-			updateResults();
-			nbblobs = 	nResults;
-			test= isOpen("Results");
-			if (test==1) { selectWindow("Results"); 	run("Close");	} // test
-			print("Separation_lines= "+nbblobs);
-			
-			
-			
+		run("Set Measurements...", "area redirect=None decimal=0");
+		run("Invert");
+		run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing display");
+		run("Invert");
+		updateResults();
+		nbblobs = 	nResults;
+		if (isOpen("Results")) { selectWindow("Results"); 	run("Close");	} // test
+		print("Separation_lines= "+nbblobs);
+		
 		// -------------------------Combinaison de l'image du masque avec celle des objets
 		run("Image Calculator...", "image1=Separation operation=Add image2=Zooplankton");
 		selectImage("Zooplankton");
@@ -356,8 +368,11 @@ else { 	print("Separation_Mask= INCLUDE");
 		saveAs("zip",chemwork+titrered+"_vis1");
 		rename(titrered);
 		ret = runMacro("Zooscan_Particle_Analysis.txt",arg);
+		ret = toString(ret);
+		if (lengthOf(ret)== 1) { showMessage("Zooscan_Particle_Analysis.txt aborted. \n Case #3 \nPress CANCEL to end.");	}
 		if (isOpen("Log")== false) {	opentemp = chemtemp +"temp_log.txt";
 			open(opentemp);
+			wait(200);
 			config = getInfo();
 			array = split(config,"\n");
 			for (i=0; i<array.length; i++)	{	print(array[i]);		} // for
@@ -365,7 +380,7 @@ else { 	print("Separation_Mask= INCLUDE");
 			run("Close");
 		} // if
 		nbblobs = parseInt(ret);
-		if (nbblobs==0) { print("Particle Analysis ABORTED"); 		} // if flag
+//		if (nbblobs==0) { print("Particle Analysis ABORTED"); 		} // if flag
 		print("Analysed_Objects= ",nbblobs);
 		val = isOpen(titrered);
 		if (val==1) { 	selectImage(titrered);		run("Close");		} // if val
@@ -376,11 +391,12 @@ else { 	print("Separation_Mask= INCLUDE");
 //----------------------------SAUVEGARDE RESULTATS---------------------------------------------
 // La fenetre RESULTS n'est PAS fermee car on va travailler avec pour les TAG. 
 // Elle est sauvee pour "securite" dans le repertoire "temp"
-res = isOpen("Results");
-if (res== 1) {saveAs("measurements",chemtemp+"measurementsB.txt");	} // if
+if (isOpen("Results")) {selectWindow("Results"); saveAs("measurements",chemtemp+"measurementsB.txt");	} // if
+wait(1000);
 
 // ---------------------------- Sauvegarde du LOG -----------------------------------------------------
-selectWindow("Log");	sauve = "save=" + chemwork + titrered + "_log.txt";	run("Text...",sauve);
+if (isOpen("Log")) {	selectWindow("Log");	sauve = "save=" + chemwork + titrered + "_log.txt";	run("Text...",sauve);	}
+else {	showMessage("Log error in Zooscan_Separation_analyse.txt for "+titrered + "_log.txt \n \nThe Log window is not open !");	}
 
 // ---------------------------- FIN ---------------------------------------------------------------------------
 ret = arg;

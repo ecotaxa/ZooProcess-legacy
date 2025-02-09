@@ -1,8 +1,8 @@
 //------------ Zooscan_separation_from_vignettes_multiples ------------------------------------------------
 // Routine de separation des organismes à partir des vignettes triées dans "multiples_to_separate"
 
-version = "7.24";
-date = "2017/07/06";
+version = "8.09";
+date = "2022/01/31;
 
 // v800
 // plusieurs traits dns la même vignette
@@ -35,7 +35,6 @@ if (File.exists(optionfile)) {	open(optionfile);
 } // if
 
 outlines = 0;	sep = 0;		testout = 0;	param = 1;	flag=0;		maximum = 0;		tag = 0;
-Hardware = "Perfection2450-Flatbed";
 PreviewXOffset= 0;		PreviewYOffset= 0;	XOffset = 0;	XSpacing =0;		YOffset = 0;		YSize = 0;	reduction = 1;
 datalig ="empty";
 
@@ -73,20 +72,20 @@ else { 	filelist  = 	getFileList(chemconfig);
 		Dialog.show();
 		configfile = Dialog.getChoice();
 	} // else
-		open(chemconfig +configfile);
-		wait(500);
-		config = getInfo();
-		array = newArray(50);
-		conf  = split(config,"\n");
-		for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
-		background_process = array[0];			enhance_thumbnail = array[1];	calibration = array[2]; 	jpeg = array[3];
-		zip = array[4];		greycor = array[5];		resolution = array[6];		greytaux = array[7];	yminref = array[8];		doyofset = array[9];		doxpos = array[10];		xdimref = array[11];
-		ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
-		voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
-		doyabspos = array[28];	bleft= array[29];		broll= array[30];			bright= array[31];	
-		contrast= array[32];	doubloonxy_inch= array[33];	doubloonarea_pourcent= array[34];	greylimit= array[35];
-		selectWindow(configfile);
-		run("Close");
+	open(chemconfig +configfile);
+	wait(500);
+	config = getInfo();
+	array = newArray(50);
+	conf  = split(config,"\n");
+	for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
+	background_process = array[0];			enhance_thumbnail = array[1];	calibration = array[2]; 	jpeg = array[3];
+	zip = array[4];		greycor = array[5];		resolution = array[6];		greytaux = array[7];	yminref = array[8];		doyofset = array[9];		doxpos = array[10];		xdimref = array[11];
+	ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
+	voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
+	doyabspos = array[28];	bleft= array[29];		broll= array[30];			bright= array[31];	
+	contrast= array[32];	doubloonxy_inch= array[33];	doubloonarea_pourcent= array[34];	greylimit= array[35];
+	selectWindow(configfile);
+	run("Close");
 } // else
 
 //--------------------Ouverture controlee du VIS et du PID -----------------------
@@ -99,7 +98,7 @@ while (check == 0) {
 		j = 0;	flagframe = 0;
 		list = newArray(filelist.length);
 		for (i=0; i<filelist.length ; i++) {	  
-			 rr = filelist[i]; 
+			rr = filelist[i]; 
 			identlong = 	lengthOf(rr);
 			rr = 		substring(rr,0,identlong-1);	
 			//--------------- Recherche du fichier image en ZIP ou en JPG ----------
@@ -171,7 +170,7 @@ while (check == 0) {
 			check = 1;
 		} // else
 	} // if workfolder
-
+	
 	else { getBoolean("No "+chemwork+" folder, press CANCEL to ABORT !");		} // else
 	print("Sample = "+titrered);
 	//------------------- Fermeture d'eventuelles images ----------------------------------------
@@ -214,7 +213,7 @@ while (check == 0) {
 		} // if	
 		else { message = "No msk1.gif  file available for the selected image.              " ;	print(message);		} // else	
 	} // if
-
+	
 	//---------------------AJOUT des outlines -----------------------------------------
 	if (maskout == true) {
 		openfile = chemwork1+ titrered+"_out1.gif";
@@ -234,7 +233,7 @@ while (check == 0) {
 	long = lengthOf(titrered);		frame = substring(titrered, long-2, long);
 	Larg = getWidth();			Haut = getHeight();	
 	XSize = Larg;				YSize = Haut;	
-
+	
 	//------------------Ouverture automatique du PID ou du DAT1.txt-------------------
 	if (maskdat1 == true) {	openfile = chemwork1+ titrered+"_dat1.txt";		} // if
 	else {			openfile = chemwork1+ titrered+"_dat1.pid";		} // else
@@ -245,83 +244,56 @@ while (check == 0) {
 	config = getInfo();
 	pid = split(config,"\n");
 	run("Close");
+	
+	//-------------------------------Type scanner----------------
+	for (k=0;k<pid.length;k++) {	champ= pid[k];	texte= champ;	
+		if (indexOf(champ,"[Crop-")>=0) { 	aa = replace(champ,"-"," ");	info = split(aa,"\ ");	scanner= info[1];		} // if
+	} // for
+	
 	//-----------------Recherche DATA section--------------------------
 	for (i=0; i<pid.length ; i++) {
 		Unit= 0;	
-		ctrl1 = indexOf(pid[i],"[Data]");
-		if (ctrl1>=0) { Deb=i+1;							} // if
-		ctrl2 = indexOf(pid[i],"Resolution");
-		if (ctrl2==0) { texte = pid[i];	res = split(texte,"\ ");		resolution = res[1];		} // if
+		if (indexOf(pid[i],"[Data]")>=0) { Deb=i+1;							} // if
+		if (indexOf(pid[i],"Resolution")==0) { texte = pid[i];	res = split(texte,"\ ");		resolution = res[1];		} // if
 		//-------------------------------Type Hardware----------------
 		champ = pid[i];
 		// Conversion des mesures faites pour 4800 dpi par VUESCAN !
-		pos = indexOf(champ,"[Input-");
-		if (pos>=0) { 	fin = lastIndexOf(champ,"]");		Hardware= substring(champ,pos+7,fin);		} // if
-		posr = indexOf(champ,"TIFFSizeReduction");
-		if (posr>=0 ) {	deb= indexOf(champ,"=");		reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
+		if (indexOf(champ,"TIFFSizeReduction")>=0 ) {	deb= indexOf(champ,"=");	reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
 		//-------------------------------Unite----------------
-		pos = indexOf(champ,"CropUnits");
-		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
+		if (indexOf(champ,"CropUnits")>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
 	} // for
 	for (i=0; i<Deb; i++) {		champ = pid[i];
-		if (Unit==0 && (Hardware == "Perfection4990-Flatbed" || Hardware == "Perfection4490-Flatbed")) 	unit= "pixel";
+		if (Unit==0 && (scanner == "Perfection4990" || scanner == "Perfection4490")) 	unit= "pixel";
 		//-------------------------------Unite----------------
-		pos = indexOf(champ,"AutoOffset");
-		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
+		if (indexOf(champ,"AutoOffset")>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
 		//----------------- PreviewXOffset ----------------
-		pos1 = indexOf(champ,"PreviewXOffset");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
+		if (indexOf(champ,"PreviewXOffset")>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
 		//----------------- X Offset ----------------
-		pos1 = indexOf(champ,"XOffset");
-		if (pos1>=0 ) {	deb= indexOf(champ,"=");
+		if (indexOf(champ,"XOffset")>=0 ) {	deb= indexOf(champ,"=");
 			if (deb < 8)  { long= lengthOf(champ);		val = substring(champ,deb+1,long);		XOffset=parseInt(val);			} // if
 		} // if	
 		//----------------- X Size ----------------
-		pos1 = indexOf(champ,"XSize");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");
+		if ( indexOf(champ,"XSize")>=0 ) { 	deb= indexOf(champ,"=");
 			if (deb < 8) {long= lengthOf(champ);		val = substring(champ,deb+1,long);		XSize=parseInt(val);				} // if
 		} // if
 		//----------------- XSpacing ----------------
-		pos1 = indexOf(champ,"XSpacing");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSpacing=parseInt(val);	} // if		
+		if (indexOf(champ,"XSpacing")>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	XSpacing=parseInt(val);	} // if		
 		//----------------- PreviewYOffset
-		pos1 = indexOf(champ,"PreviewYOffset");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYOffset=parseInt(val);	} // if	
+		if (indexOf(champ,"PreviewYOffset")>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewYOffset=parseInt(val);	} // if	
 		//----------------- Y Offset ----------------
-		pos1 = indexOf(champ,"YOffset");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");
+		if (indexOf(champ,"YOffset")>=0 ) { 	deb= indexOf(champ,"=");
 			if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);		YOffset=parseInt(val);			} // if
 		} // if
 		//----------------- Y Size ----------------
-		pos1 = indexOf(champ,"YSize");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");
+		if (indexOf(champ,"YSize")>=0 ) { 	deb= indexOf(champ,"=");
 			if (deb < 10) { long= lengthOf(champ);		val = substring(champ,deb+1,long);		YSize=parseInt(val);				} // if
 		} // if	
 	} // for
-	resolution = toString(resolution);
-	// --------------------------- Biotom - Hydroptic v1 ----------------------------------------------
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="300" ) { reduction = 16; };
 	
-	// -------------------------- Hydroptic v2 -----------------------------------------------------------
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="300" ) { reduction = 16; };
-
-	// -------------------------- Hydroptic v3 -----------------------------------------------------------
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "PerfectionV700-Flatbed" && resolution=="300" ) { reduction = 16; };	
-	
-	// -------------------------- Hydroptic v4 -----------------------------------------------------------
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "PerfectionV800-Flatbed" && resolution=="300" ) { reduction = 16; };	
+	// ------------------- Reduction --------------------------------
+	resolution = toString(resolution);		
+	reduction = runMacro("Zooscan_define_reduction.txt",scanner+" "+resolution);
+	reduction = parseInt(reduction);
 	
 	// --------------------Correction du RATIO car ERREUR VUESCAN ------------------------------
 	PreviewXOffset= PreviewXOffset/reduction;
@@ -394,7 +366,7 @@ for (t=0; t<nbval;t++) { coord[t] =	"0 0 0 0";	} // for
 //	x = 	newArray(2);	y = 	newArray(2);
 colarea = 0;	colbx = 0;		colby = 0;		colwidth = 0;		colheight = 0;
 colno = 0;		coltag = 0;	colxstart = 0;	colystart = 0;	colpred = 0;	
-	
+
 //----------------- Recherche Type de separateur ( tabs, ; ou space)--------------------------
 i = deb;
 sep = "tabs";
@@ -528,7 +500,7 @@ while (lig < ind) {	ligne =  	aff[lig];
 	}//
 	lig++;
 }// while
-	
+
 lig = 0;
 //while (lig < ind) {
 while (lig < idx) {	
@@ -625,7 +597,7 @@ while (lig < idx) {
 				setTool(4);
 				getCursorLoc(A,B,C, flags);
 				keyd = isKeyDown("space"   );
-//				x[0] = 	A;	y[0] =	B;
+				//				x[0] = 	A;	y[0] =	B;
 				//---------------NEXT par space bar-------------------
 				if (keyd == 1) { 	check =1;	closeimg = 1;		lig++;	selectImage(nomvignette);	run("Close");	wait(100);	} // if
 				else { 	//---------------NEXT-------------------
@@ -673,7 +645,7 @@ while (lig < idx) {
 						coord_to_sep[lig] ="0 0 0 0";	setColor(0);
 					} // else if
 					else { wait(500);		} // else
-				if (keyd == 1) { wait(500)	} // if
+					if (keyd == 1) { wait(500)	} // if
 				} // else
 			} // if
 			//-------------------------- Si la vignette est fermee par l'operateur--------------------------------
@@ -712,7 +684,7 @@ while (lig < idx) {
 						// --------------- CAS NEXT ----------------------
 						test = 1;
 						selectImage(nomvignette);	run("Close");	lig++; 	wait(100);	
-//						aa = getBoolean("TEST = 1");
+						//						aa = getBoolean("TEST = 1");
 						
 					} // if
 					else {	// --------------- CAS DESSIN --------------------
@@ -720,7 +692,7 @@ while (lig < idx) {
 						prevflags = flags;
 						ref = -bleft;
 						if (dif==ref) {test = 2;	showStatus("Draw line now !");		
-//							aa = getBoolean("TEST = 2");	
+							//							aa = getBoolean("TEST = 2");	
 						} // if
 					}
 				} // while
@@ -760,9 +732,9 @@ while (lig < idx) {
 					else { Coord = toString(a) +" "+toString(b)+" "+toString(c) +" "+toString(d);	} // else
 					coord_to_sep[lig] = 	Coord;
 				}
-//				if (isOpen(nomvignette) && test == 1) {	// ------------  NEXT VIGNETTE -------------
-//					selectImage(nomvignette);	run("Close");	wait(100);	//	lig++;	
-//				}
+				//				if (isOpen(nomvignette) && test == 1) {	// ------------  NEXT VIGNETTE -------------
+				//					selectImage(nomvignette);	run("Close");	wait(100);	//	lig++;	
+				//				}
 			} // while
 			if (isOpen(nomvignette) == false && test != 1) {	// ------------- La vignette a été fermée ---------------------
 				lig++;
@@ -809,7 +781,7 @@ saveAs("Gif", chemwork1+ titrered+"_sep");
 close();
 
 while (nImages()>0) {	selectImage(nImages());  	run("Close");	}	
-showMessage("RUN the ''Convert & Process'' tool to re-process the images. \n \nSelect the ''Process again particles from processed images to include separation mask'' option.");
+showMessage("RUN the ''CONVERT & PROCESS scanned SAMPLES in batch mode''tool to re-process the images. \n \nSelect the ''Process again particles from processed images to include separation mask'' option.");
 
 // ---------------------------- FIN du PROCESS ------------------------
 ret = titrered;

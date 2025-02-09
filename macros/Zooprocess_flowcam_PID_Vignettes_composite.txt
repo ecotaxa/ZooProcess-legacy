@@ -1,6 +1,6 @@
 // -------------------------- Zooprocess_flowcam_PID_Vignettes_composite --------------------------
-version = "7.32";
-date = "2019/10/15";
+version = "8.20";
+date = "2023/008/28";
 
 // Traitement des images composites du FlowCam
 // Solution du probleme image name dans lst
@@ -10,18 +10,17 @@ args = 	getArgument();
 //args = "C:\\flowcam_composite_essai03 364-193137_2 no flowcam 364-193137_2";
 arg = 	split(args," ");
 path = 			arg[0];
-profileprocessed = 	arg[1];
+Filename = 		arg[1];
 configfile = 		arg[2];
 instrum = 		arg[3];
-Stationname = 		arg[4];
-profileraw =		"flowcam_"+profileprocessed;
-//	profileraw =		profileprocessed;
+SampleId = 		arg[4];
+Profileraw =		"flowcam_"+Filename;
+//	Profileraw =		Filename;
 pathraw = 		path+"\\raw\\";
-pathprocessed = 	path+"\\work\\"+profileprocessed+"\\";
-pathconfig = 		path+"\\config\\";
-profile = 		profileprocessed;						// a remplacer dans le soft si OK
+pathprocessed = 	path+"\\work\\"+SampleId+"\\";
+pathconfig = 		path+"\\config\\";						// a remplacer dans le soft si OK
 pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
-pathback =		path+"\\back\\FlowCam_"+profileprocessed+"_auto\\";
+pathback =		path+"\\back\\FlowCam_"+SampleId+"_auto\\";
 for (b=0;b<4;b++)	{	run("free memory");		wait(1000);	progress = (b+1)/4;	showProgress(progress);   } // for
 except = 0;
 badsubtrac = 0;
@@ -41,20 +40,18 @@ setBatchMode(batch);
 dateheurestart =	runMacro("Zooscan_get_time_5");
 
 // ------------------------- Lecture RUN SUMMARY --------------------------------
-filelist  = 	getFileList(pathraw+profileraw);
-list = newArray(filelist.length);
 summaryfile ="not_file";
-for (i=0; i<filelist.length ; i++) {
-	ctrlsum = endsWith(filelist[i],"_run_summary.txt");
-	ctrlctx = endsWith(filelist[i],".ctx");
-	ctrllst = endsWith(filelist[i],".lst");
-	if (ctrlsum == true )		{ summaryfile = filelist[i];		} // if
-	if (ctrlctx == true )		{ ctxfile = filelist[i];		} // if
-	if (ctrllst == true )		{ lstfile = filelist[i];		} // if
+list_pathraw_filename  = 	getFileList(pathraw+Profileraw);
+for (i=0; i<list_pathraw_filename.length ; i++) {
+	ctrlsum = endsWith(list_pathraw_filename[i],"_run_summary.txt");
+	ctrlctx = endsWith(list_pathraw_filename[i],".ctx");
+	ctrllst = endsWith(list_pathraw_filename[i],".lst");
+	if (ctrlsum == true )		{ summaryfile = list_pathraw_filename[i];		} // if
+	if (ctrlctx == true )		{ ctxfile = list_pathraw_filename[i];		} // if
+	if (ctrllst == true )		{ lstfile = list_pathraw_filename[i];		} // if
 } // for	
-if (summaryfile =="not_file") { getBoolean("Summary file not found in "+pathraw+profileraw+"\n      \nPress Cancel to abort !");	} // if
-//aa = getBoolean(pathraw+profileraw+"\\"+summaryfile);
-open (pathraw+profileraw+"\\"+summaryfile);
+if (summaryfile =="not_file") { getBoolean("Summary file not found in "+pathraw+Profileraw+"\n      \nPress Cancel to abort !");	} // if
+open (pathraw+Profileraw+"\\"+summaryfile);
 wait(100);
 summary = getInfo();
 run("Close");
@@ -95,12 +92,10 @@ x1 = 10;
 
 scale = 1;
 nbvigar = 100;
-//	removeduplicates = yes;
 duplicatestot = 0;
 duplicaterange = 0.05;
 notxt = 1000000;
 stop_after_n_images = 1000000;
-//	grey_auto_adjust = "yes";
 
 // ----------------------- Conversions  ----------------------------------------------------
 echelle_micro = 	parseInt(echelle_micro);
@@ -122,69 +117,98 @@ imagenb = stop_after_n_images;
 
 // --------------------------- Lecture du fichier "lst" -------------------------------------------------
 // LE FICHIER DOIT ETRE OUVERT PAR Notepad+ et enregistré en TXT en AINSI
-//open(pathraw+profileraw+"\\"+profileprocessed+".txt");
-
-//aa = getBoolean(pathraw+profileraw+"\\"+profileprocessed+".lst");
-lst = File.openAsString(pathraw+profileraw+"\\"+profileprocessed+".lst");
+lst = File.openAsString(pathraw+Profileraw+"\\"+Filename+".lst");
 wait(1000);
 lst = replace(lst,"|"," ");
 data  = split(lst,"\n");
+// showMessage(pathraw+Profileraw+"\\"+Filename+".lst   read");
 
 // --------------------------- Selection metadata ---------------------------------------------------
 list = newArray(150);
-index = 0;
-end_meta = 0;
-while (end_meta == 0) {
-	ligne = data[index];
+timestamp_line = 0;
+image_id_line = 0;
+for (i= 0 ; i < data.length ;i++) {
+	ligne = data[i];
+	if(indexOf(ligne,"id") == 0 ) 		id_line = i;		// 2
+	if (indexOf(ligne,"timestamp") == 0) 	timestamp_line = i;
+	if (indexOf(ligne,"image_id") == 0) 	image_id_line = i;
+	if (indexOf(ligne,"collage_file") == 0) collage_file_line = i;	
+	
+	if(indexOf(ligne,"image_x") == 0 ) colx = i - id_line;
+	if(indexOf(ligne,"image_y") == 0 ) coly = i - id_line;
+	if(indexOf(ligne,"image_w") == 0 ) colw = i - id_line;
+	if(indexOf(ligne,"image_h") == 0 ) colh = i - id_line;
+}
+first_data_line_index = maxOf(image_id_line,collage_file_line)+1;
+
+if (timestamp_line == 0) aa = getBoolean("The "+pathraw+Profileraw+"\\"+Filename+".lst file does not contain timestamps. \n \nPress Cancel to abort !");
+	
+// ------------------------- détection des noms d'image ------------------
+if (indexOf(data[first_data_line_index],"flowcam_") >= 0 ) flowcam_test = true;
+/*	
 	if(indexOf(ligne,"image_x") == 0 ) colx = index -2;
 	if(indexOf(ligne,"image_y") == 0 ) coly = index -2;
 	if(indexOf(ligne,"image_w") == 0 ) colw = index -2;
 	if(indexOf(ligne,"image_h") == 0 ) colh = index -2;
-	if (lengthOf(ligne) > 200) {
-		end_meta = index;
-	}
+	if (indexOf(ligne,"timestamp") == 0) {	end_meta = index;	}
+	if (indexOf(ligne,"image_id") == 0) {	image_id_index = index;	}
 	index++;
 }
+*/
+
 // -------------------------- Entete --------------------
 entete = "!Item;Label";
-for (i= 3 ; i < end_meta - 2 ;i++) {
-	ligne = data[i];
-	val = split(ligne,"\ ");
-	entete = entete+";"+val[0];	
+for (i= id_line + 1 ; i < timestamp_line ;i++) {
+	val = split(data[i],"\ ");
+	entete = entete+";"+val[0];
 }
-//	aa = getBoolean(data[data.length - 1]);
 
 // --------------------------- Boucle sur les lignes DATA ----------------------------------------------------
 image_prev = "no";
-data_vect = newArray( data.length - end_meta);
-for (i = end_meta ; i < data.length ;i++) {
+flowcam_test = false;
+// -------------------------- vecteur des données ------------------------
+data_vect = newArray(data.length - first_data_line_index);
+for (i = first_data_line_index ; i < data.length ;i++) {
 	ligne = data[i];
 	val = split(ligne,"\ ");
-	val_dat = val[1];
-	for (j = 2; j < val.length - 2 ; j++) {	val_dat = val_dat + ";" + val[j];	}
+	// ----------------- Deux premiers champs -------------------------
+	val_dat = val[0] +";"+Filename;
+	
+	// ----------------- Vecteur --------------------------------------
+	for (j = id_line - 1; j < timestamp_line - id_line ; j++) {	val_dat = val_dat + ";" + val[j];	}
+	data_vect[i - first_data_line_index] = val_dat;
+
 	// -------------- Heure debut & FIN ---------------------
-	if (i == end_meta) 		date_raw_start = 	val[val.length - 2];
-	if (i == data.length - 1 ) 	date_raw_end = 		val[val.length - 2];
-		
-	item = toString(i);	
-	data_vect[i - end_meta] = val[0] +";"+profileprocessed+";"+val_dat;
-//	print(data_vect[i - end_meta]);	
+	if (i == first_data_line_index) 		date_raw_start = 	val[timestamp_line - id_line];
+	if (i == data.length - 1 ) 			date_raw_end = 		val[timestamp_line - id_line];
+	
+//	aa = getBoolean(date_raw_start);
+	
 	// -------------- Ouverture image composite si pas ouverte et fermeture précédente -----------------
-	image_name = val[val.length - 1];
-	// -------------- Cas champ supplémentaire après image name ----------------------------------------
-	if (indexOf(image_name,".tif") < 0 )  ; image_name = val[val.length - 2];
+	image_name = val[collage_file_line - id_line];
 
-//	aa = getBoolean("IMAGE= "+pathraw+profileraw+"\\"+image_name);
-
-	if (isOpen(pathraw+profileraw+"\\"+image_name) == false )	{	
-		if (isOpen(image_prev))	{ 	selectImage(image_prev); 	close();	}
-		open(pathraw+profileraw+"\\"+image_name); 
-		setColor(200,200, 200);
-		image_prev = image_name;			
-	}
+	// ------------------- retrait du préfixe flowcam si présent ----------------
+	if (indexOf(image_name,"flowcam") == 0) {	image_name = toLowerCase(substring(image_name,8,lengthOf(image_name)));	}
+	
 //	aa = getBoolean(image_name);
+	
+	if (image_prev != image_name) {		
+		// ------------- Fermeture image_prev et ouverture image_name ---------------
+		if (image_prev != "no") {	selectImage(image_prev); 	close();	}
+		
+		if (		File.exists(pathraw+Profileraw+"\\"+image_name)) 	{open(pathraw+Profileraw+"\\"+image_name); 	image_prev = image_name;	}
+//		else if (	File.exists(pathraw+Profileraw+"\\"+image_name_cor))	{open(pathraw+Profileraw+"\\"+image_name_cor); 	image_prev = image_name_cor;	}
+		else { aa = getBoolean("The file "+image_name+" or "+image_name_cor+" does not exist in "+pathraw+Profileraw+"\nThe final abundance will be biased. \n \nPress CANCEL and check the folder for the collage images !");	}
+		setColor(200,200, 200);
+		
+//	aa = getBoolean(image_prev);
+	
+	}
+	
+	
+	
 	// -------------- Creation de la vignette ------------------------
-	selectImage(image_name);
+	selectImage(image_prev);
 	makeRectangle(val[colx],val[coly],val[colw],val[colh]);
 	run("Copy");
 	largeur = maxOf(longline +10 , val[colw]);
@@ -195,22 +219,23 @@ for (i = end_meta ; i < data.length ;i++) {
 	// -------------- Ajout légende ----------------------------------
 	textesize = "width="+largeur+" height="+hauteur+" position=Top-Left zero";
 	run("Canvas Size...", textesize);
-//	aa = getBoolean(textesize);
 	setFont("SansSerif", 9);
 	drawString(echelletext,2,hauteur-15);
 	setLineWidth(1);
 	drawLine(2,hauteur-10,2+longline,hauteur-10);
-//	aa = getBoolean("OK");
 
 	// -------------- Enregistrement de la vignette ------------------
-	saveAs("jpg", pathprocessed+"\\"+profileprocessed+"_"+val[0]);
-	//	print(profileprocessed+"_"+val[0]);	
+	
+//	aa = getBoolean(pathprocessed+"\\"+SampleId+"_"+val[0]);
+	
+	saveAs("jpg", pathprocessed+"\\"+SampleId+"_"+val[0]);
+	close();
 }
 
 //aa = getBoolean("END vignettes");
 // ---------- Ecriture du PID ---------------------
 // --------------------- Lecture METADATA ---------------------------------------
-open(pathprocessed+profileprocessed+"_meta.txt");
+open(pathprocessed+SampleId+"_meta.txt");
 wait(100);
 config = getInfo();
 run("Close");
@@ -241,7 +266,7 @@ print(summary);
 print(" ");
 
 // ----------------- Flowcam settings ---------------------------------------------------
-open (pathraw+profileraw+"\\"+ctxfile);
+open (pathraw+Profileraw+"\\"+ctxfile);
 wait(100);
 settings = getInfo();
 run("Close");
@@ -307,21 +332,20 @@ for (i = 0 ; i < data_vect.length ; i++) { print(data_vect[i]);	}
 
 // ---------- Enregsitrement ----------------------
 // ---------------- Enregistrement dans le repertoire du profile -------------
-sauvepid = "save=" + pathprocessed+profileprocessed +"_dat1.pid";	
+sauvepid = "save=" + pathprocessed+SampleId +"_dat1.pid";	
 selectWindow("Log");
 run("Text...",sauvepid);
 // ----------------- Enregistrement dans pid_results de la mission ---------
-sauvepid = "save=" + pathpidresults+profileprocessed +"_dat1.pid";
+sauvepid = "save=" + pathpidresults+SampleId +"_dat1.pid";
 selectWindow("Log");
 run("Text...",sauvepid);
 
 // ---------- CREATION du TSV ---------------------
 link = "http://www.zooscan.obs-vlfr.fr//";
-print(path+" "+pathprocessed+" "+profileprocessed +"_dat1.pid"+" pid no false new "+link);
+print(path+" "+pathprocessed+" "+SampleId +"_dat1.pid"+" pid no false new "+link);
 
-ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathprocessed+" "+profileprocessed +"_dat1.pid"+" pid no false new "+link);
-
-
+flag = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathprocessed+" "+SampleId +"_dat1.pid"+" pid no false new "+link);
+if (lengthOf(toString(flag)) == 1)  { 	showMessage("Error message : ''Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic'' macro aborted.     "); 	}
 // ----------------------------- FIN ----------------------------------------------
 ret = "OK";
 return ret;

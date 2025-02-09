@@ -121,17 +121,16 @@ while (sortie ==0) {
 			if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
 			print(data);
 			text =  "save=" + chemcheck+"checked_files.txt";
-			selectWindow("Log");
-			run("Text...",text);	
-			run("Close");
-			print("==============================================================================");
-			print("Press SPACE bar to close the opened image AND ends the checks !       ");
-			print("CLOSE the image to open another image to be checked !         ");
-			print("==============================================================================");
-			// ------------------- AJOUT Check dans le fichier scan CONTROL ---------------------------
-			
-			
-			
+			if (isOpen("Log")) {	selectWindow("Log");
+				run("Text...",text);	
+				run("Close");
+				print("==============================================================================");
+				print("Press SPACE bar to close the opened image AND ends the checks !       ");
+				print("CLOSE the image to open another image to be checked !         ");
+				print("==============================================================================");
+				// ------------------- AJOUT Check dans le fichier scan CONTROL ---------------------------
+			}
+			else {	showMessage("Log error in Zooscan_check_msk1.txt");	}
 			
 		}//
 	} // while

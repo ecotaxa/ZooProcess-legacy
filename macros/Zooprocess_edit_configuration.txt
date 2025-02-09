@@ -1,6 +1,6 @@
 //-------------------Zooprocess_edit_configuration---------------------------------
-version = "7.33";
-date = "2019/11/08";
+version = "8.27";
+date = "2024/05/24";
 
 // UVP5 HD / Std
 // CREATE / EDIT
@@ -9,6 +9,11 @@ date = "2019/11/08";
 // FLOWCAM color threshold
 // GENERIC, invert_only for Octopus raw images
 // Valeurs ESD min et Nb par défaut
+// ESD min Flowcam => 40
+// pixel automatique (voir process PID and vignettes
+// plus de choix de nom de fichier
+// Flowcam max obj 50000 => 20000
+// effacement nb_images, rolling ball, process_option
 
 arg = getArgument(); 
 array = split(arg," ");
@@ -21,6 +26,8 @@ uvp_type = "std";
 if (array.length == 6) { uvp_type = array[4];	uvp_sn_txt = array[5];	} //
 create_acq = false;
 longinst = 	lengthOf(instrum);
+pixel4x = 1.29;
+pixel10x = 5.0;
 
 // --------------------------Affichage de la date et de l'heure ------------------
 dateheure =	runMacro("Zooscan_get_time_5");
@@ -72,27 +79,27 @@ if (j==0 || option == "create") {
 				if (startsWith(dat[0],"sn"))		uvp_sn_txt = dat[1];
 			}// for
 		}// exists
-				
+		
 		
 		// -------------------------------- Choix STD / HD -------------------------------------------
-//		listaff = newArray("UVP5 (1 Mp)","UVP5 HD (4 Mp)");	
-//		uvp_choice = listaff[0];
-//		if (xsize == 2048 && ysize == 2048) uvp_choice = listaff[1];
-//		if (xsize == 0 ) {		
-//			Dialog.create("SELECT UVP5 model ");
-//			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
-//			Dialog.addMessage("Instrument :  "+instrum);
-//			Dialog.addMessage("Project :        "+path);
-//			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
-//			message = "SELECT UVP5 model from the list.             " ;
-//			Dialog.addMessage(message);
-//			Dialog.addChoice("       ", listaff);
-//			Dialog.show();
-//			uvp_choice = Dialog.getChoice();
-//		}//
-//		else { showMessage("UVP type = "+uvp_choice);	}
+		//		listaff = newArray("UVP5 (1 Mp)","UVP5 HD (4 Mp)");	
+		//		uvp_choice = listaff[0];
+		//		if (xsize == 2048 && ysize == 2048) uvp_choice = listaff[1];
+		//		if (xsize == 0 ) {		
+		//			Dialog.create("SELECT UVP5 model ");
+		//			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
+		//			Dialog.addMessage("Instrument :  "+instrum);
+		//			Dialog.addMessage("Project :        "+path);
+		//			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------      ");
+		//			message = "SELECT UVP5 model from the list.             " ;
+		//			Dialog.addMessage(message);
+		//			Dialog.addChoice("       ", listaff);
+		//			Dialog.show();
+		//			uvp_choice = Dialog.getChoice();
+		//		}//
+		//		else { showMessage("UVP type = "+uvp_choice);	}
 		
-//		if (uvp_choice == "UVP5 (1 Mp)") {	
+		//		if (uvp_choice == "UVP5 (1 Mp)") {	
 		if (uvp_type == "std") {
 			pixel = 0.148;
 			xsize = 1280;
@@ -102,12 +109,12 @@ if (j==0 || option == "create") {
 			xsize = 2048;
 			ysize = 2048;
 		}//
-
+		
 		if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
 		print("calibration= "+dateheure);
 		print("pixel= "+toString(pixel));
 		if (uvp_type == "std") {
-//		if (uvp_choice == "UVP5 (1 Mp)") {
+			//		if (uvp_choice == "UVP5 (1 Mp)") {
 			print("upper= 235");	
 			print("gamma= 4");
 			print("echelle_mm= 5");		
@@ -144,18 +151,18 @@ if (j==0 || option == "create") {
 		print("background_method= Automatic_25/1000img");		// average_image/rolling
 		print("nb_images= 5");
 		print("rolling= 100");
-		print("pixel4x= 1.29");
-		print("pixel10x= 5");
+		print("pixel4x= "+pixel4x);
+		print("pixel10x= "+pixel10x);
 		print("upper= 245");	
 		print("gamma= 2");
 		print("echelle_µm= 100");
 		print("process_option= advanced");
-		print("esdmin= 20");
+		print("esdmin= 40");
 		print("esdmax= 100000");
 		print("LUT_ofset= 0");
 		print("LUT_slope= 1");
-		print("Stop_after_n_images= 90000");
-		print("Stop_after_m_objects= 50000");
+		print("Stop_after_n_images= 99999");
+		print("Stop_after_m_objects= 20000");
 		print("scale= 2");
 		print("remove_objects_on_sides= yes");
 		print("remove_duplicates= yes");
@@ -166,24 +173,24 @@ if (j==0 || option == "create") {
 		if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
 		print("calibration= "+dateheure);
 		print("background_method= rolling_ball");		// average_image/rolling
-			print("nb_images= 10");
+		print("nb_images= 10");
 		print("rolling= 20");
 		print("pixelx= 1");
-			print("pixel10x= 5");
+		print("pixel10x= 5");
 		print("upper= 243");	
 		print("gamma= 2");
 		print("echelle_µm= 2");
-			print("process_option= advanced");
+		print("process_option= advanced");
 		print("esdmin= 5");
 		print("esdmax= 100000");
-			print("LUT_ofset= 0");
-			print("LUT_slope= 1");
+		print("LUT_ofset= 0");
+		print("LUT_slope= 1");
 		print("Stop_after_n_images= 10000");
 		print("Stop_after_m_objects= 10000");
 		print("scale= 2");
 		print("remove_objects_on_sides= yes");
-			print("remove_duplicates= no");
-			print("grey_auto_adjust= no");
+		print("remove_duplicates= no");
+		print("grey_auto_adjust= no");
 		print("Analysed_color_channel= Red");
 		print("Vignette_color= B&W_no_background");
 	} // if
@@ -194,7 +201,7 @@ if (j==0 || option == "create") {
 	wait(100);
 	run("Close");
 	option = "create";
-
+	
 } // if
 
 if (option != "create") {
@@ -220,490 +227,494 @@ if (option != "create") {
 
 else { configfile = "process_install_config.txt";			} // else
 
-// ------------------------------ EDITION du fichier choisi ------------------------------------------------------------------
-	openconfig = pathconfig +"\\"+configfile;
+// =================================== EDITION du fichier choisi ===================================
+openconfig = pathconfig +"\\"+configfile;
 
-	// ---------------------------- Lecture fichier existant -----------------------------------------------
-	open(openconfig);
-	wait(100);
-	config = getInfo();
-	run("Close");
-	conf  = split(config,"\n");
-	size = conf.length;
-	array = newArray(size);
-	for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
-	if (instrum == "UVP5") {
-		calibration = 			array[0];
-		pixel=				array[1];
-		upper= 			array[2];
-		gamma= 			array[3];
-		echelle_mm= 			array[4];
-		process_option= 		array[5];
-		profmin= 			array[6];
-		esdmin= 			array[7];
-		esdmax= 			array[8];
-		threshold= 			array[9];
-		smzoo= 			array[10];
-		ratio = 				array[11];
-		Larg= 				array[12];
-		Haut= 				array[13];
-		scale= 				array[14];
-		if (conf.length == 16 ) {	areamini= array[15];	} //
-		else { 				areamini = 1;		}
-	} // if
-	if (instrum == "Flowcam") {
-		calibration = 			array[0];
-		background_method= 		array[1];
-		nb_image= 			array[2];
-		rolling= 			array[3];
-		pixel4x= 			array[4];
-		pixel10x= 			array[5];
-		upper= 			array[6];
-		gamma= 			array[7];
-		echelle_micro=			array[8];
-		process_option=		array[9];
-		esdmin= 			array[10];
-		esdmax= 			array[11];
-		lut_offset= 			array[12];
-		lut_slope= 			array[13];
-		stop_after_n_images= 	array[14];
-		stop_after_m_objects= 	array[15];
-		scale= 				array[16];
-		remove_objects_on_sides= 	array[17];
-		removeduplicates= 		array[18];
-		grey_auto_adjust = 		array[19];
-	} // if
+// ---------------------------- Lecture fichier existant -----------------------------------------------
+//showMessage(openconfig+" OPENING");
+open(openconfig);
+wait(100);
+config = getInfo();
+run("Close");
+conf  = split(config,"\n");
+size = conf.length;
+array = newArray(size);
+
+//showMessage(openconfig+" READ");
+for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
+if (instrum == "UVP5") {
+	calibration = 			array[0];
+	pixel=				array[1];
+	upper= 			array[2];
+	gamma= 			array[3];
+	echelle_mm= 			array[4];
+	process_option= 		array[5];
+	profmin= 			array[6];
+	esdmin= 			array[7];
+	esdmax= 			array[8];
+	threshold= 			array[9];
+	smzoo= 			array[10];
+	ratio = 				array[11];
+	Larg= 				array[12];
+	Haut= 				array[13];
+	scale= 				array[14];
+	if (conf.length == 16 ) {	areamini= array[15];	} //
+	else { 				areamini = 1;		}
+} // if
+if (instrum == "Flowcam") {
+	calibration = 			array[0];
+	background_method= 		array[1];
+	nb_image= 			array[2];
+	rolling= 			array[3];
+	pixel4x= 			array[4];
+	pixel10x= 			array[5];
+	upper= 			array[6];
+	gamma= 			array[7];
+	echelle_micro=			array[8];
+	process_option=		array[9];
+	esdmin= 			array[10];
+	esdmax= 			array[11];
+	lut_offset= 			array[12];
+	lut_slope= 			array[13];
+	stop_after_n_images= 	array[14];
+	stop_after_m_objects= 	array[15];
+	scale= 				array[16];
+	remove_objects_on_sides= 	array[17];
+	removeduplicates= 		array[18];
+	grey_auto_adjust = 		array[19];
+} // if
+if (instrum == "Generic") {
+	calibration = 			array[0];
+	background_method= 		array[1];
+	nb_image= 			array[2];
+	rolling= 			array[3];
+	pixelx= 				array[4];
+	pixel10x= 			array[5];
+	upper= 			array[6];
+	gamma= 			array[7];
+	echelle_micro=			array[8];
+	process_option=		array[9];
+	esdmin= 			array[10];
+	esdmax= 			array[11];
+	lut_offset= 			array[12];
+	lut_slope= 			array[13];
+	stop_after_n_images= 	array[14];
+	stop_after_m_objects= 	array[15];
+	scale= 				array[16];
+	remove_objects_on_sides= 	array[17];
+	removeduplicates= 		array[18];
+	grey_auto_adjust = 		array[19];
+	analysed_color_channel = 	array[20];
+	vignette_color= 		array[21];
+} // if
+
+// --------------------------------- Affichage et saisie des valeurs ------------------------------------------------------------
+conf =  newArray(size);
+test =1;
+while (test ==1) {
+	check= 0;
+	message = "WARNING :                                                                                                                                                                                                                          \n \n";
+	Dialog.create("EDIT CONFIGURATION FILE    ");
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
+	Dialog.addMessage("Instrument :  "+instrum+ "\nSource folder :        "+path+"\nConfig file :   "+configfile);
+	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
 	if (instrum == "Generic") {
-		calibration = 			array[0];
-		background_method= 		array[1];
-		nb_image= 			array[2];
-		rolling= 			array[3];
-		pixelx= 				array[4];
-		pixel10x= 			array[5];
-		upper= 			array[6];
-		gamma= 			array[7];
-		echelle_micro=			array[8];
-		process_option=		array[9];
-		esdmin= 			array[10];
-		esdmax= 			array[11];
-		lut_offset= 			array[12];
-		lut_slope= 			array[13];
-		stop_after_n_images= 	array[14];
-		stop_after_m_objects= 	array[15];
-		scale= 				array[16];
-		remove_objects_on_sides= 	array[17];
-		removeduplicates= 		array[18];
-		grey_auto_adjust = 		array[19];
-		analysed_color_channel = 	array[20];
-		vignette_color= 		array[21];
-	} // if
-
-	// --------------------------------- Affichage et saisie des valeurs ------------------------------------------------------------
-	conf =  newArray(size);
-	test =1;
-	while (test ==1) {
-		check= 0;
-		message = "WARNING :                                                                                                                                                                                                                          \n \n";
-		Dialog.create("EDIT CONFIGURATION FILE    ");
-		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
-		Dialog.addMessage("Instrument :  "+instrum+ "\nSource folder :        "+path+"\nConfig file :   "+configfile);
-		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
-		if (instrum == "Generic") {
-			// ---------------------------------------------------- Generic ------------------------------------------------------
-			analysed_color_channels = newArray(analysed_color_channel,"Merged","Red","Green","Blue","allRGB","B&W_8bit");
-			analysed_color_channels[0] = analysed_color_channel;
-			Dialog.addChoice("              Color channel to analyse ",analysed_color_channels);
-
-			background_methods= newArray(background_method,"average_image","rolling_ball","no_subtraction_needed","automatic_threshold","invert_only");
-			background_methods[0] = 			background_method;
-			Dialog.addChoice("Method to sutract background ",background_methods);
-
-			dim = 10;
-			nb_imagemin = 0;
-			nb_images= newArray(dim);	
-			for (k=1;k<dim;k++) { nb_images[k] = nb_imagemin+k;	} // for
-			nb_images[0] =nb_image;
-			Dialog.addChoice("Number of images to average in background ",nb_images);
-
-			rollings = newArray(rolling,"10","15","20","25","50","75","100","125","150","175","200");
-			rollings[0] = rolling;
-			Dialog.addChoice("              Rolling ball value (used when background method is set to ''rolling_ball') ",rollings);
-
-			Dialog.addNumber("Pixel size (µm)  ",pixelx);
-//			Dialog.addNumber("Pixel size cell 10x (µm)  ",pixel10x);
-
-			dim = 255;
-			uppermin = 1;
-			uppers= newArray(dim);	
-			for (k=1;k<dim;k++) { uppers[k] = uppermin+k;	} // for
-			uppers[0] = upper;
-			Dialog.addChoice("Threshold for segmentation (upper) or Grey Difference for automatic_threshold option",uppers);
-
-			Dialog.addNumber("Gamma for vignette display (0.5 - 5)  ",gamma);
-
-			vignette_colors = newArray(vignette_color,"Color_ie_background","B&W_no_background");
-			vignette_colors[0] = vignette_color;
-			Dialog.addChoice("              Vignette color ",vignette_colors);
-
-			echelle_micro= newArray(echelle_micro,"1","2","5","10","25","50","100","1000");
-			Dialog.addChoice("Length of the scale line to be displayed in vignettes (µm) ",echelle_micro);
-
-			process_options = newArray(process_option,"advanced","basic");
-			process_options[0] = process_option;
-	//		Dialog.addChoice("Process option ",process_options);
-
-			Dialog.addNumber("ESD min for organisms to be analyzed (µm) ",esdmin);
-
-			Dialog.addNumber("ESD max for organisms to be analyzed (µm) ",esdmax);
-
-	//		Dialog.addNumber("LUT offset",lut_offset);
-
-	//		Dialog.addNumber("LUT slope",lut_slope);
-
-			Dialog.addNumber("Maximum number of images to be analysed  ",stop_after_n_images);
-
-			Dialog.addNumber("Maximum number of objects to be analysed  ",stop_after_m_objects);
-
-//			Dialog.addNumber("Vignette ratio (2) ",scale);
-
-			remove_objects_on_sidess = newArray(remove_objects_on_sides,"yes","no");
-			remove_objects_on_sidess[0] = remove_objects_on_sides;
-			Dialog.addChoice("Remove objects touching image sides (truncated) ? ",remove_objects_on_sidess);
-
-			removeduplicatess = newArray(removeduplicates,"yes","no");
-			removeduplicatess[0] = removeduplicates;
-			Dialog.addChoice("Remove duplicates (objects in successive images) ? ",removeduplicatess);
-
-			grey_auto_adjusts = newArray(grey_auto_adjust,"yes","no");
-			grey_auto_adjusts[0] = grey_auto_adjust;
-			Dialog.addChoice("Grey level auto adjust for background subtraction ? ",grey_auto_adjusts);
-
-			//=====================================================================================
-			Dialog.show;	
-			//=====================================================================================
-
-			analysed_color_channel = Dialog.getChoice();
-			conf[20] = "Analysed_color_channel= "+analysed_color_channel;
-
-			conf[0] = "calibration= "+dateheure;
-
-			background_method = Dialog.getChoice();	
-			conf[1] = "background_method= "+background_method;
-
-			nb_image = Dialog.getChoice();	
-			conf[2] = "nb_image= "+nb_image;
-
-			rolling = Dialog.getChoice();	
-			conf[3] = "rolling= "+rolling;
-
-			pixelx = Dialog.getNumber();
-			if (pixelx == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
-	//		if (pixelx >= 10) { message = message + "''pixel size'' is above 10 µm \n"; 		check = 1; 	} // if
-			conf[4] = "pixelx=  "+pixelx;
-
-	//		pixel10x = Dialog.getNumber();
-	//		if (pixel10x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
-	//		if (pixel10x >= 100) { message = message + "''pixel size'' is above 100µm \n"; 		check = 1; 	} // if
-			conf[5] = "pixel10x=  "+pixel10x;
-
-			upper = Dialog.getChoice();	
-			conf[6] = "upper= "+upper;
-
-			gamma  = Dialog.getNumber();
-			if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
-			if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
-			conf[7] = "gamma= "+gamma;
-
-			vignette_color = Dialog.getChoice();	
-			conf[21] = "Vignette_color= "+vignette_color;
-
-			echelle_micro = Dialog.getChoice();	
-			conf[8] = "echelle_micro= "+echelle_micro;
-
-	//		process_option = Dialog.getChoice();	
-			conf[9] = "process_option= "+process_option;
-
-			esdmin = Dialog.getNumber();
-			if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[10] = "esdmin= "+esdmin;
-
-			esdmax = Dialog.getNumber();
-			if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
-			if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
-			conf[11] = "esdmax= "+esdmax;
-
-	//		lut_offset = Dialog.getNumber();
-			conf[12] = "lut_offset= "+lut_offset;
-
-	//		lut_slope = Dialog.getNumber();
-			conf[13] = "lut_slope= "+lut_slope;
-
-			stop_after_n_images = Dialog.getNumber();
-			if (stop_after_n_images== 0) { message = message + "''Number of images to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[14] = "stop_after_n_images= "+stop_after_n_images;
-
-			stop_after_m_objects = Dialog.getNumber();
-			if (stop_after_m_objects== 0) { message = message + "''Number of objects to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[15] = "stop_after_m_objects= "+stop_after_m_objects;
-
-//			scale = Dialog.getNumber();
-			conf[16] = "scale= "+scale;
-
-			remove_objects_on_sides = Dialog.getChoice();	
-			conf[17] = "remove_objects_on_sides= "+remove_objects_on_sides;
-
-			removeduplicates = Dialog.getChoice();	
-			conf[18] = "remove_duplicates= "+removeduplicates;
-
-			grey_auto_adjust = Dialog.getChoice();	
-			conf[19] = "grey_auto_adjust= "+grey_auto_adjust;
-
-		} // if Generic
-
-	if (instrum == "Flowcam") {
-			// ---------------------------------------------------- Flowcam ------------------------------------------------------
-			background_methods= newArray(background_method,"Automatic_25/1000img","Automatic_25i/2000img","Automatic_25i/5000img","average_image","rolling_ball");
-			background_methods[0] = 			background_method;
-			Dialog.addChoice("Method to sutract background ",background_methods);
-
-			dim = 10;
-			nb_imagemin = 0;
-			nb_images= newArray(dim);	
-			for (k=1;k<dim;k++) { nb_images[k] = nb_imagemin+k;	} // for
-			nb_images[0] =nb_image;
-			Dialog.addChoice("Number of images to average in background ",nb_images);
-
-			rollings = newArray(rolling,"50","100","150","200");
-			rollings[0] = rolling;
-			Dialog.addChoice("              Rolling ball value (used when background method is set to ''rolling_ball') ",rollings);
-
-			Dialog.addNumber("Pixel size cell 4x   (µm)  ",pixel4x);
-			Dialog.addNumber("Pixel size cell 10x (µm)  ",pixel10x);
-
-			Dialog.addMessage("WARNING : Set Threshold to 245 for B&W Flowcam and +/- 238 for Color Flowcam");
-			dim = 25;
-			uppermin = 230;
-			uppers= newArray(dim);	
-			for (k=1;k<dim;k++) { uppers[k] = uppermin+k;	} // for
-			uppers[0] = upper;
-			Dialog.addChoice("Threshold for segmentation (upper)",uppers);
-
-			Dialog.addNumber("Gamma for vignette display (0.5 - 5)  ",gamma);
-
-			echelle_micro= newArray(echelle_micro,"1","2","5","10","25","50","100");
-			Dialog.addChoice("Length of the scale line to be displayed in vignettes (µm) ",echelle_micro);
-
-			process_options = newArray(process_option,"advanced","basic");
-			process_options[0] = process_option;
-			Dialog.addChoice("Process option ",process_options);
-
-			Dialog.addNumber("ESD min for organisms to be analyzed (µm) ",esdmin);
-
-			Dialog.addNumber("ESD max for organisms to be analyzed (µm) ",esdmax);
-
-			Dialog.addNumber("LUT offset",lut_offset);
-
-			Dialog.addNumber("LUT slope",lut_slope);
-
-			Dialog.addNumber("Maximum number of images to be analysed  ",stop_after_n_images);
-
-			Dialog.addNumber("Maximum number of objects to be analysed  ",stop_after_m_objects);
-
-//			Dialog.addNumber("Vignette ratio (2) ",scale);
-
-			remove_objects_on_sidess = newArray(remove_objects_on_sides,"yes","no");
-			remove_objects_on_sidess[0] = remove_objects_on_sides;
-			Dialog.addChoice("Remove objects touching image sides (truncated) ? ",remove_objects_on_sidess);
-
-			removeduplicatess = newArray(removeduplicates,"yes","no");
-			removeduplicatess[0] = removeduplicates;
-			Dialog.addChoice("Remove duplicates (objects in successive images) ? ",removeduplicatess);
-
-			grey_auto_adjusts = newArray(grey_auto_adjust,"yes","no");
-			grey_auto_adjusts[0] = grey_auto_adjust;
-			Dialog.addChoice("Grey level auto adjust for background subtraction ? ",grey_auto_adjusts);
-
-			//=====================================================================================
-			Dialog.show;	
-			//=====================================================================================
-			conf[0] = "calibration= "+dateheure;
-
-			background_method = Dialog.getChoice();	
-			conf[1] = "background_method= "+background_method;
-
-			nb_image = Dialog.getChoice();	
-			conf[2] = "nb_image= "+nb_image;
-
-			rolling = Dialog.getChoice();	
-			conf[3] = "rolling= "+rolling;
-
-			pixel4x = Dialog.getNumber();
-			if (pixel4x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
-			if (pixel4x >= 10) { message = message + "''pixel size'' is above 10 µm \n"; 		check = 1; 	} // if
-			conf[4] = "pixel4x=  "+pixel4x;
-
-			pixel10x = Dialog.getNumber();
-			if (pixel10x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
-			if (pixel10x >= 100) { message = message + "''pixel size'' is above 100µm \n"; 		check = 1; 	} // if
-			conf[5] = "pixel10x=  "+pixel10x;
-
-			upper = Dialog.getChoice();	
-			conf[6] = "upper= "+upper;
-
-			gamma  = Dialog.getNumber();
-			if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
-			if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
-			conf[7] = "gamma= "+gamma;
-
-			echelle_micro = Dialog.getChoice();	
-			conf[8] = "echelle_micro= "+echelle_micro;
-
-			process_option = Dialog.getChoice();	
-			conf[9] = "process_option= "+process_option;
-
-			esdmin = Dialog.getNumber();
-			if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[10] = "esdmin= "+esdmin;
-
-			esdmax = Dialog.getNumber();
-			if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
-			if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
-			conf[11] = "esdmax= "+esdmax;
-
-			lut_offset = Dialog.getNumber();
-			conf[12] = "lut_offset= "+lut_offset;
-
-			lut_slope = Dialog.getNumber();
-			conf[13] = "lut_slope= "+lut_slope;
-
-			stop_after_n_images = Dialog.getNumber();
-			if (stop_after_n_images== 0) { message = message + "''Number of images to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[14] = "stop_after_n_images= "+stop_after_n_images;
-
-			stop_after_m_objects = Dialog.getNumber();
-			if (stop_after_m_objects== 0) { message = message + "''Number of objects to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[15] = "stop_after_m_objects= "+stop_after_m_objects;
-
-//			scale = Dialog.getNumber();
-			conf[16] = "scale= "+scale;
-
-			remove_objects_on_sides = Dialog.getChoice();	
-			conf[17] = "remove_objects_on_sides= "+remove_objects_on_sides;
-
-			removeduplicates = Dialog.getChoice();	
-			conf[18] = "remove_duplicates= "+removeduplicates;
-
-			grey_auto_adjust = Dialog.getChoice();	
-			conf[19] = "grey_auto_adjust= "+grey_auto_adjust;
-
-		} // if Flowcam
-
-		if (instrum == "UVP5") {
-			// ---------------------------------------------------- UVP5 ------------------------------------------------------
-
-			Dialog.addNumber("Pixel size (mm)  ",pixel);
-			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
-			Dialog.addMessage("VALUES to be utilized for the processing of VIGNETTES & PID files");
-			uppermin = 220;
-			uppers= newArray(255-uppermin);	
-			for (k=1;k<255-uppermin;k++) { uppers[k] = uppermin+k;	} // for
-			uppers[0] = upper;
-			Dialog.addChoice("Threshold for segmentation (upper)",uppers);
-			Dialog.addNumber("Gamma for vignette display (0.5 - 5)  ",gamma);
-			echelle_mms= newArray(echelle_mm,"1","2","5","10");
-			Dialog.addChoice("Length of the scale line to be displayed in vignettes (mm) ",echelle_mms);
-			Dialog.addMessage("If ''advancedi'' option is enabled, the previous Learning sets may not be usable for this project !");
-			process_options = newArray(process_option,"advancedi","advanced","basic");
-			process_options[0] = process_option;
-			Dialog.addChoice("Process option ",process_options);
-			Dialog.addNumber("Minimum depth to start to process vignettes (m)",profmin);
-			Dialog.addNumber("             ESD min for organisms to be analyzed (mm), note : 0.5 should be a minimum ",esdmin);
-			Dialog.addNumber("ESD max for organisms to be analyzed (mm) ",esdmax);
-			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
-//			Dialog.addMessage("These values will be writen in the modfile (''mixtfh'', ''mixhd'', ''fullhd'') or to be defined for re-processing");
-			Dialog.addMessage("Fields with * must be carefully documented. They influence the process of the UVP5 images. ");
-//			Dialog.addMessage("IT IS ANYHOW NOT RECOMMENDED TO CREATE THE FILES FOR ACQUISITION BUT TO DOWNLOAD THEM FROM THE UVP5 AND EDTIT THEM IF NECESSARY");
-			if (uvp_type == "hd" && create_acq == true) {
-				Dialog.addNumber("          	Enter Exposure* time (an offset of 60µs will be added) ",100);
-				Dialog.addNumber("          	Enter Gain* (36-512) ",200);
-			}			
-			Dialog.addNumber("Threshold* ",threshold);
-			Dialog.addNumber("Smbase* (pixel) ",areamini);
-			Dialog.addNumber("Smzoo min* (pixel) ", smzoo);
-			Dialog.addNumber("Vignette size ratio  ",ratio);
-			Dialog.addNumber("Full image width  ",Larg);
-			Dialog.addNumber("Full image heigth  ",Haut);
-			Dialog.addNumber("Vignette ratio (2) ",scale);
-			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
-			
-
-			//=====================================================================================
-			Dialog.show;	
-			//=====================================================================================
-			conf[0] = "calibration= "+dateheure;
-
-			pixel = Dialog.getNumber();
-			if (pixel == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
-			if (pixel >= 1) { message = message + "''pixel size'' is above 1mm \n"; 		check = 1; 	} // if
-			conf[1] = "pixel=  "+pixel;
-
-			upper = Dialog.getChoice();	
-			conf[2] = "upper= "+upper;
-
-			gamma  = Dialog.getNumber();
-			if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
-			if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
-			conf[3] = "gamma= "+gamma;
-
-			echelle_mm = Dialog.getChoice();	
-			conf[4] = "echelle_mm= "+echelle_mm;
-
-			process_option = Dialog.getChoice();	
-			conf[5] = "process_option= "+process_option;
-
-			profmin  = Dialog.getNumber();
-			if (profmin < 0) { message = message + "profmin is set below the 0m limit. \n"; check = 1; 			} // if
-			if (profmin > 6000) { message = message + "Gamma is above the 6000m limit. \n"; check = 1; 						} // if
-			conf[6] = "profmin= "+profmin;
-
-			esdmin = Dialog.getNumber();
-			if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (mm)'' is not a number or set to 0 \n"; check = 1; } // if
-			conf[7] = "esdmin= "+esdmin;
-
-			esdmax = Dialog.getNumber();
-			if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (mm)'' is not a number or set to 0 \n"; check = 1; } // if
-			if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
-			conf[8] = "esdmax= "+esdmax;
-			
-			if (uvp_type == "hd" && create_acq == true) {
-				Exposure = Dialog.getNumber();
-				Exposure = parseInt(Exposure) + 60;
-				Gain = Dialog.getNumber();
-			}			
-
-			threshold = Dialog.getNumber();
-			conf[9] = "threshold= "+threshold;
-			areamini = Dialog.getNumber();
-			conf[15] = "areamini= "+areamini;
-			smzoo = Dialog.getNumber();
-			conf[10] = "smzoo= "+smzoo;
-			ratio = Dialog.getNumber();
-			conf[11] = "ratio= "+ratio;
-			Larg = Dialog.getNumber();
-			conf[12] = "Larg= "+Larg;
-			Haut = Dialog.getNumber();	
-			conf[13] = "Haut= "+Haut;
-			scale = Dialog.getNumber();
-			conf[14] = "scale= "+scale;
-		} // if UVP5
-
- 		if (check == 1) { message = message + " \n \nENTER SETTINGS AGAIN              ";	
-			showMessage(message); 
-			test = 1;
-		} // if
-		else { 	test = 0;			} 	// else
-	} // while test
+		// ---------------------------------------------------- Generic ------------------------------------------------------
+		analysed_color_channels = newArray(analysed_color_channel,"Merged","Red","Green","Blue","allRGB","B&W_8bit");
+		analysed_color_channels[0] = analysed_color_channel;
+		Dialog.addChoice("              Color channel to analyse ",analysed_color_channels);
+		
+		background_methods= newArray(background_method,"average_image","rolling_ball","no_subtraction_needed","automatic_threshold","invert_only");
+		background_methods[0] = 			background_method;
+		Dialog.addChoice("Method to sutract background ",background_methods);
+		
+		dim = 10;
+		nb_imagemin = 0;
+		nb_images= newArray(dim);	
+		for (k=1;k<dim;k++) { nb_images[k] = nb_imagemin+k;	} // for
+		nb_images[0] =nb_image;
+		Dialog.addChoice("Number of images to average in background ",nb_images);
+		
+		rollings = newArray(rolling,"10","15","20","25","50","75","100","125","150","175","200");
+		rollings[0] = rolling;
+		Dialog.addChoice("              Rolling ball value (used when background method is set to ''rolling_ball') ",rollings);
+		
+		Dialog.addNumber("Pixel size (µm)  ",pixelx);
+		//			Dialog.addNumber("Pixel size cell 10x (µm)  ",pixel10x);
+		
+		dim = 255;
+		uppermin = 1;
+		uppers= newArray(dim);	
+		for (k=1;k<dim;k++) { uppers[k] = uppermin+k;	} // for
+		uppers[0] = upper;
+		Dialog.addChoice("Threshold for segmentation (upper) or Grey Difference for automatic_threshold option",uppers);
+		
+		Dialog.addNumber("Gamma for vignette display (0.5 - 5)  ",gamma);
+		
+		vignette_colors = newArray(vignette_color,"Color_ie_background","B&W_no_background");
+		vignette_colors[0] = vignette_color;
+		Dialog.addChoice("              Vignette color ",vignette_colors);
+		
+		echelle_micro= newArray(echelle_micro,"1","2","5","10","25","50","100","1000");
+		Dialog.addChoice("Length of the scale line to be displayed in vignettes (µm) ",echelle_micro);
+		
+		process_options = newArray(process_option,"advanced","basic");
+		process_options[0] = process_option;
+		//		Dialog.addChoice("Process option ",process_options);
+		
+		Dialog.addNumber("ESD min for organisms to be analyzed (µm) ",esdmin);
+		
+		Dialog.addNumber("ESD max for organisms to be analyzed (µm) ",esdmax);
+		
+		//		Dialog.addNumber("LUT offset",lut_offset);
+		
+		//		Dialog.addNumber("LUT slope",lut_slope);
+		
+		Dialog.addNumber("Maximum number of images to be analysed  ",stop_after_n_images);
+		
+		Dialog.addNumber("Maximum number of objects to be analysed  ",stop_after_m_objects);
+		
+		//			Dialog.addNumber("Vignette ratio (2) ",scale);
+		
+		remove_objects_on_sidess = newArray(remove_objects_on_sides,"yes","no");
+		remove_objects_on_sidess[0] = remove_objects_on_sides;
+		Dialog.addChoice("Remove objects touching image sides (truncated) ? ",remove_objects_on_sidess);
+		
+		removeduplicatess = newArray(removeduplicates,"yes","no");
+		removeduplicatess[0] = removeduplicates;
+		Dialog.addChoice("Remove duplicates (objects in successive images) ? ",removeduplicatess);
+		
+		grey_auto_adjusts = newArray(grey_auto_adjust,"yes","no");
+		grey_auto_adjusts[0] = grey_auto_adjust;
+		Dialog.addChoice("Grey level auto adjust for background subtraction ? ",grey_auto_adjusts);
+		
+		//=====================================================================================
+		Dialog.show;	
+		//=====================================================================================
+		
+		analysed_color_channel = Dialog.getChoice();
+		conf[20] = "Analysed_color_channel= "+analysed_color_channel;
+		
+		conf[0] = "calibration= "+dateheure;
+		
+		background_method = Dialog.getChoice();	
+		conf[1] = "background_method= "+background_method;
+		
+		nb_image = Dialog.getChoice();	
+		conf[2] = "nb_image= "+nb_image;
+		
+		rolling = Dialog.getChoice();	
+		conf[3] = "rolling= "+rolling;
+		
+		pixelx = Dialog.getNumber();
+		if (pixelx == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
+		//		if (pixelx >= 10) { message = message + "''pixel size'' is above 10 µm \n"; 		check = 1; 	} // if
+		conf[4] = "pixelx=  "+pixelx;
+		
+		//		pixel10x = Dialog.getNumber();
+		//		if (pixel10x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
+		//		if (pixel10x >= 100) { message = message + "''pixel size'' is above 100µm \n"; 		check = 1; 	} // if
+		conf[5] = "pixel10x=  "+pixel10x;
+		
+		upper = Dialog.getChoice();	
+		conf[6] = "upper= "+upper;
+		
+		gamma  = Dialog.getNumber();
+		if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
+		if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
+		conf[7] = "gamma= "+gamma;
+		
+		vignette_color = Dialog.getChoice();	
+		conf[21] = "Vignette_color= "+vignette_color;
+		
+		echelle_micro = Dialog.getChoice();	
+		conf[8] = "echelle_micro= "+echelle_micro;
+		
+		//		process_option = Dialog.getChoice();	
+		conf[9] = "process_option= "+process_option;
+		
+		esdmin = Dialog.getNumber();
+		if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[10] = "esdmin= "+esdmin;
+		
+		esdmax = Dialog.getNumber();
+		if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
+		if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
+		conf[11] = "esdmax= "+esdmax;
+		
+		//		lut_offset = Dialog.getNumber();
+		conf[12] = "lut_offset= "+lut_offset;
+		
+		//		lut_slope = Dialog.getNumber();
+		conf[13] = "lut_slope= "+lut_slope;
+		
+		stop_after_n_images = Dialog.getNumber();
+		if (stop_after_n_images== 0) { message = message + "''Number of images to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[14] = "stop_after_n_images= "+stop_after_n_images;
+		
+		stop_after_m_objects = Dialog.getNumber();
+		if (stop_after_m_objects== 0) { message = message + "''Number of objects to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[15] = "stop_after_m_objects= "+stop_after_m_objects;
+		
+		//			scale = Dialog.getNumber();
+		conf[16] = "scale= "+scale;
+		
+		remove_objects_on_sides = Dialog.getChoice();	
+		conf[17] = "remove_objects_on_sides= "+remove_objects_on_sides;
+		
+		removeduplicates = Dialog.getChoice();	
+		conf[18] = "remove_duplicates= "+removeduplicates;
+		
+		grey_auto_adjust = Dialog.getChoice();	
+		conf[19] = "grey_auto_adjust= "+grey_auto_adjust;
+		
+	} // if Generic
 	
+	if (instrum == "Flowcam") {
+		// ---------------------------------------------------- Flowcam ------------------------------------------------------
+//		background_methods= newArray(background_method,"Automatic_25/1000img","Automatic_25i/2000img","Automatic_25i/5000img","average_image","rolling_ball");
+		background_methods= newArray(background_method,"Automatic_25/1000img","Automatic_25/0500img","Automatic_25/2000img","Automatic_25/5000img");
+		background_methods[0] = 			background_method;
+		Dialog.addChoice("Method to sutract background ",background_methods);
+		
+		dim = 10;
+		nb_imagemin = 0;
+		nb_images= newArray(dim);	
+		for (k=1;k<dim;k++) { nb_images[k] = nb_imagemin+k;	} // for
+		nb_images[0] =nb_image;
+//		Dialog.addChoice("Number of images to average in background ",nb_images);
+		
+		rollings = newArray(rolling,"50","100","150","200");
+		rollings[0] = rolling;
+//		Dialog.addChoice("              Rolling ball value (used when background method is set to ''rolling_ball') ",rollings);
+		
+//		Dialog.addNumber("Pixel size cell 4x   (µm)  ",pixel4x);
+//		Dialog.addNumber("Pixel size cell 10x (µm)  ",pixel10x);
+		
+		Dialog.addMessage("WARNING : Set Threshold to 245 for B&W Flowcam and +/- 238 for Color Flowcam");
+		dim = 25;
+		uppermin = 230;
+		uppers= newArray(dim);	
+		for (k=1;k<dim;k++) { uppers[k] = uppermin+k;	} // for
+		uppers[0] = upper;
+		Dialog.addChoice("Grey level threshold for segmentation (0-255) ",uppers);
+		
+		Dialog.addNumber("Gamma for vignette display (B&W process, 0.5 - 5)  ",gamma);
+		
+		echelle_micro= newArray(echelle_micro,"1","2","5","10","25","50","100");
+		Dialog.addChoice("Length of the scale line to be displayed in vignettes (µm) ",echelle_micro);
+		
+		process_options = newArray(process_option,"advanced","basic");
+		process_options[0] = process_option;
+//		Dialog.addChoice("Process option ",process_options);
+		
+		Dialog.addNumber("ESD min for organisms to be analyzed (µm) ",esdmin);
+		
+		Dialog.addNumber("ESD max for organisms to be analyzed (µm) ",esdmax);
+		
+//		Dialog.addNumber("LUT offset",lut_offset);
+		
+//		Dialog.addNumber("LUT slope",lut_slope);
+		
+		Dialog.addNumber("Maximum number of raw images to be analysed  ",stop_after_n_images);
+		
+		Dialog.addNumber("Maximum number of objects to be analysed  ",stop_after_m_objects);
+		
+		//			Dialog.addNumber("Vignette ratio (2) ",scale);
+		
+		remove_objects_on_sidess = newArray(remove_objects_on_sides,"yes","no");
+		remove_objects_on_sidess[0] = remove_objects_on_sides;
+		Dialog.addChoice("Skip objects touching image sides (truncated) ? ",remove_objects_on_sidess);
+		
+		removeduplicatess = newArray(removeduplicates,"yes","no");
+		removeduplicatess[0] = removeduplicates;
+		Dialog.addChoice("Skip duplicates (same object in successive images) ? ",removeduplicatess);
+		
+		grey_auto_adjusts = newArray(grey_auto_adjust,"yes","no");
+		grey_auto_adjusts[0] = grey_auto_adjust;
+		Dialog.addChoice("Grey level auto adjust for background subtraction ? ",grey_auto_adjusts);
+		
+		//=====================================================================================
+		Dialog.show;	
+		//=====================================================================================
+		conf[0] = "calibration= "+dateheure;
+		
+		background_method = Dialog.getChoice();	
+		conf[1] = "background_method= "+background_method;
+		
+//		nb_image = Dialog.getChoice();	
+		conf[2] = "nb_image= "+nb_image;
+		
+//		rolling = Dialog.getChoice();	
+		conf[3] = "rolling= "+rolling;
+		
+//		pixel4x = Dialog.getNumber();
+//		if (pixel4x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
+//		if (pixel4x >= 10) { message = message + "''pixel size'' is above 10 µm \n"; 		check = 1; 	} // if
+		conf[4] = "pixel4x=  "+pixel4x;
+		
+//		pixel10x = Dialog.getNumber();
+//		if (pixel10x == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
+//		if (pixel10x >= 100) { message = message + "''pixel size'' is above 100µm \n"; 		check = 1; 	} // if
+		conf[5] = "pixel10x=  "+pixel10x;
+		
+		upper = Dialog.getChoice();	
+		conf[6] = "upper= "+upper;
+		
+		gamma  = Dialog.getNumber();
+		if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
+		if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
+		conf[7] = "gamma= "+gamma;
+		
+		echelle_micro = Dialog.getChoice();	
+		conf[8] = "echelle_micro= "+echelle_micro;
+		
+//		process_option = Dialog.getChoice();	
+		conf[9] = "process_option= "+process_option;
+		
+		esdmin = Dialog.getNumber();
+		if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[10] = "esdmin= "+esdmin;
+		
+		esdmax = Dialog.getNumber();
+		if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (µm)'' is not a number or set to 0 \n"; check = 1; } // if
+		if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
+		conf[11] = "esdmax= "+esdmax;
+		
+//		lut_offset = Dialog.getNumber();
+		conf[12] = "lut_offset= "+lut_offset;
+		
+//		lut_slope = Dialog.getNumber();
+		conf[13] = "lut_slope= "+lut_slope;
+		
+		stop_after_n_images = Dialog.getNumber();
+		if (stop_after_n_images== 0) { message = message + "''Number of images to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[14] = "stop_after_n_images= "+stop_after_n_images;
+		
+		stop_after_m_objects = Dialog.getNumber();
+		if (stop_after_m_objects== 0) { message = message + "''Number of objects to be analysed'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[15] = "stop_after_m_objects= "+stop_after_m_objects;
+		
+		//			scale = Dialog.getNumber();
+		conf[16] = "scale= "+scale;
+		
+		remove_objects_on_sides = Dialog.getChoice();	
+		conf[17] = "remove_objects_on_sides= "+remove_objects_on_sides;
+		
+		removeduplicates = Dialog.getChoice();	
+		conf[18] = "remove_duplicates= "+removeduplicates;
+		
+		grey_auto_adjust = Dialog.getChoice();	
+		conf[19] = "grey_auto_adjust= "+grey_auto_adjust;
+		
+	} // if Flowcam
+	
+	if (instrum == "UVP5") {
+		// ---------------------------------------------------- UVP5 ------------------------------------------------------
+		
+		Dialog.addNumber("Pixel size (mm)  ",pixel);
+		Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
+		Dialog.addMessage("VALUES to be utilized for the processing of VIGNETTES & PID files");
+		uppermin = 220;
+		uppers= newArray(255-uppermin);	
+		for (k=1;k<255-uppermin;k++) { uppers[k] = uppermin+k;	} // for
+		uppers[0] = upper;
+		Dialog.addChoice("Threshold for segmentation (upper)",uppers);
+		Dialog.addNumber("Gamma for vignette display (0.5 - 5)  ",gamma);
+		echelle_mms= newArray(echelle_mm,"1","2","5","10");
+		Dialog.addChoice("Length of the scale line to be displayed in vignettes (mm) ",echelle_mms);
+		Dialog.addMessage("If ''advancedi'' option is enabled, the previous Learning sets may not be usable for this project !");
+		process_options = newArray(process_option,"advancedi","advanced","basic");
+		process_options[0] = process_option;
+		Dialog.addChoice("Process option ",process_options);
+		Dialog.addNumber("Minimum depth to start to process vignettes (m)",profmin);
+		Dialog.addNumber("             ESD min for organisms to be analyzed (mm), note : 0.5 should be a minimum ",esdmin);
+		Dialog.addNumber("ESD max for organisms to be analyzed (mm) ",esdmax);
+		Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
+		//			Dialog.addMessage("These values will be writen in the modfile (''mixtfh'', ''mixhd'', ''fullhd'') or to be defined for re-processing");
+		Dialog.addMessage("Fields with * must be carefully documented. They influence the process of the UVP5 images. ");
+		//			Dialog.addMessage("IT IS ANYHOW NOT RECOMMENDED TO CREATE THE FILES FOR ACQUISITION BUT TO DOWNLOAD THEM FROM THE UVP5 AND EDTIT THEM IF NECESSARY");
+		if (uvp_type == "hd" && create_acq == true) {
+			Dialog.addNumber("          	Enter Exposure* time (an offset of 60µs will be added) ",100);
+			Dialog.addNumber("          	Enter Gain* (36-512) ",200);
+		}			
+		Dialog.addNumber("Threshold* ",threshold);
+		Dialog.addNumber("Smbase* (pixel) ",areamini);
+		Dialog.addNumber("Smzoo min* (pixel) ", smzoo);
+		Dialog.addNumber("Vignette size ratio  ",ratio);
+		Dialog.addNumber("Full image width  ",Larg);
+		Dialog.addNumber("Full image heigth  ",Haut);
+		Dialog.addNumber("Vignette ratio (2) ",scale);
+		Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------        ");
+		
+		
+		//=====================================================================================
+		Dialog.show;	
+		//=====================================================================================
+		conf[0] = "calibration= "+dateheure;
+		
+		pixel = Dialog.getNumber();
+		if (pixel == 0) { message = message + "''pixel size'' is not a number or set to 0 \n"; 	check = 1; 	} // if
+		if (pixel >= 1) { message = message + "''pixel size'' is above 1mm \n"; 		check = 1; 	} // if
+		conf[1] = "pixel=  "+pixel;
+		
+		upper = Dialog.getChoice();	
+		conf[2] = "upper= "+upper;
+		
+		gamma  = Dialog.getNumber();
+		if (gamma < 0.5) { message = message + "Gamma is set below the 0.5 limit. \n"; check = 1; 			} // if
+		if (gamma > 5) { message = message + "Gamma is above the 5 limit. \n"; check = 1; 						} // if
+		conf[3] = "gamma= "+gamma;
+		
+		echelle_mm = Dialog.getChoice();	
+		conf[4] = "echelle_mm= "+echelle_mm;
+		
+		process_option = Dialog.getChoice();	
+		conf[5] = "process_option= "+process_option;
+		
+		profmin  = Dialog.getNumber();
+		if (profmin < 0) { message = message + "profmin is set below the 0m limit. \n"; check = 1; 			} // if
+		if (profmin > 6000) { message = message + "Gamma is above the 6000m limit. \n"; check = 1; 						} // if
+		conf[6] = "profmin= "+profmin;
+		
+		esdmin = Dialog.getNumber();
+		if (esdmin== 0) { message = message + "''ESD min for organisms to be analyzed (mm)'' is not a number or set to 0 \n"; check = 1; } // if
+		conf[7] = "esdmin= "+esdmin;
+		
+		esdmax = Dialog.getNumber();
+		if (esdmax== 0) { message = message + "''ESD min for organisms to be analyzed (mm)'' is not a number or set to 0 \n"; check = 1; } // if
+		if (esdmax <= esdmin) { message = message + "''ESD min set above ESD max \n"; check = 1; } // if
+		conf[8] = "esdmax= "+esdmax;
+		
+		if (uvp_type == "hd" && create_acq == true) {
+			Exposure = Dialog.getNumber();
+			Exposure = parseInt(Exposure) + 60;
+			Gain = Dialog.getNumber();
+		}			
+		
+		threshold = Dialog.getNumber();
+		conf[9] = "threshold= "+threshold;
+		areamini = Dialog.getNumber();
+		conf[15] = "areamini= "+areamini;
+		smzoo = Dialog.getNumber();
+		conf[10] = "smzoo= "+smzoo;
+		ratio = Dialog.getNumber();
+		conf[11] = "ratio= "+ratio;
+		Larg = Dialog.getNumber();
+		conf[12] = "Larg= "+Larg;
+		Haut = Dialog.getNumber();	
+		conf[13] = "Haut= "+Haut;
+		scale = Dialog.getNumber();
+		conf[14] = "scale= "+scale;
+	} // if UVP5
+	
+	if (check == 1) { message = message + " \n \nENTER SETTINGS AGAIN              ";	
+		showMessage(message); 
+		test = 1;
+	} // if
+	else { 	test = 0;			} 	// else
+} // while test
+/*
 if (option != "create") {
 	//--------------------Save Options------------------------------------------
 	boucle = false;
@@ -726,17 +737,18 @@ if (option != "create") {
 			for (i=0; i<listaff.length ; i++) {		file = listaff[i];
 				if (file == configfilenew) { 	boucle = getBoolean(configfilenew+" already exists in                        \n"+pathconfig+ " folder.        \n \nDo you want to replace it ?");			} // if
 			} // for
-		 } // if
+		} // if
 		else { boucle = true;		} // eles
 	} // while
 	configfile = configfilenew;
 } // if
-
+*/
 // ---------------------- Enregistrement ------------------------------------------
 if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
 for (i=0; i<size; i++) {	text = conf[i];	print(text);	} // for
 selectWindow("Log");
-sauve = "save=" + pathconfig+"\\" + configfile;
+sauve = "save=" + pathconfig+"\\process_install_config.txt";
+//sauve = "save=" + pathconfig+"\\" + configfile;
 run("Text...",sauve);
 run("Close");
 

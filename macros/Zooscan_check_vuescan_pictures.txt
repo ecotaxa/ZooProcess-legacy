@@ -1,0 +1,100 @@
+// -------------------------- Zooscan_check_vuescan_pictures ----------------------
+version = "8.27";
+date = "2024/10/03";
+
+
+vuescan_default = "9.7.67";
+vuescan = "unknown";
+chemvue = "undefined";
+
+// ---------------------------------- Recherche Vuescan.exe -------------------------
+mat = newArray("C:\\Program Files\\Vuescan\\","C:\\Vuescan\\","D:\\Vuescan\\","E:\\Vuescan\\","F:\\Vuescan\\","G:\\Vuescan\\","H:\\Vuescan\\");
+i= 0;
+vuescan_app = false;
+while (i<mat.length)  { 
+	if (File.exists(mat[i])) { 	vuescan_app = true;		} // if
+	i++;
+} // while...
+
+if (vuescan_app == true ) {
+	
+	// ========================= Recherche dans Pictures/Vuescan =====================
+	ini_file = false;
+	log_file = false;
+	// ----------------- Detection du nom du USER ------------------
+	path_plugin = call("ij.Menus.getPlugInsPath");
+	//	print(path_plugin);
+	index_desktop = indexOf(path_plugin,"Desktop");
+	chem_pict_vue = substring(path_plugin,0,index_desktop) + "Pictures\\Vuescan\\";
+	
+	// ----------------- Test de l'existence du répertoire et de la présence des fichiers -----------
+	if (File.exists(chem_pict_vue +"\\vuescan.ini")) {	ini_file = true;	}
+	if (File.exists(chem_pict_vue +"\\vuescan.log")) {	log_file = true; 	}
+	
+	// ------------------- Purge du fichier du test précédent --------------------------------
+	if (File.exists(chem_pict_vue +"\\write_test_ok.txt")) {
+		File.delete(chem_pict_vue +"\\write_test_ok.txt"); 
+		//	showMessage("The ''write_test_ok.txt'' file is deleted");
+	}
+	
+	// ------------------- essai écriture fichier de test ------------------------------------
+	if (File.exists(chem_pict_vue)) {	filename = chem_pict_vue +"\\write_test.ini";
+		contenu = "Writing test";
+		File.saveString(contenu, filename);
+	}
+	
+	// ------------------- test si écrit -----------------------------------------------------
+	if (File.exists(chem_pict_vue +"\\write_test.ini") == false) {
+		write_test = false;
+	}
+	else {	// -------------------- Le répertoire est OK -------------------------------------
+		File.rename(chem_pict_vue +"\\write_test.ini",chem_pict_vue +"\\write_test_ok.txt");
+		
+		write_test = true;
+		// -------------------- Detection de la version de Vuescan -----------------------
+		if (ini_file == true && log_file == true) {
+			// --------------- Lecture version vuescan dans log ----------------------
+			open(chem_pict_vue+"\\vuescan.log");
+			wait(100);
+			data = getInfo();
+			selectWindow("vuescan.log");
+			run("Close");	
+			if (indexOf(data,"9.7.67") > 1) 	vuescan = "9.7.67";		
+		}
+	}
+	
+	// -------------------------- Synthese ---------------------------------------------
+	if (vuescan == "9.7.67" && ini_file == true) {	chemvue = chem_pict_vue;	}
+	else {	// ========================== Recherche ancienne méthode ===================
+		mat = newArray("C:\\Vuescan\\","D:\\Vuescan\\","E:\\Vuescan\\","F:\\Vuescan\\","G:\\Vuescan\\","H:\\Vuescan\\");
+		i= 0;
+		while (i<mat.length)  { 
+			if (File.exists(mat[i]) == true ) { 		
+				if (File.exists(mat[i]+"\\"+"vuescan.exe") == true ){
+					chemvue = mat[i];		i=mat.length+1;	
+					// --------- Vérification de la version -----------
+					if (File.exists(chemvue+"\\vuescan.log")) {
+						open(chemvue+"\\vuescan.log");
+						wait(100);
+						data = getInfo();
+						selectWindow("vuescan.log");
+						run("Close");
+						index = 0;	
+						if (indexOf(data,"9.7.67") > 1) 	vuescan = "9.7.67";	
+					}				
+				}
+				
+			} // if
+			i++;
+		} // while...
+		write_test = true;
+	}
+	
+	if (write_test == false) {	aa = getBoolean("WARNING : Imagej could not write a test file in "+chem_pict_vue+" \n \nPlease contact HYDROPTIC for assistance. \n \nPress CANCEL to abort !");	}
+	else if (chemvue == "undefined") {	aa = getBoolean("WARNING : the vuescan folder containing the ''vuescan.ini'' and ''vuescan.log'' files could not be found. \n \nvuescan.exe should be installed in ''Program Files\\Vuescan'' and the ''Pictures\\vuescan'' folder must exist.\n \nPlease contact HYDROPTIC for assistance. \n \nPress CANCEL to abort !");	}
+}
+// ----------------------------- FIN ----------------------------------------------
+chemvue = replace(chemvue," ","_");
+//showMessage("END");
+ret = vuescan + " " + chemvue;
+return ret;

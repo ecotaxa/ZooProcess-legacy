@@ -1,6 +1,6 @@
 print("------------------------Zooscan_trt_1-------------");
-version = "7.20";
-date = "2015/09/01";
+version = "8.20";
+date = "2023/10/09";
 
 // Save Ecotaxa table avec vignettes 
 
@@ -16,11 +16,14 @@ if (array.length == 6 )	chemzooprocess = array[5];
 text_run = chemzooprocess+"batch_run.txt";
 text_stop = chemzooprocess+"batch_stop.txt";
 
-processoption = newArray("Convert AND Process Image AND particles (images in RAW folder)","Process Image AND particles (images in SCAN folder)","Process again particles from processed images (images in WORK sub- folders)","Process again particles from processed images to include SEPARATION MASK (images in WORK sub- folders)");
-process0 = replace(processoption[0]," ","_");
-process1 = replace(processoption[1]," ","_");
-process2 = replace(processoption[2]," ","_");
-process3 = replace(processoption[3]," ","_");
+//processoption = newArray("Convert AND Process Image AND particles (images in RAW folder)","Process Image AND particles (images in SCAN folder)","Process again particles from processed images (images in WORK sub- folders)","Process again particles from processed images to include SEPARATION MASK (images in WORK sub- folders)");
+
+processoption = newArray("Convert AND Process Image AND particles (images in RAW folder)"," "," ","Process again particles from processed images to include SEPARATION MASK (images in WORK sub- folders)");
+
+process_from_raw = replace(processoption[0]," ","_");
+process_from_scan = replace(processoption[1]," ","_");
+proces_from_work = replace(processoption[2]," ","_");
+process_from_work_sep = replace(processoption[3]," ","_");
 
 drive = 	substring(projfolder,0,2);
 lon = 	lengthOf(projfolder);
@@ -90,7 +93,7 @@ else { 	print("CONFIG exits");
 		testvis = 0;	flagframe = 0;	testsep = 0;
 		list = newArray(filelist.length);
 		for (i=0; i<filelist.length ; i++) {	  
-			 rr = filelist[i]; 
+			rr = filelist[i]; 
 			identlong = 	lengthOf(rr);
 			rr = 		substring(rr,0,identlong-1);	
 			//--------------- Recherche du fichier image en ZIP ou en JPG ----------
@@ -108,10 +111,10 @@ else { 	print("CONFIG exits");
 			mskexist = File.exists(imagemsk);
 			outexist = File.exists(imageout);
 			sepexist = File.exists(imagesep);
-//			getBoolean(imagesep);
+			//			getBoolean(imagesep);
 			if ((zipexist == 1 || jpgexist == 1)&&logexist == 1 && pidexist == 1 && mskexist == 1 && outexist == 1){ 			testvis++;  		} // if
 			if ((zipexist == 1 || jpgexist == 1)&&logexist == 1 && pidexist == 1 && mskexist == 1 && outexist == 1 && sepexist == 1){ 	testsep++;  	
-//				getBoolean(imagesep+"    "+sepexist);	
+				//				getBoolean(imagesep+"    "+sepexist);	
 			} // if				
 		} // for
 		//----------------------- Selection des fichiers dont le nom comporte le mot "_raw_1.tif" et dont les metadata et le log existent--------------------
@@ -153,28 +156,28 @@ else { 	print("CONFIG exits");
 			imagemeta = chemwork1+"\\"+namered+"\\"+namered+"_meta.txt";
 			logexist = File.exists(imagelog);
 			metaexist = File.exists(imagemeta);
-//			getBoolean("namered="+namered+"---  "+ imagemeta+" ---   "+imagelog+" ---"+logexist+"---"+metaexist);
-//			if ((ctrl1==1|| ctrl2 == 1) &&  imagelog == 1 && imagemeta == 1) {rr = filelist[i];	list[tifimg] = rr;		tifimg++;	} // if
+			//			getBoolean("namered="+namered+"---  "+ imagemeta+" ---   "+imagelog+" ---"+logexist+"---"+metaexist);
+			//			if ((ctrl1==1|| ctrl2 == 1) &&  imagelog == 1 && imagemeta == 1) {rr = filelist[i];	list[tifimg] = rr;		tifimg++;	} // if
 			if ((ctrl1==1|| ctrl2 == 1) && (logexist == 1 && metaexist == 1)) {
 				rr = filelist[i];	list[tifimg] = rr;		tifimg++;		
-//				getBoolean("Selected");
+				//				getBoolean("Selected");
 			} // if
 		} // for	
 		// ------------------- Single image ----------------------------
 		if (param == "1") { 
 			if (tifimg !=0 && testvis != 0) 		processoption = newArray("Process Image AND particles (images in SCAN folder)","Process again particles from processed images (images in WORK sub- folders)");
-			else if (tifimg !=0 && testvis == 0) 	processoption = newArray("Process Image AND particles (images in SCAN folder)");
-			else if (tifimg ==0 && testvis != 0) 	processoption = newArray("Process again particles from processed images (images in WORK sub- folders)");
+//			else if (tifimg !=0 && testvis == 0) 	processoption = newArray("Process Image AND particles (images in SCAN folder)");
+//			else if (tifimg ==0 && testvis != 0) 	processoption = newArray("Process again particles from processed images (images in WORK sub- folders)");
 			else { getBoolean("No CONVERTED image to be processed in "+proj+"           \n \nConvert image first or use Batch mode \n \nPress Cancel to abort.    ");			} // else
 		} // if
 		// ------------------ batch image ------------------------------
 		else {
-//			getBoolean("tifimg= " + tifimg+" rawimg= "+rawimg+"  testvis= "+testvis+"  testsep= "+testsep+"   testvis= "+testvis);
+			//			getBoolean("tifimg= " + tifimg+" rawimg= "+rawimg+"  testvis= "+testvis+"  testsep= "+testsep+"   testvis= "+testvis);
 			processoption = newArray(" "," "," "," ");
 			proc = 0;
 			if (rawimg != 0) 	{	proc++;	processoption[0] = "Convert AND Process Image AND particles (images in RAW folder)";							} //if
-			if (tifimg !=0) 		{	proc++;	processoption[1] = "Process Image AND particles (images in SCAN folder)";									} // if
-			if (testvis != 0)		{	proc++;	processoption[2] = "Process again particles from processed images (images in WORK sub- folders)";					} // if
+//			if (tifimg !=0) 		{	proc++;	processoption[1] = "Process Image AND particles (images in SCAN folder)";									} // if
+//			if (testvis != 0)		{	proc++;	processoption[2] = "Process again particles from processed images (images in WORK sub- folders)";						} //if
 			if (testsep != 0)	{	proc++;	processoption[3] = "Process again particles from processed images to include SEPARATION MASK (images in WORK sub- folders)";	} // if
 			if (proc == 0) 		{	getBoolean("No image to be processed in "+proj+"           \n \nPress Cancel to abort.    ");									} // if
 		} // else
@@ -186,7 +189,11 @@ else { 	print("CONFIG exits");
 			Dialog.addChoice("              SELECT CONFIGURATION FILE  ", listaff);
 			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
 		} // if j
-		if (scan !="1" ) {	
+		if (scan !="1" ) {
+			Dialog.addMessage("- Select ''Convert AND Process Image AND particles (images in RAW folder)'' for the initial process of a sample and for the reprocessing after a separation (default option).");
+//			Dialog.addMessage("- Select ''Process Image AND particles (images in SCAN folder)'' to avoid the initial conversion (if already done).");
+//			Dialog.addMessage("- Select ''Process again particles from processed images (images in WORK sub- folders)'' to avoid the initial conversion and process (if already done).");
+			Dialog.addMessage("- Select ''Process again particles from processed images to include SEPARATION MASK (images in WORK sub- folders)'' \n              in case you added separations on an already separated and processed sample.");
 			Dialog.addChoice("       SELECT PROCESS OPTION  ",processoption);
 			Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
 		} // if
@@ -197,7 +204,7 @@ else { 	print("CONFIG exits");
 			if (process == "0.0")  getBoolean("Do not select ''0.0'' ! \n Press Cancel and restart !          ");
 			process = replace(process," ","_");				
 		} // if	
-		else { process = process1;												} // else
+		else { process = process_from_scan;												} // else
 		//-----------------Ouverture du fichier de config et lecture du paramètre de soustraction du fond--------------------
 		openconfig = chemconfig +configfile;
 		open(openconfig);
@@ -224,59 +231,59 @@ if (Background_process == "recover" && scan == "1") Background_process = "last";
 // ==========================================================================================
 // ==================================== Background  ===========================================
 // ==========================================================================================
-//	if (process == process0 || process == process1 ) {
-	// ------------------ Liste des fichiers background -------------------------------------------------
-	if (Background_process=="last" || Background_process == "recover" || Background_process=="select") {
-		texte = drive+"\\"+"\\"+"Zooscan_"+proj+"\\"+"\\"+"Zooscan_back";
-		if (File.exists(texte)) {	
-			filelist  = getFileList(texte+"\\");
-			j = 0;
-			// ------------------------- Selection des images TIF dont le nom comporte le mot "background"
-			list = newArray(filelist.length);
-			for (i=0; i<filelist.length ; i++) {	ctrl = indexOf(filelist[i],"background");		ctrl1 = indexOf(filelist[i],".tif");
-				if (ctrl>=0 && ctrl1>0 ) 	{	rr = filelist[i];	list[j] = rr;		j = j + 1;			} // if
-			} // for
-			//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
-			if (j==0) { print("No valid background file in the "+texte);		getBoolean("No valid background file in "+texte+"                 ");		} // if
-			// -------------------- Purger les fichiers vides de la liste !
-			listaff = newArray(j);
-			for (i=0; i<listaff.length ; i++) {		rr = list[i];	listaff[i] = rr;				} // for
-			// ------------- Inversion de la liste et liste des dates --------------------------------------
-			listaffinv = newArray(j);
-			listaffdate = newArray(j);
-			for (i=0; i<listaff.length ; i++) {		
-				rr = listaff[j-i-1]; 	
-				listaffinv[i] = rr;		
-				year = 		substring(rr, 0, 4);			yearb = 		parseInt(year);
-				month = 		substring(rr, 4, 6);			monthb = 	parseInt(month);
-				dayofmonth = 	substring(rr, 6, 8);			dayofmonthb = 	parseInt(dayofmonth);
-				heure  = 		substring(rr, 9, 11);		heureb = 	parseInt(heure);
-				minute = 		substring(rr, 11, 13);		minuteb = 	parseInt(minute);
-				dur = 		monthdur[month];			durb = 		parseInt(dur);
-				dateheure = 	year+month+dayofmonth+"_"+heure+minute;
-				timeback =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
-				listaffdate[i] = 	timeback;	
-			} // for
-			// ----------------- Selection du background s'il en existe au moins un -------------------------------------------------------------
-			if (j != 0 && Background_process=="select" && (process == process0 || process == process1)) {	
-				selectback = 1;
-				Dialog.create("BACKGROUND SELECTION MENU");
-				Dialog.addMessage("The selected configuration file indicates that the background correction is done using a blanck image ");
-				Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
-				Dialog.addMessage("Select a background image size (narrow/large) adapted to the frame size used when the images to be processed was scanned          ");
-				Dialog.addMessage("Background image will automatically be splitted if necessary ");
-				Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
-				message = "SELECT Background file in " + texte ;
-				Dialog.addMessage(message);
-				Dialog.addChoice(" ", listaffinv);
-				Dialog.show();
-				backimg = Dialog.getChoice();
-			} // if
-			if (j == 0 ) { getBoolean("No background image available        \n \nPress Cancel to abort  !       ");		} // else if
+//	if (process == process_from_raw || process == process_from_scan ) {
+// ------------------ Liste des fichiers background -------------------------------------------------
+if (Background_process=="last" || Background_process == "recover" || Background_process=="select") {
+	texte = drive+"\\"+"\\"+"Zooscan_"+proj+"\\"+"\\"+"Zooscan_back";
+	if (File.exists(texte)) {	
+		filelist  = getFileList(texte+"\\");
+		j = 0;
+		// ------------------------- Selection des images TIF dont le nom comporte le mot "background"
+		list = newArray(filelist.length);
+		for (i=0; i<filelist.length ; i++) {	ctrl = indexOf(filelist[i],"background");		ctrl1 = indexOf(filelist[i],".tif");
+			if (ctrl>=0 && ctrl1>0 ) 	{	rr = filelist[i];	list[j] = rr;		j = j + 1;			} // if
+		} // for
+		//---------------------Test de la presence de fichiers dans le repertoire-----------------------------------------------------------------------	
+		if (j==0) { print("No valid background file in the "+texte);		getBoolean("No valid background file in "+texte+"                 ");		} // if
+		// -------------------- Purger les fichiers vides de la liste !
+		listaff = newArray(j);
+		for (i=0; i<listaff.length ; i++) {		rr = list[i];	listaff[i] = rr;				} // for
+		// ------------- Inversion de la liste et liste des dates --------------------------------------
+		listaffinv = newArray(j);
+		listaffdate = newArray(j);
+		for (i=0; i<listaff.length ; i++) {		
+			rr = listaff[j-i-1]; 	
+			listaffinv[i] = rr;		
+			year = 		substring(rr, 0, 4);			yearb = 		parseInt(year);
+			month = 		substring(rr, 4, 6);			monthb = 	parseInt(month);
+			dayofmonth = 	substring(rr, 6, 8);			dayofmonthb = 	parseInt(dayofmonth);
+			heure  = 		substring(rr, 9, 11);		heureb = 	parseInt(heure);
+			minute = 		substring(rr, 11, 13);		minuteb = 	parseInt(minute);
+			dur = 		monthdur[month];			durb = 		parseInt(dur);
+			dateheure = 	year+month+dayofmonth+"_"+heure+minute;
+			timeback =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
+			listaffdate[i] = 	timeback;	
+		} // for
+		// ----------------- Selection du background s'il en existe au moins un -------------------------------------------------------------
+		if (j != 0 && Background_process=="select" && (process == process_from_raw || process == process_from_scan)) {	
+			selectback = 1;
+			Dialog.create("BACKGROUND SELECTION MENU");
+			Dialog.addMessage("The selected configuration file indicates that the background correction is done using a blanck image ");
+			Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+			Dialog.addMessage("Select a background image size (narrow/large) adapted to the frame size used when the images to be processed was scanned          ");
+			Dialog.addMessage("Background image will automatically be splitted if necessary ");
+			Dialog.addMessage("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
+			message = "SELECT Background file in " + texte ;
+			Dialog.addMessage(message);
+			Dialog.addChoice(" ", listaffinv);
+			Dialog.show();
+			backimg = Dialog.getChoice();
 		} // if
-		else { getBoolean("No background folder available        \n \nPress Cancel to abort  !       ");		} // else if
+		if (j == 0 ) { getBoolean("No background image available        \n \nPress Cancel to abort  !       ");		} // else if
 	} // if
-	if (Background_process == "recover") backimg = "none";
+	else { getBoolean("No background folder available        \n \nPress Cancel to abort  !       ");		} // else if
+} // if
+if (Background_process == "recover") backimg = "none";
 //	} // if process
 
 //---------------------------------------- Test sur l'existence du repertoire des fichiers source : _scan--------------------------------------
@@ -303,14 +310,14 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 	if (titre=="B") { 
 		print("Traitement d'une image, titre=B");
 		// ----------------- Process particles ONLY -------------------------------
-		if (process == process2) { 
+		if (process == proces_from_work) { 
 			// -------------------- Liste des sous repertoires OK --------------------
 			filelist  = getFileList(chemwork1);
 			//-------------- Selection des fichiers ---------------------
 			j = 0;	flagframe = 0;
 			list = newArray(filelist.length);
 			for (i=0; i<filelist.length ; i++) {	  
-				 rr = filelist[i]; 
+				rr = filelist[i]; 
 				identlong = 	lengthOf(rr);
 				rr = 		substring(rr,0,identlong-1);	
 				//--------------- Recherche du fichier image en ZIP ou en JPG ----------
@@ -343,7 +350,7 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 			} // else
 		} // if
 		// ----------------- Process Image AND particles -------------------------------
-		if (process == process1) { 
+		if (process == process_from_scan) { 
 			// ------------------------Selection des fichiers dont le nom comporte le mot ".tif";
 			filelist  = getFileList(chemscan);
 			j = 0;
@@ -516,7 +523,7 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 		} // if
 		else if (logvis == 0) { print("LOG file not completed  for image ",titrered);		         	} // else
 		else { 		print("LOG : other solution");							} // else
-
+		
 		if (isOpen("Log")) {		selectWindow("Log");	run("Close");				} // if
 		openlog = chemscan + titrered + "_log.txt";
 		open(openlog);
@@ -532,9 +539,9 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 		logf = 1;
 	} // if
 	if (lengthOf(metalogmessage) >=3) { showMessage(metalogmessage+"                 \ncopied from scan folder to image folder");		} // if
-
+	
 	// -------------------------------- Recherche de l'image de fond si background = LAST -------------------------------------------------------------------------------------
-	if (Background_process == "last" && (process == process0 || process == process1|| sep == 1)) {
+	if (Background_process == "last" && (process == process_from_raw || process == process_from_scan|| sep == 1)) {
 		if (listaffdate.length == 0) getBoolean("No background image availablein that project.              \n \nPress Cancel to abort !               ");
 		dh = 	"0";
 		date = 	"0";
@@ -574,7 +581,7 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 			month = 			array[1];
 			t = 0;
 			while (t < 13) {
-			if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
+				if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
 				t++;
 			} // while
 			monthnb = toString(monthnb);
@@ -610,11 +617,11 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 			if (timedif < diftimemax) {	diftimemax = timedif;	backimg = imgback;			} // if
 		} // for
 	} // if Background_process
-
+	
 	// ------------------------ Test de l'existence de l'image de fond recuperee ------------------------------------------
 	texte = drive+"\\"+"\\"+"Zooscan_"+proj+"\\"+"\\"+"Zooscan_back\\"+backimgrecup;
 	fond = File.exists(texte);
-	if (Background_process == "recover" && (backimgrecup == "none" || fond == false) && (process == process0 || process == process1 ))  { 
+	if (Background_process == "recover" && (backimgrecup == "none" || fond == false) && (process == process_from_raw || process == process_from_scan ))  { 
 		selectback = 1;
 		Dialog.create("BACKGROUND SELECTION MENU");
 		if (backimg != "none") 	Dialog.addMessage("The recovered "+backimg+" image doesnt exist.   ");
@@ -651,7 +658,7 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 	message = info +"\n"+ infov  +"\n"+ infol  +"\n"+ infoz  +"\n"+ infos  +"\n"+ infot  +"\n"+infoi+"\n"+ infop;
 	Dialog.addMessage(message);
 	// ----------------- Process Image AND particles -------------------------------
-	if (process == process0 || process == process1 || (sep == 1 && process == process2 )) {
+	if (process == process_from_raw || process == process_from_scan || (sep == 1 && process == proces_from_work )) {
 		grey = newArray(6);
 		correc = newArray("Correct and remove right side of image","Correct and keep whole image","No correction","Correction for CNRS2003","Measure OD and remove right side of image");
 		grey[1] = correc[0];
@@ -681,7 +688,7 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 		if (greycor != 2 ) {		Dialog.addCheckbox("OD process ?", true); 		} // if
 		else {			Dialog.addCheckbox("OD process ?", false);		} // else
 		Dialog.addCheckbox("ZIP image from ''_scan'' folder into ''_zip'' folder ?", false);
-		if (sep == 1 && process == process2 ) { Dialog.addMessage("Image will be reprocessed ONLY if you select to work with the separation mask !     ");	} // if
+		if (sep == 1 && process == proces_from_work ) { Dialog.addMessage("Image will be reprocessed ONLY if you select to work with the separation mask !     ");	} // if
 	} // if
 	else { 	Dialog.addMessage("PROCESS PARTICLES ONLY");					} // else
 	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
@@ -690,18 +697,18 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 	Dialog.addCheckbox("SAVE thumbnail images of organisms & Ecotaxa table?", false);
 	Dialog.addCheckbox("SAVE also FALSE tagged object thumbnail images ?", false);  
 	Dialog.addCheckbox("Force doubloon check for frame 2 images ?", true);  
-	if (process == process0 || process == process1 || sep == 1) 	Dialog.addCheckbox("Work with Separation mask (CREATE-MODIFY-INCLUDE) ?", false); 
+	if (process == process_from_raw || process == process_from_scan || sep == 1) 	Dialog.addCheckbox("Work with Separation mask (CREATE-MODIFY-INCLUDE) ?", false); 
 	Dialog.addCheckbox("Work with TAG fonction for bad objetcs (CREATE-MODIFY-INCLUDE) ?", false); 
 	Dialog.addCheckbox("Process Manual Identification (CREATE-MODIFY-INCLUDE) ?", false); 
 	Dialog.addMessage(" ");
 	// ----------------- Process Image AND particles -------------------------------
-	//	if ((process == process1 || process == process1) && par == 1) 	 {
+	//	if ((process == process_from_scan || process == process_from_scan) && par == 1) 	 {
 	//		Dialog.addMessage("CNRS 2003 import parametre");
 	//		Dialog.addCheckbox("INCLUDE the metadata info from the PAR file TO the new META file ?", true); 
 	//	} // if
 	Dialog.show();
 	// ----------------- Process Image AND particles -------------------------------
-	if (process == process0 || process == process1 || (sep == 1 && process == process2 )) {
+	if (process == process_from_raw || process == process_from_scan || (sep == 1 && process == proces_from_work )) {
 		maskvis = 	true;
 		maskod = 	Dialog.getCheckbox();
 		savezip = 	Dialog.getCheckbox();
@@ -713,17 +720,17 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 	savevig = 	Dialog.getCheckbox();
 	savetag = 	Dialog.getCheckbox();
 	savedoub = 	Dialog.getCheckbox();
-	if (process == process0 || process == process1 || sep == 1) { 	maskop = 	Dialog.getCheckbox();	} // if
+	if (process == process_from_raw || process == process_from_scan || sep == 1) { 	maskop = 	Dialog.getCheckbox();	} // if
 	else {							maskop = 	false;			} // else
 	masktag = 	Dialog.getCheckbox();
 	maskident = 	Dialog.getCheckbox();
-	//	if ((process == process1 || process == process1) && par == 1) {	maskpar = 	Dialog.getCheckbox();	} // if
+	//	if ((process == process_from_scan || process == process_from_scan) && par == 1) {	maskpar = 	Dialog.getCheckbox();	} // if
 	//	else { 							maskpar =	 false;			} // else
 	maskpar =	 true;
 	// Si on vient de scanner, si le vis ou le log n'existent pas ou ne sont pas corrects, il faut recalculer la VIS !...
 	if (scan==1 || vis==0 || logf==0) { 	maskvis=1; 					} // if
 	// ------------------ On ne recalcule pas la VIS dans le cas ou on ne calcule que les particules (pas de masque) --------------------------------
-	if (process == process2 && maskop == false ) {	
+	if (process == proces_from_work && maskop == false ) {	
 		maskvis = 	false;
 		maskod = 	false;
 		savezip = 	false;
@@ -735,10 +742,10 @@ if (param=="1" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 ) {
 	print("configfile= ",configfile);
 	print("maskod= ",maskod);
 	// ---------------------- Test de la presence de l'image convertie -------------------------------------
-	if (sep == 1 && process == process2 ) { texte = chemscan +"\\"+titre;
+	if (sep == 1 && process == proces_from_work ) { texte = chemscan +"\\"+titre;
 		if (File.exists(texte) == 0) { getBoolean("ERROR MESSAGE \n \nThe converted image doesn't exist in the "+chemscan+"  folder.     \n \nConvert image first !       \n \nPress Cancel to abort !       ");		} // if
 	} // if
-//	showMessage(titre);
+	//	showMessage(titre);
 	arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ maskpar +" "+chemscan+" "+chemwork1 +" "+savevig+" "+savezip+" "+maskod +" "+ident +" "+maskident +" "+vis+" "+maskvis+" "+scan+" "+yyy+" "+savetag+" "+savedoub+" "+backimg+" "+projfolder;
 	// ------------------------- La routine "Zooscan_1m.txt" est lancée depuis "zooprocess_txt"  -----------------------------------------------
 } // if param = 1
@@ -751,7 +758,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 	for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
 	// ++++++++++++++++++++ Convert and process +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//----------------------- Selection des fichiers dont le nom comporte le mot "_raw_1.tif" et dont les metadata et le log existen t------------------------------
-	if (process == process0) { 
+	if (process == process_from_raw) { 
 		filelist  = 	getFileList(chemraw);
 		rawimg = 0;
 		list = newArray(filelist.length);
@@ -784,7 +791,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 		} // if
 	} // if process
 	// ++++++++++++++++++++++++++++ Process Image AND particles ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	if (process == process1) { 
+	if (process == process_from_scan) { 
 		// ------------------------Selection des fichiers dont le nom comporte le mot ".tif" dans chemscan ------------------
 		filelist  = getFileList(chemscan);
 		j = 0;
@@ -815,7 +822,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 		for (i=0; i<listaff.length ; i++) {	rr = list[i];			listaff[i] = rr;		} // for
 	} // Image AND Particles
 	// ++++++++++++++++++++++++++++ Re-Process to include separation mask ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	if (process == process3) { 
+	if (process == process_from_work_sep) { 
 		// ------------------------Selection des fichiers dont le nom comporte le mot ".tif" dans chemscan ------------------
 		filelist  = getFileList(chemscan);
 		j = 0;
@@ -861,7 +868,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 				minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
 				dur = 		monthdur[month];			durb = 		parseInt(dur);
 				timesep =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
-
+				
 				pidfile1 = chemwork1+"\\"+name+"\\"+name+"_dat1.pid";
 				testpid1 = File.exists(pidfile1);
 				// --------------- recherche date creation pid --------------------
@@ -896,7 +903,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 				timepid =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
 				// --------------- verifier si sep plus recent que ZIP -------------
 				if (timesep>timepid) recent = 1;
-	
+				
 				logfile1 = chemwork1+"\\"+name+"\\"+name+"_log.txt";
 				testlog1 = File.exists(logfile1);
 				if (testmeta1 == 1 && testlog1 == 1 && testsep1 == 1 && recent == 1) { list[j] = rr;	j = j + 1;		} // if
@@ -905,7 +912,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 				recent = 0;
 				metafile2 = chemwork1+"\\"+name+"\\"+name+"_meta.txt";
 				testmeta2 = File.exists(metafile2);
-
+				
 				sepfile2 = chemwork1+"\\"+name+"\\"+name+"_sep.gif";
 				testsep2 = File.exists(sepfile2);
 				// --------------- recherche date creation sep --------------------
@@ -938,7 +945,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 				minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
 				dur = 		monthdur[month];			durb = 		parseInt(dur);
 				timesep =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
-
+				
 				pidfile2 = chemwork1+"\\"+name+"\\"+name+"_dat1.pid";
 				testpid2 = File.exists(pidfile2);
 				// --------------- recherche date creation zip --------------------
@@ -973,7 +980,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 				timepid =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
 				// --------------- verifier si sep plus recent que ZIP -------------
 				if (timesep>timepid) recent = 1;
-	
+				
 				sepfile2 = chemwork1+"\\"+name+"\\"+name+"_sep.gif";
 				testsep2 = File.exists(sepfile2);
 				logfile2 = chemwork1+"\\"+name+"\\"+name+"_log.txt";
@@ -986,16 +993,16 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 		listaff = newArray(j);
 		for (i=0; i<listaff.length ; i++) {	rr = list[i];			listaff[i] = rr;		} // for
 	} // Image AND Particles
-
+	
 	// +++++++++++++++++++++++++++++ Process particles ONLY +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	if (process == process2) { 
+	if (process == proces_from_work) { 
 		// -------------------- Liste des sous repertoires OK --------------------
 		filelist  = getFileList(chemwork1);
 		//-------------- Selection des fichiers ---------------------
 		j = 0;	flagframe = 0;
 		list = newArray(filelist.length);
 		for (i=0; i<filelist.length ; i++) {	  
-			 rr = filelist[i]; 
+			rr = filelist[i]; 
 			identlong = 	lengthOf(rr);
 			rr = 		substring(rr,0,identlong-1);	
 			//--------------- Recherche du fichier image en ZIP ou en JPG ----------
@@ -1028,19 +1035,19 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
 	Dialog.addMessage("Project  : "+proj);
 	// ----------------- Convert ou Process Image AND particles -------------------------------
-	if (process == process0 || process == process1 || process == process3) { 
-		if (process == process0) { 
+	if (process == process_from_raw || process == process_from_scan || process == process_from_work_sep) { 
+		if (process == process_from_raw) { 
 			Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
 			Dialog.addMessage("Images CONVERTED using default parametres.");
 			if (File.exists(mode_advanced) == true) {
 				Dialog.addCheckbox("SKIP convert again images ?", true);
 				Dialog.addCheckbox("Fast conversion (images not displayed when possible) ? ", true);
 			} // if
-			else {	Dialog.addMessage("Select ADVANCED mode for more options !");		} // 
+			else {	Dialog.addMessage("Switch to ADVANCED mode for more options !");		} // 
 		} // if
 		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
 		Dialog.addMessage("IMAGE TREATMENT PARAMETRES");
-		if (process == process3) Dialog.addMessage("ALL recently separated images will be reprocessed ! ");
+		if (process == process_from_work_sep) Dialog.addMessage("ALL recently separated images will be reprocessed ! ");
 		grey = newArray(6);
 		correc = newArray("Correct and remove right side of image","Correct and keep whole image","No correction","Correction for CNRS2003","Measure OD and remove right side of image");
 		grey[1] = correc[0];	grey[2] = correc[1];	grey[3] = correc[2];	grey[4] = correc[3];	grey[5] = correc[4];
@@ -1064,14 +1071,14 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 			if (greycor != 2 ) {	Dialog.addCheckbox("OD process ?", true); 			} // if
 			else {		Dialog.addCheckbox("OD process ?", false);				} // else
 			Dialog.addCheckbox("ZIP image from ''_scan'' folder into ''_zip'' folder ?", false);
-			if (process == process3) 	{ Dialog.addCheckbox("SKIP allready processed images ?", false);	} // if
+			if (process == process_from_work_sep) 	{ Dialog.addCheckbox("SKIP allready processed images ?", false);	} // if
 			else {	Dialog.addCheckbox("SKIP allready processed images ?", true);		} // else
 		} // if user
 	} // if
 	else { 	
 		Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
 		Dialog.addMessage("PROCESS PARTICLES ONLY");	
-		Dialog.addMessage("If a separation mask exists for an image, the image will be re-processed to include the mask. ");						
+		Dialog.addMessage("If a ''recent'' separation mask exists for an image, the image will be re-processed to include the mask. ");						
 	} // else
 	Dialog.addMessage("-------------------------------------------------------------------------------------------------------------------------");
 	Dialog.addMessage("PARTICLE TREATMENT PARAMETRES");
@@ -1079,18 +1086,18 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 	Dialog.addCheckbox("SAVE thumbnail images of organisms & Ecotaxa table? ", true); 
 	if (File.exists(mode_advanced) == true) {
 		Dialog.addCheckbox("SAVE also FALSE tagged object thumbnail images ?", false);  
-		if (process == process0 || process == process1 ) {	Dialog.addCheckbox("INCLUDE SEPARATION mask if exists ?", true);		} // if 
+		if (process == process_from_raw || process == process_from_scan ) {	Dialog.addCheckbox("INCLUDE SEPARATION mask if exists ?", true);		} // if 
 		//	else {	Dialog.addMessage("If a separation mask exists for an image, the image will be re-processed to include the mask. ");		} // else
 		Dialog.addCheckbox("KEEP Tag informations from previous process if exists ? ", true); 
 		Dialog.addCheckbox("Force doubloon check for frame 2 images ?", true);  
 		Dialog.addMessage("Use single image tool to process manual identification");
 	}// if user
-	else {	Dialog.addMessage("Select ADVANCED mode for more options !");		} // 
-
+	else {	Dialog.addMessage("Switch to ADVANCED mode for more options !");		} // 
+	
 	Dialog.show();
 	// ------------------ general --------------------------------------------------------------------------------------------------
-	if (process == process0 || process == process1 || process == process3 ) { 
-		if (process == process0) {
+	if (process == process_from_raw || process == process_from_scan || process == process_from_work_sep ) { 
+		if (process == process_from_raw) {
 			if (File.exists(mode_advanced) == true) {
 				repl = 		Dialog.getCheckbox();
 				mode = 		Dialog.getCheckbox();
@@ -1102,7 +1109,7 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 		if (File.exists(mode_advanced) == true) {
 			maskod = 	Dialog.getCheckbox();
 			savezip = 	Dialog.getCheckbox();
-			//	if (process != process3) 	
+			//	if (process != process_from_work_sep) 	
 			skip = 		Dialog.getCheckbox();
 			//	else {			skip = false	}// else
 		} // if user
@@ -1110,18 +1117,18 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 			if (greycor != 2 ) {	maskod = true;		} // 
 			else {			maskod = false;		} // else
 			savezip = false;
-			if (process == process3) { 	skip = false;	} // if
+			if (process == process_from_work_sep) { 	skip = false;	} // if
 			else {				skip = true;	} // else
 		} // else user
-			
+		
 	} // if
 	else {	maskvis = 	false;		maskod = 	false;		savezip = 	false;		skip = 		false;		} // else
 	savevig = 		Dialog.getCheckbox();
 	if (File.exists(mode_advanced) == true) {
 		savetag = 		Dialog.getCheckbox();
 		// ------------------ process separation -------------------------------------------------------------------------------------
-		if (process == process0 || process == process1 ) 		maskop = 	Dialog.getCheckbox();	
-		else if (process == process3 ) 				maskop = 	true;
+		if (process == process_from_raw || process == process_from_scan ) 		maskop = 	Dialog.getCheckbox();	
+		else if (process == process_from_work_sep ) 				maskop = 	true;
 		else {			maskop = 	false;			} // else
 		masktag = 	Dialog.getCheckbox();
 		// ------------------ duplicates -------------------------------------------------------------------------------------------------
@@ -1135,12 +1142,12 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 	} // else
 	maskpar =	 true;
 	maskident = 0;	
-
+	
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// ++++++++++++++++++++++++++++++++++ OPERATIONS PRINCIPALES  ++++++++++++++++++++++++++++++++++++
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// ---------------------------- Conversion -----------------------------------------------------------------
-	if (process == process0) { process  = "trtbatch";
+	if (process == process_from_raw) { process  = "trtbatch";
 		args = chem+" "+projfolder+" "+process+" "+skip+" "+repl+" "+batch+" "+chemzooprocess;		
 		ret = runMacro("Zooscan_convert_main",args);
 		flag=toString(ret);
@@ -1194,56 +1201,198 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 	} // for
 	listaff = newArray(z);
 	for (i=0; i<listaff.length ; i++) {	rr = listfinal[i];		listaff[i] = rr;		} // for
-
+	
 	// ---------------------- Debut de boucle Process Image et Process Particules ------------------------------------------------------------------------
 	for (k=0 ;k< listaff.length ; k++) {
 		// --------------- TEST ARRET PROCESS -----------------
 		if (File.exists(text_run)) {
-		// -------------- Fermeture des images actives ---------------------------------------------------
-		while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while
-		// -------------------------------- Sauvegarde du SUIVI--------------------------
-		if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if
-		run("free memory");		wait(1000);
-		run("free memory");		wait(1000);
-		run("free memory");		wait(1000);
-		run("free memory");		wait(1000);
-		backimgrecup= "none";
-		// -------------------------------- Gestion du SUIVI ---------------------------------
-		opensuivi = chemtemp +"Suivi_log.txt";
-		open(opensuivi);
-		suivi = getInfo();
-		run("Close");
-		array = split(suivi,"\n");
-		for (i=0; i<array.length; i++) {	print(array[i]);								} // for
-		// --------------------------Affichage de la date et de l'heure ----------------------
-		dateheure =	runMacro("Zooscan_get_time_5");
-		print("------------------------------------------------");
-		print("Date= ",dateheure);
-		titre = listaff[k];
-		long = lengthOf(titre);
-		titrered = substring(titre, 0, long-4);
-		print("raw_image = ",titrered);
-		selectWindow("Log");
-		sauve = "save=" + chemtemp +"Suivi_log.txt";
-		run("Text...",sauve);
-		run("Close");
-		logf= 0;	zip= 0;	sep = 0;	tag = 0;	meta = 0;	par = 0;	ident = 0;	vis = 0;	yyy= 0;	zzz=0;
-		// -----------------------TEST de l'existence du repertoire de l'image pour stocker les donnees et qui deviendra le chemwork s'il existe ------------------------------------
-		chemwork = chemscan + "_work\\"+titrered+"\\";
-		confwork = File.exists(chemwork); 
-		if (confwork==0) { 	File.makeDirectory(chemwork); 			} // if
-		else { print(chemwork," folder exits"); 
-			// --------------------------Fichier MASQUE de SEPARATION
-			if (File.exists(chemwork+titrered + "_sep.gif")) { print("Existence_d'un_MASQUE_de_SEPARATION_pour_l'image= ",titrered); 	sep = 1;					} // if
-			//-------------------------- Fichier IDENTIFICATION
-			if (File.exists(chemwork+titrered +"_ident.txt")) { print("Existence_d'un_fichier_IDENTIFICATION_pour_l'image= ",titrered); 		ident = 1;					} // if
-			// -----------------------------Fichier VIS image traitee (avec eventuellement des traits de separation)
-			if (File.exists(chemwork+titrered +"_vis1.zip") || File.exists(chemwork+titrered +"_vis1.jpg")) { print("Existence_d'un_fichier_Image_corrigee_pour_l'image= ",titrered);	vis = 1;	} // if vis1
-			// ------------------------------- Fichier LOG image traitee (avec eventuellement des traits de separation)
-			if (File.exists(chemwork+titrered +"_log.txt")) { 
-				print("Existence_d'un_fichier_LOG_pour_l'image= ",titrered); 
-				// ----------------------- Si LOG existe, alors on verifie que le contenu du LOG permet de ne pas retraiter le VIS 
-				open(chemwork+"\\"+titrered+"_log.txt");
+			// -------------- Fermeture des images actives ---------------------------------------------------
+			while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while
+			// -------------------------------- Sauvegarde du SUIVI--------------------------
+			if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if
+			run("free memory");		wait(1000);
+			run("free memory");		wait(1000);
+			run("free memory");		wait(1000);
+			run("free memory");		wait(1000);
+			backimgrecup= "none";
+			// -------------------------------- Gestion du SUIVI ---------------------------------
+			opensuivi = chemtemp +"Suivi_log.txt";
+			open(opensuivi);
+			suivi = getInfo();
+			run("Close");
+			array = split(suivi,"\n");
+			for (i=0; i<array.length; i++) {	print(array[i]);								} // for
+			// --------------------------Affichage de la date et de l'heure ----------------------
+			dateheure =	runMacro("Zooscan_get_time_5");
+			print("------------------------------------------------");
+			print("Date= ",dateheure);
+			titre = listaff[k];
+			long = lengthOf(titre);
+			titrered = substring(titre, 0, long-4);
+			print("raw_image = ",titrered);
+			selectWindow("Log");
+			sauve = "save=" + chemtemp +"Suivi_log.txt";
+			run("Text...",sauve);
+			run("Close");
+			logf= 0;	zip= 0;	sep = 0;	tag = 0;	meta = 0;	par = 0;	ident = 0;	vis = 0;	yyy= 0;	zzz=0;
+			// -----------------------TEST de l'existence du repertoire de l'image pour stocker les donnees et qui deviendra le chemwork s'il existe ------------------------------------
+			chemwork = chemscan + "_work\\"+titrered+"\\";
+			confwork = File.exists(chemwork); 
+			if (confwork==0) { 	File.makeDirectory(chemwork); 			} // if
+			else { print(chemwork," folder exits"); 
+				// --------------------------Fichier MASQUE de SEPARATION
+				if (File.exists(chemwork+titrered + "_sep.gif")) { print("Existence_d'un_MASQUE_de_SEPARATION_pour_l'image= ",titrered); 	sep = 1;					} // if
+				//-------------------------- Fichier IDENTIFICATION
+				if (File.exists(chemwork+titrered +"_ident.txt")) { print("Existence_d'un_fichier_IDENTIFICATION_pour_l'image= ",titrered); 		ident = 1;					} // if
+				// -----------------------------Fichier VIS image traitee (avec eventuellement des traits de separation)
+				if (File.exists(chemwork+titrered +"_vis1.zip") || File.exists(chemwork+titrered +"_vis1.jpg")) { print("Existence_d'un_fichier_Image_corrigee_pour_l'image= ",titrered);	vis = 1;	} // if vis1
+				// ------------------------------- Fichier LOG image traitee (avec eventuellement des traits de separation)
+				if (File.exists(chemwork+titrered +"_log.txt")) { 
+					print("Existence_d'un_fichier_LOG_pour_l'image= ",titrered); 
+					// ----------------------- Si LOG existe, alors on verifie que le contenu du LOG permet de ne pas retraiter le VIS 
+					open(chemwork+"\\"+titrered+"_log.txt");
+					data = getInfo();
+					selectWindow(titrered+"_log.txt");
+					run('Close');
+					ligne = split(data,"\n");
+					for(h=0;h<ligne.length;h++) { 	
+						texte = ligne[h];
+						if (texte=="PID") { 			logpid = 1;		print("PID line available for image= ",titrered);			} // if texte
+						if (texte=="[LUT]") { 			loglut = 1;		print("[LUT] line available for image= ",titrered);		} // if texte
+						if (texte=="[Output]" || texte == "[Files]") { 	logout = 1;	print("Scanning information available for image= ",titrered); 	} // if texte
+						if (texte=="Vis_image_save= YES") { 	logvis = 1;		print("VIS save information available for image= ",titrered); 	} // if texte
+						// ---------------------- Determiner la ligne Author -------------------------------
+						posauthor = indexOf(texte,"Author=");
+						if (posauthor == 0) { 			logaut = 1;	print("VIS save information available for image= ",titrered); 		} // if texte
+						// ---------------------- Determiner le Background -------------------------------
+						if (Background_process == "recover") {	posback = indexOf(texte,"Background_correct_using=");
+							if (posback == 0)  { databack = split(texte,"\ ");	backimgrecup = databack[1]; 	backimg = backimgrecup;		} // if
+						} // if
+						// ---------------------- Background le plus proche si LAST --------------------
+						if (Background_process == "last") {
+							// ------------------ Recherche "scanning_time=" --------------------
+							if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
+							else { // ------------------- Sinon, date d'enregistrement du log -----------
+								date = File.dateLastModified(chemwork+"\\"+titrered+"_log.txt");					
+								array = 			split(date," ");
+								dayofweek = 		array[0];
+								month = 			array[1];
+								t = 0;
+								while (t < 13) {
+									if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
+									t++;
+								} // while
+								dayofmonth= 		array[2];
+								if (lengthOf(dayofmonth) == 1) 	dayofmonth = "0"+dayofmonth;
+								time =			array[3];
+								year =			array[5];
+								time = 			replace(time,":"," ");
+								time = 			split(time," ");
+								heure = 			time[0];
+								if (lengthOf(heure) == 1) 	heure = "0"+heure;
+								minute = 			time[1];
+								if (lengthOf(minute) == 1) 	minute = "0"+minute;
+								monthnb = toString(monthnb);
+								if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
+								dh = 		year+monthnb+dayofmonth+"_"+heure+minute;
+							} // else
+							year = 		substring(dh, 0, 4);		yearb = 		parseInt(year);
+							month = 		substring(dh, 4, 6);		monthb = 	parseInt(month);
+							dayofmonth = 	substring(dh, 6, 8);		dayofmonthb = 	parseInt(dayofmonth);
+							heure  = 		substring(dh, 9, 11);		heureb = 	parseInt(heure);
+							minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
+							dur = 		monthdur[month];			durb = 		parseInt(dur);
+							timelog =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
+							// ------------------- Choix du plus proche, boucle sur les background -----------------------------
+							diftimemax = 100000000000000000000000;
+							for (i=0; i<listaffdate.length ; i++) {		
+								imgback = 	listaffinv[i];
+								timeback = 	listaffdate[i];
+								timedif = abs(timeback - timelog);
+								if (timedif < diftimemax) {	diftimemax = timedif;	backimg = imgback;			} // if
+							} // for
+						} // if Background_process
+					} // for
+					if (scan == 0 && logvis == 1 && logout == 1 && logpid == 1 && loglut == 1) { 	logf = 1;								} // if
+					else if ( scan == 0 && logpid !=1 ) { 		print("LOG file  not completed  for image ",titrered," :  PID is missing."); 				} // else if
+					else if ( scan == 0 && logaut == 1 && logout == 0) { 	print("LOG file  not completed  for image ",titrered," :  Scanning section is missing."); 	} // if
+					else if (logvis == 0) { print("LOG file  not completed  for image ",titrered);		         								} // else
+					else { 		print("LOG : other solution");														} // else
+				} // if
+				//----------------------- Fichier PID et donnees TAG ----------------------------------------------------
+				if (File.exists(chemwork+titrered +"_dat1.pid")) { 
+					print("Existence_d'un_fichier_dat1_pour_l'image= ",titrered); 
+					//----------------------- Recherche de l'existence de donnees TAG dans le fichier des mesures
+					open(chemwork+"\\"+titrered+"_dat1.pid");
+					wait(500);
+					data = getInfo();
+					pid = split(data,"\n");
+					//-----------------Recherche DATA section--------------------------
+					for (i=0; i<pid.length ; i++) {	ctrl1 = indexOf(pid[i],"[Data]");
+						if (ctrl1>=0) deb=i+1;
+					} // for
+					//------------------Detection de la colonne pour le champ tag -------------
+					coltag = 0;
+					a= replace(pid[deb],";"," ");
+					entete = split(a,"\ ");
+					for (i=0; i<entete.length ; i++) {	v = entete[i];
+						if (v=="Tag") { 	coltag = i;			} //if
+					} // for
+					if (coltag>0) { print("TAG"); 	tag = 1;		} // if
+					selectWindow(titrered+"_dat1.pid");
+					run("Close");
+				} // if
+				//--------------------------- Fichier Metadata ----------------------------------------------
+				if (File.exists(chemwork+titrered +"_meta.txt")) { print("Existence_d'un_fichier_METADATA_pour_l'image= ",titrered); 	meta = 1;	} // if
+			} // else chemwork
+			//------------------------- Recherche de l'existence du fichier ZIP dans _zip -----------------
+			filelist  = getFileList(chemzip);
+			nbfile = filelist.length;
+			for (i=0; i<nbfile ; i++) {
+				rr = filelist[i];
+				long = lengthOf(titre);
+				titrered = substring(titre, 0, long-4);
+				maskimg = titrered + ".zip";
+				if (rr==maskimg) { 
+					print("Existence_d'un_fichier_ZIP_pour_l'image= ",titrered); 		
+					zip = 1;		
+				} // if
+			} // for
+			//-------------------------- Si ZIP existe ON NE LE RECALCULE PAS pour economiser du temps ! -------------------
+			if (zip==1 ) { 	sauvezip =0; 			} // if
+			//------------------------- Recherche de l'existence du fichier PAR dans _scan -------------------------------------------
+			filelist  = getFileList(chemscan);
+			nbfile = filelist.length;
+			for (i=0; i<nbfile ; i++) {
+				rr = filelist[i];
+				long = lengthOf(titre);
+				titrered = substring(titre, 0, long-4);
+				maskimg = titrered + ".tif-zoo2.par";
+				if (rr==maskimg) { 
+					print("Existence_d'un_entete_PAR_pour_l'image= ",titrered); 		
+					par = 1;		
+				} // if
+			} // for
+			//-------------------------Si meta ou log pas trouves dans le work, recherche dans Zooscan_scan-------------------------
+			if (meta ==0 && File.exists(chemscan+titrered+"_meta.txt")) {
+				if (isOpen("Log")) {	selectWindow("Log");		run("Close");			} // if
+				openmeta = chemscan + titrered + "_meta.txt";
+				open(openmeta);
+				metadata = getInfo();
+				run("Close");
+				array = split(metadata,"\n");
+				for (i=0; i<array.length; i++) {	print(array[i]);		} // for
+				selectWindow("Log");
+				sauve = "save=" + chemwork+"\\"+titrered + "_meta.txt";
+				run("Text...",sauve);
+				run("Close");
+				meta = 1;
+			} // if
+			// ----------------------- Si LOG existe, alors on verifie que le contenu du LOG permet de ne pas retraiter le VIS ------------------
+			if (logf ==0 && File.exists(chemscan+titrered+"_log.txt")) {
+				if (isOpen("Log")) {		selectWindow("Log");	run("Close");			} // if
+				openlog = chemscan + titrered + "_log.txt";
+				open(openlog);
 				data = getInfo();
 				selectWindow(titrered+"_log.txt");
 				run('Close');
@@ -1261,271 +1410,129 @@ if ( param=="2" && confrep  ==1 && confscan==1 && confwork1==1 && confraw==1 )  
 					if (Background_process == "recover") {	posback = indexOf(texte,"Background_correct_using=");
 						if (posback == 0)  { databack = split(texte,"\ ");	backimgrecup = databack[1]; 	backimg = backimgrecup;		} // if
 					} // if
-					// ---------------------- Background le plus proche si LAST --------------------
-					if (Background_process == "last") {
-						// ------------------ Recherche "scanning_time=" --------------------
-						if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
-						else { // ------------------- Sinon, date d'enregistrement du log -----------
-							date = File.dateLastModified(chemwork+"\\"+titrered+"_log.txt");					
-							array = 			split(date," ");
-							dayofweek = 		array[0];
-							month = 			array[1];
-							t = 0;
-							while (t < 13) {
-								if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
-								t++;
-							} // while
-							dayofmonth= 		array[2];
-							if (lengthOf(dayofmonth) == 1) 	dayofmonth = "0"+dayofmonth;
-							time =			array[3];
-							year =			array[5];
-							time = 			replace(time,":"," ");
-							time = 			split(time," ");
-							heure = 			time[0];
-							if (lengthOf(heure) == 1) 	heure = "0"+heure;
-							minute = 			time[1];
-							if (lengthOf(minute) == 1) 	minute = "0"+minute;
-							monthnb = toString(monthnb);
-							if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
-							dh = 		year+monthnb+dayofmonth+"_"+heure+minute;
-						} // else
-						year = 		substring(dh, 0, 4);		yearb = 		parseInt(year);
-						month = 		substring(dh, 4, 6);		monthb = 	parseInt(month);
-						dayofmonth = 	substring(dh, 6, 8);		dayofmonthb = 	parseInt(dayofmonth);
-						heure  = 		substring(dh, 9, 11);		heureb = 	parseInt(heure);
-						minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
-						dur = 		monthdur[month];			durb = 		parseInt(dur);
-						timelog =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
-						// ------------------- Choix du plus proche, boucle sur les background -----------------------------
-						diftimemax = 100000000000000000000000;
-						for (i=0; i<listaffdate.length ; i++) {		
-							imgback = 	listaffinv[i];
-							timeback = 	listaffdate[i];
-							timedif = abs(timeback - timelog);
-							if (timedif < diftimemax) {	diftimemax = timedif;	backimg = imgback;			} // if
-						} // for
-					} // if Background_process
 				} // for
-				if (scan == 0 && logvis == 1 && logout == 1 && logpid == 1 && loglut == 1) { 	logf = 1;								} // if
-				else if ( scan == 0 && logpid !=1 ) { 		print("LOG file  not completed  for image ",titrered," :  PID is missing."); 				} // else if
+				if (scan == 0 && logvis == 1 && logout == 1 && logpid == 1 && loglut == 1) { logf = 1;									} // if
+				else if ( scan == 0 && logpid !=1 ) { 		print("LOG file  not completed  for image ",titrered," :  PID is missing."); 					} // else if
 				else if ( scan == 0 && logaut == 1 && logout == 0) { 	print("LOG file  not completed  for image ",titrered," :  Scanning section is missing."); 	} // if
 				else if (logvis == 0) { print("LOG file  not completed  for image ",titrered);		         								} // else
 				else { 		print("LOG : other solution");														} // else
-			} // if
-			//----------------------- Fichier PID et donnees TAG ----------------------------------------------------
-			if (File.exists(chemwork+titrered +"_dat1.pid")) { 
-				print("Existence_d'un_fichier_dat1_pour_l'image= ",titrered); 
-				//----------------------- Recherche de l'existence de donnees TAG dans le fichier des mesures
-				open(chemwork+"\\"+titrered+"_dat1.pid");
-				wait(500);
-				data = getInfo();
-				pid = split(data,"\n");
-				//-----------------Recherche DATA section--------------------------
-				for (i=0; i<pid.length ; i++) {	ctrl1 = indexOf(pid[i],"[Data]");
-					if (ctrl1>=0) deb=i+1;
-				} // for
-				//------------------Detection de la colonne pour le champ tag -------------
-				coltag = 0;
-				a= replace(pid[deb],";"," ");
-				entete = split(a,"\ ");
-				for (i=0; i<entete.length ; i++) {	v = entete[i];
-					if (v=="Tag") { 	coltag = i;			} //if
-				} // for
-				if (coltag>0) { print("TAG"); 	tag = 1;		} // if
-				selectWindow(titrered+"_dat1.pid");
+				if (isOpen("Log")) {		selectWindow("Log");	run("Close");			} // if
+				openlog = chemscan + titrered + "_log.txt";
+				open(openlog);
+				logdata = getInfo();
 				run("Close");
-			} // if
-			//--------------------------- Fichier Metadata ----------------------------------------------
-			if (File.exists(chemwork+titrered +"_meta.txt")) { print("Existence_d'un_fichier_METADATA_pour_l'image= ",titrered); 	meta = 1;	} // if
-		} // else chemwork
-		//------------------------- Recherche de l'existence du fichier ZIP dans _zip -----------------
-		filelist  = getFileList(chemzip);
-		nbfile = filelist.length;
-		for (i=0; i<nbfile ; i++) {
-			rr = filelist[i];
-			long = lengthOf(titre);
-			titrered = substring(titre, 0, long-4);
-			maskimg = titrered + ".zip";
-			if (rr==maskimg) { 
-				print("Existence_d'un_fichier_ZIP_pour_l'image= ",titrered); 		
-				zip = 1;		
-			} // if
-		} // for
-		//-------------------------- Si ZIP existe ON NE LE RECALCULE PAS pour economiser du temps ! -------------------
-		if (zip==1 ) { 	sauvezip =0; 			} // if
-		//------------------------- Recherche de l'existence du fichier PAR dans _scan -------------------------------------------
-		filelist  = getFileList(chemscan);
-		nbfile = filelist.length;
-		for (i=0; i<nbfile ; i++) {
-			rr = filelist[i];
-			long = lengthOf(titre);
-			titrered = substring(titre, 0, long-4);
-			maskimg = titrered + ".tif-zoo2.par";
-			if (rr==maskimg) { 
-				print("Existence_d'un_entete_PAR_pour_l'image= ",titrered); 		
-				par = 1;		
-			} // if
-		} // for
-		//-------------------------Si meta ou log pas trouves dans le work, recherche dans Zooscan_scan-------------------------
-		if (meta ==0 && File.exists(chemscan+titrered+"_meta.txt")) {
-			if (isOpen("Log")) {	selectWindow("Log");		run("Close");			} // if
-			openmeta = chemscan + titrered + "_meta.txt";
-			open(openmeta);
-			metadata = getInfo();
-			run("Close");
-			array = split(metadata,"\n");
-			for (i=0; i<array.length; i++) {	print(array[i]);		} // for
-			selectWindow("Log");
-			sauve = "save=" + chemwork+"\\"+titrered + "_meta.txt";
-			run("Text...",sauve);
-			run("Close");
-			meta = 1;
-		} // if
-		// ----------------------- Si LOG existe, alors on verifie que le contenu du LOG permet de ne pas retraiter le VIS ------------------
-		if (logf ==0 && File.exists(chemscan+titrered+"_log.txt")) {
-			if (isOpen("Log")) {		selectWindow("Log");	run("Close");			} // if
-			openlog = chemscan + titrered + "_log.txt";
-			open(openlog);
-			data = getInfo();
-			selectWindow(titrered+"_log.txt");
-			run('Close');
-			ligne = split(data,"\n");
-			for(h=0;h<ligne.length;h++) { 	
-				texte = ligne[h];
-				if (texte=="PID") { 			logpid = 1;		print("PID line available for image= ",titrered);			} // if texte
-				if (texte=="[LUT]") { 			loglut = 1;		print("[LUT] line available for image= ",titrered);		} // if texte
-				if (texte=="[Output]" || texte == "[Files]") { 	logout = 1;	print("Scanning information available for image= ",titrered); 	} // if texte
-				if (texte=="Vis_image_save= YES") { 	logvis = 1;		print("VIS save information available for image= ",titrered); 	} // if texte
-				// ---------------------- Determiner la ligne Author -------------------------------
-				posauthor = indexOf(texte,"Author=");
-				if (posauthor == 0) { 			logaut = 1;	print("VIS save information available for image= ",titrered); 		} // if texte
-				// ---------------------- Determiner le Background -------------------------------
-				if (Background_process == "recover") {	posback = indexOf(texte,"Background_correct_using=");
-					if (posback == 0)  { databack = split(texte,"\ ");	backimgrecup = databack[1]; 	backimg = backimgrecup;		} // if
+				array = split(logdata,"\n");
+				for (i=0; i<array.length; i++) {	print(array[i]);		} // for
+				selectWindow("Log");
+				sauve = "save=" + chemwork +"\\"+titrered + "_log.txt";
+				run("Text...",sauve);
+				run("Close");
+				logf = 1;
+			} // if logf
+			print("chemconfig= ",chemconfig);
+			print("chem= ",chem);
+			print("configfile= ",configfile);
+			
+			if (Background_process == "recover" && backimg == "none") 	Background_process = "last";
+			// -------------------------------- Recherche de l'image de fond si background = LAST -------------------------------------------------------------------------------------
+			if (Background_process == "last") {
+				dh = 	"0";
+				date = 	"0";
+				if (File.exists(chemraw+titrered +"_log.txt")) {
+					open(chemraw+titrered +"_log.txt");
+					data = getInfo();
+					selectWindow(titrered +"_log.txt");
+					run('Close');
+					ligne = split(data,"\n");
+					texte = ligne[2];
+					if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
+					else { date = File.dateLastModified(chemraw+"\\"+titrered+"_log.txt");					} // else
 				} // if
-			} // for
-			if (scan == 0 && logvis == 1 && logout == 1 && logpid == 1 && loglut == 1) { logf = 1;									} // if
-			else if ( scan == 0 && logpid !=1 ) { 		print("LOG file  not completed  for image ",titrered," :  PID is missing."); 					} // else if
-			else if ( scan == 0 && logaut == 1 && logout == 0) { 	print("LOG file  not completed  for image ",titrered," :  Scanning section is missing."); 	} // if
-			else if (logvis == 0) { print("LOG file  not completed  for image ",titrered);		         								} // else
-			else { 		print("LOG : other solution");														} // else
-			if (isOpen("Log")) {		selectWindow("Log");	run("Close");			} // if
-			openlog = chemscan + titrered + "_log.txt";
-			open(openlog);
-			logdata = getInfo();
-			run("Close");
-			array = split(logdata,"\n");
-			for (i=0; i<array.length; i++) {	print(array[i]);		} // for
-			selectWindow("Log");
-			sauve = "save=" + chemwork +"\\"+titrered + "_log.txt";
-			run("Text...",sauve);
-			run("Close");
-			logf = 1;
-		} // if logf
-		print("chemconfig= ",chemconfig);
-		print("chem= ",chem);
-		print("configfile= ",configfile);
-
-	if (Background_process == "recover" && backimg == "none") 	Background_process = "last";
-	// -------------------------------- Recherche de l'image de fond si background = LAST -------------------------------------------------------------------------------------
-	if (Background_process == "last") {
-		dh = 	"0";
-		date = 	"0";
-		if (File.exists(chemraw+titrered +"_log.txt")) {
-			open(chemraw+titrered +"_log.txt");
-			data = getInfo();
-			selectWindow(titrered +"_log.txt");
-			run('Close');
-			ligne = split(data,"\n");
-			texte = ligne[2];
-			if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
-			else { date = File.dateLastModified(chemraw+"\\"+titrered+"_log.txt");					} // else
-		} // if
-		else if (File.exists(chemscan+titrered +"_log.txt")) {
-			open(chemscan+titrered +"_log.txt");
-			data = getInfo();
-			selectWindow(titrered +"_log.txt");
-			run('Close');
-			ligne = split(data,"\n");
-			texte = ligne[2];
-			if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
-			else { date = File.dateLastModified(chemscan+"\\"+titrered+"_log.txt");					} // else
-		} // if
-		else {	open(chemwork+titrered +"_log.txt");
-			data = getInfo();
-			selectWindow(titrered +"_log.txt");
-			run('Close');
-			ligne = split(data,"\n");
-			texte = ligne[2];
-			if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
-			else { date = File.dateLastModified(chemwork+"\\"+titrered+"_log.txt");					} // else
-		} // if
-		// ------------------------- Si pas de date lue dans le fichier log, recherche dans la date d'enregidtrement ----------------
-		if (dh == "0" && date != "0") {
-			array = 			split(date," ");
-			dayofweek = 		array[0];
-			month = 			array[1];
-			t = 0;
-			while (t < 13) {
-				if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
-				t++;
-			} // while
-			monthnb = toString(monthnb);
-			if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
-			dayofmonth= 		array[2];
-			if (lengthOf(dayofmonth) == 1) 	dayofmonth = "0"+dayofmonth;
-			time =			array[3];
-			year =			array[5];
-			time = 			replace(time,":"," ");
-			time = 			split(time," ");
-			heure = 			time[0];
-			if (lengthOf(heure) == 1) 	heure = "0"+heure;
-			minute = 			time[1];
-			if (lengthOf(minute) == 1) 	minute = "0"+minute;
-			monthnb = toString(monthnb);
-			if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
-			dh = 		year+monthnb+dayofmonth+"_"+heure+minute;
-		} // if
-		if (dh == "0" && date == "0") {	getBoolean("No available logfile for the selected image.                \n \nPress Cancel to abort !                   ");	} // if
-		year = 		substring(dh, 0, 4);		yearb = 		parseInt(year);
-		month = 		substring(dh, 4, 6);		monthb = 	parseInt(month);
-		dayofmonth = 	substring(dh, 6, 8);		dayofmonthb = 	parseInt(dayofmonth);
-		heure  = 		substring(dh, 9, 11);		heureb = 	parseInt(heure);
-		minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
-		dur = 		monthdur[month];			durb = 		parseInt(dur);
-		timelog =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
-		// ------------------- Choix du plus proche, boucle sur les background -----------------------------
-		diftimemax = 100000000000000000000000;
-		for (i=0; i<listaffdate.length ; i++) {		
-			imgback = 	listaffinv[i];
-			timeback = 	listaffdate[i];
-			timedif = abs(timeback - timelog);
-			if (timedif < diftimemax) {	diftimemax = timedif;	backimg = imgback;			} // if
-		} // for
-	} // if Background_process
-
-		// ------------------ On ne recalcule pas la VIS --------------------------------
-		if (process == process2 ) {	
-			maskvis = 	false;
-			maskod = 	false;
-			savezip = 	false;
-			vis = 		1;
-			sep = 		0;
-		} // if
-	//	showMessage(titre+"     "+backimg+" sep= "+sep );
-		arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ maskpar +" "+chemscan+" "+chemwork1 +" "+savevig+" "+savezip+" "+maskod +" "+ident +" "+maskident +" "+vis+" "+maskvis+" "+scan+" "+yyy+" "+savetag+" "+savedoub+" "+backimg+" "+projfolder;
-		arg = runMacro("Zooscan_1m",arg);
-		arg = toString(arg);
-		l= lengthOf(arg);
-		if (l==1)  { showMessage("Error message  : Batch Image Process aborted  for file  "+titre+"    "); 	} // if
-		else {	showStatus("Waiting to release memory");
-			run("free memory");		wait(1000);
-			run("free memory");		wait(1000);
-			run("free memory");		wait(1000);
-			run("free memory");		wait(1000);	
-			if (isOpen("Log")) {	selectWindow("Log");	run("Close");		} // if
-		} // else
-	} // if arrêt process
+				else if (File.exists(chemscan+titrered +"_log.txt")) {
+					open(chemscan+titrered +"_log.txt");
+					data = getInfo();
+					selectWindow(titrered +"_log.txt");
+					run('Close');
+					ligne = split(data,"\n");
+					texte = ligne[2];
+					if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
+					else { date = File.dateLastModified(chemscan+"\\"+titrered+"_log.txt");					} // else
+				} // if
+				else {	open(chemwork+titrered +"_log.txt");
+					data = getInfo();
+					selectWindow(titrered +"_log.txt");
+					run('Close');
+					ligne = split(data,"\n");
+					texte = ligne[2];
+					if (startsWith(texte, "Scanning_date= ")) {	dat = split(texte,"\ ");		dh = dat[1];		} // if
+					else { date = File.dateLastModified(chemwork+"\\"+titrered+"_log.txt");					} // else
+				} // if
+				// ------------------------- Si pas de date lue dans le fichier log, recherche dans la date d'enregidtrement ----------------
+				if (dh == "0" && date != "0") {
+					array = 			split(date," ");
+					dayofweek = 		array[0];
+					month = 			array[1];
+					t = 0;
+					while (t < 13) {
+						if (month == monthlist[t]) {	monthnb = t;  dur = monthdur[t];	t = 13;		} // if
+						t++;
+					} // while
+					monthnb = toString(monthnb);
+					if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
+					dayofmonth= 		array[2];
+					if (lengthOf(dayofmonth) == 1) 	dayofmonth = "0"+dayofmonth;
+					time =			array[3];
+					year =			array[5];
+					time = 			replace(time,":"," ");
+					time = 			split(time," ");
+					heure = 			time[0];
+					if (lengthOf(heure) == 1) 	heure = "0"+heure;
+					minute = 			time[1];
+					if (lengthOf(minute) == 1) 	minute = "0"+minute;
+					monthnb = toString(monthnb);
+					if (lengthOf(monthnb) == 1) 	monthnb = "0"+monthnb;
+					dh = 		year+monthnb+dayofmonth+"_"+heure+minute;
+				} // if
+				if (dh == "0" && date == "0") {	getBoolean("No available logfile for the selected image.                \n \nPress Cancel to abort !                   ");	} // if
+				year = 		substring(dh, 0, 4);		yearb = 		parseInt(year);
+				month = 		substring(dh, 4, 6);		monthb = 	parseInt(month);
+				dayofmonth = 	substring(dh, 6, 8);		dayofmonthb = 	parseInt(dayofmonth);
+				heure  = 		substring(dh, 9, 11);		heureb = 	parseInt(heure);
+				minute = 		substring(dh, 11, 13);		minuteb = 	parseInt(minute);
+				dur = 		monthdur[month];			durb = 		parseInt(dur);
+				timelog =  	minuteb +heureb*60 + dayofmonthb*60*24 + durb*60*24 + yearb*365*60*24;
+				// ------------------- Choix du plus proche, boucle sur les background -----------------------------
+				diftimemax = 100000000000000000000000;
+				for (i=0; i<listaffdate.length ; i++) {		
+					imgback = 	listaffinv[i];
+					timeback = 	listaffdate[i];
+					timedif = abs(timeback - timelog);
+					if (timedif < diftimemax) {	diftimemax = timedif;	backimg = imgback;			} // if
+				} // for
+			} // if Background_process
+			
+			// ------------------ On ne recalcule pas la VIS --------------------------------
+			if (process == proces_from_work ) {	
+				maskvis = 	false;
+				maskod = 	false;
+				savezip = 	false;
+				vis = 		1;
+				sep = 		0;
+			} // if
+			//	showMessage(titre+"     "+backimg+" sep= "+sep );
+			arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ maskpar +" "+chemscan+" "+chemwork1 +" "+savevig+" "+savezip+" "+maskod +" "+ident +" "+maskident +" "+vis+" "+maskvis+" "+scan+" "+yyy+" "+savetag+" "+savedoub+" "+backimg+" "+projfolder;
+			arg = runMacro("Zooscan_1m",arg);
+			arg = toString(arg);
+			l= lengthOf(arg);
+			if (l==1)  { showMessage("Error message  : Batch Image Process aborted  for file  "+titre+"    "); 	} // if
+			else {	showStatus("Waiting to release memory");
+				run("free memory");		wait(1000);
+				run("free memory");		wait(1000);
+				run("free memory");		wait(1000);
+				run("free memory");		wait(1000);	
+				if (isOpen("Log")) {	selectWindow("Log");	run("Close");		} // if
+			} // else
+		} // if arrêt process
 	} // for k
 	// +++++++++++++++++++++++++++ FIN boucle  sur les fichiers +++++++++++++++++++++++++++++++++++++
 } // if
@@ -1536,5 +1543,3 @@ if (File.exists(text_stop)) {  showMessage("IMAGE Process stopped by operator !"
 if (File.exists(text_stop) == 1) {  run_stop = File.rename(text_stop,text_run);	} // if
 ret = arg;
 return ret;
-
-

@@ -1,0 +1,181 @@
+// -------------------------- Zooprocess_flowcam_image_zone_correction --------------------------
+version = "8.27";
+date = "2024/06/04";
+
+args = 	getArgument();
+arg = 	split(args," ");
+SampleId = 		arg[0];
+image =			arg[1];
+flowcam_1200x1920 = 	arg[2];
+capture_left = 		parseInt(arg[3]);
+left_lim = 		parseInt(arg[4]);
+capture_right = 	parseInt(arg[5]);
+right_lim = 		parseInt(arg[6]);
+capture_top = 		parseInt(arg[7]);
+capture_bottom = 	parseInt(arg[8]);
+capture_pixel_border = 	parseInt(arg[9]);
+zone_optimisation = 	parseInt(arg[10]);
+img_w =			parseInt(arg[11]);
+img_h = 		parseInt(arg[12]);
+sauvelog = 		arg[13];
+pathprocessed =		arg[14];
+
+print("----------------------------------");
+print("Checking image limits ");
+print("SampleId = "+SampleId);
+print("Image = "+image);
+print("----------------------------------");
+left_right_test = false;
+top_bottom_test = false;
+border_pixel = false;
+marging_left_right = 10;
+if (flowcam_1200x1920 == true) {
+	// ------------ Comparaison avec bordures détectées ------------------
+	print("flowcam_1200x1920 = true");
+	if (capture_left > left_lim+marging_left_right && capture_right < right_lim - marging_left_right) 	left_right_test = true;
+	if (capture_top < 3 && capture_bottom >= 1917)				top_bottom_test = true;
+	if (capture_pixel_border < 6)						border_pixel = true;
+}
+else if (img_w == 1024 && img_h == 768) {  
+	print("flowcam_1024x768 = true");	
+	if (capture_left < 3 && capture_right >= 1021) 			left_right_test = true;
+	if (capture_top < 3 && capture_bottom >= 766)			top_bottom_test = true;
+	if (capture_pixel_border < marging_left_right+1)		border_pixel = true;
+}
+else if (img_w == 1280 && img_h == 960) {
+	print("flowcam_1280x960 = true");
+	if (capture_left < 3 && capture_right >= 1277) 			left_right_test = true;
+	if (capture_top < 3 && capture_bottom >= 959)			top_bottom_test = true;
+	if (capture_pixel_border < marging_left_right+1)		border_pixel = true;
+}  
+print("AcceptableLeft = "+capture_left);
+print("Detected_left_lim = "+left_lim);
+print("AcceptableRight = "+capture_right);
+print("Detected_right_lim = "+right_lim);
+print("AcceptableTop = "+capture_top);
+print("AcceptableBottom = "+capture_bottom);
+print("----------------------------------");
+selectWindow("Log");
+run("Text...",sauvelog);
+
+// ---------------------- Image de contrôle ---------------------
+image_zone_correction = false;
+selectImage("Imageraw");
+run("Duplicate...", "title=Image_corrected");
+run("Colors...", "foreground=red background=white selection=red");
+run("Line Width...", "line=3");
+selectImage("Imageraw");
+makeRectangle(capture_left, capture_top, capture_right - capture_left, capture_bottom - capture_top);
+run("Draw");
+saveAs("jpg", pathprocessed+"Border_control_image.jpg");
+rename("Imageraw");
+print("The Border_control_image.jpg is saved in the "+SampleId+" folder.");
+
+// ----------------------- Calcul des limites recommandées --------------------
+capture_width = capture_right - capture_left;
+border_recom = round(((right_lim - left_lim) - (capture_right - capture_left)) / 2);
+capture_left_recom = left_lim + border_recom;
+capture_right_recom = capture_left_recom + capture_width;
+
+capture_left_optimized = left_lim + marging_left_right;
+capture_right_optimized = right_lim - marging_left_right;
+capture_width_optimized = capture_right_optimized - capture_left_optimized;
+
+capture_top_recom = 2;
+capture_bottom_recom = img_h - 2;
+
+// ----------------- ratio to correct image volume ---------------
+area_source = capture_width * (capture_bottom - capture_top);
+area_optimized = capture_width_optimized * (capture_bottom_recom - capture_top_recom);
+area_ratio = area_optimized/area_source;
+
+if (zone_optimisation == 2) {
+	// -------------- On applique la modif des limites pour le process ------------
+	print("----------------------------------------------------");
+	print("The process is done using an automatically optimized width and height.");
+	capture_left = capture_left_optimized;	
+	capture_right = capture_right_optimized;
+	print("AcceptableLeft (optimized) = "+capture_left);
+	print("AcceptableRight (optimized) = "+capture_right);
+	print("Original imaged width = "+capture_width);
+	print("Optimized imaged width = "+capture_width_optimized);	
+	capture_top = capture_top_recom;
+	capture_bottom = capture_bottom_recom;
+	print("AcceptableTop (optimized) = "+capture_top);
+	print("AcceptableBottom (optimized) = "+capture_bottom);
+	selectWindow("Log");
+	run("Text...",sauvelog);
+	// ---------------- Image corrected --------------------------
+	selectImage("Image_corrected");
+	capture_height = capture_bottom - capture_top;
+	makeRectangle(capture_left_optimized, capture_top, capture_width_optimized, capture_height);
+	run("Draw");
+	saveAs("jpg", pathprocessed+"Border_control_image_corrected.jpg");
+	rename("Image_corrected");
+	print("The Border_control_image_corrected.jpg is saved in the "+SampleId+" folder.");
+	print("----------------------------------------------------");
+	image_zone_correction = true;
+}
+else if (zone_optimisation == 0 && left_right_test == false) {
+	// ------------------ Cas non systématique ----------------------
+	print("TEST limits = the imaged area is too close to the limits of the cell");
+	if (capture_left <= left_lim + marging_left_right) { 	print("The source left captured limit is defined too close to the LEFT side of the cell.");	}
+	if (capture_right >= right_lim - marging_left_right) { 	print("The source right captured limit is defined too close to the RIGHT side of the cell.");	}	
+	if (capture_left_recom <= left_lim + marging_left_right) { 
+		area_ratio = 1;
+		print("The sample CANNOT be reprocessed because the VS settings were not OK and cannot be corrected");
+		aa = getBoolean("WARNING : \n \n"+profileraw + " / "+ SampleId + "\n \nThe width of captured zone was too large during the acquisition of the images by VS.\n \nA log file and a control image have been saved in the "+SampleId+" folder.\n \nThe error cannot be corrected easily by changing the values in the CTX and the summary files (except for Flowcam GURU people).\n \nThe analysis of this sample must thus be redone with the Flowcam after changing the imaged zone in VS.	\n \nPress CANCEL to abort the process of this sample.");	
+	}
+	else {	// -------------- The sample can be reprocessed ----------------------------
+		print("The sample may be re-processed providing that the CTX file from the "+ profileraw + "\nis corrected to change both the ''AcceptableLeft'' and ''AcceptableRigh'' parameters with :");
+		print(" - Calculated border = "+border_recom);
+		print(" - AcceptableLeft (corrected) = " + capture_left_recom);
+		print(" - AcceptableRigh (corrected) = " + capture_right_recom);
+		print("Do modify ONLY these two values if you edit the CTX file and want to try a re-process !");
+		print("You would otherwise get erroneous concentrations at the end of the classification process in EcoTAXA !");	
+		print("----------------------------------------------------");
+		selectWindow("Log");
+		run("Text...",sauvelog);
+		// ---------------- Visu zone corrigée ----------
+		selectImage("Imageraw");
+		capture_height = capture_bottom - capture_top;
+		makeRectangle(capture_left_recom, capture_top, capture_right_recom - capture_left_recom, capture_height);
+		run("Draw");
+//		aa = getBoolean("WARNING : \n \n"+profileraw + " / "+ SampleId + "\n \nThe captured zone was badly delimited during the acquisition of the images by VS.\n \nA log file and a control image have been saved in the "+SampleId+" folder.	\n \nWe recommend to first try to redo the process of the sample after correcting the settings in the CTX file of the sample. \nor we recommend to change the settings in VS and redo the analysis of the sample with the Flowcam, both according to the recommendations saved in the log file.\n \nPress CANCEL to abort the process of this sample.");		
+		zone_optimisation = getBoolean("WARNING : \n \n"+profileraw + " / "+ SampleId + "\n \nThe captured zone was badly delimited during the acquisition of the images by VS.\n \nA log file and a control image have been saved in the "+SampleId+" folder.	\n \nZooprocess can automatiquely apply the recommended settings indicated in the log file and continue the process (press YES) \n or \n you can try to redo the process of the sample after correcting the settings in the CTX file of the sample (raw folder). \n or \n you can change the settings in VS (using the settings recommended in the log file) and redo the analysis of the sample with the Flowcam.\n \nPress YES or CANCEL according to your choise.");
+	}
+}
+else {	area_ratio = 1;	}
+
+if (zone_optimisation == 1) {
+	// -------------- On applique la modif des limites pour le process ------------
+	print("----------------------------------------------------");
+	print("The process is done using automatically corrected limit values");
+	capture_left = capture_left_recom;
+	print("AcceptableLeft (corrected) = "+capture_left);
+	capture_right = capture_right_recom;
+	print("AcceptableRight (corrected) = "+capture_right);
+	print("AcceptableTop = "+capture_top);
+	print("AcceptableBottom = "+capture_bottom);
+	selectWindow("Log");
+	run("Text...",sauvelog);
+	// ---------------- Image corrected --------------------------
+	selectImage("Image_corrected");
+	capture_height = capture_bottom - capture_top;
+	makeRectangle(capture_left, capture_top, capture_right - capture_left, capture_height);
+	run("Draw");
+	saveAs("jpg", pathprocessed+"Border_control_image_corrected.jpg");
+	rename("Image_corrected");
+	print("The Border_control_image_corrected.jpg is saved in the "+SampleId+" folder.");
+	print("----------------------------------------------------");
+	image_zone_correction = true;
+}
+
+selectImage("Image_corrected");
+close();
+selectImage("Imageraw");
+close();
+
+// ----------------------------- FIN ----------------------------------------------
+ret = "ret "+image_zone_correction+" "+capture_left+" "+left_lim+" "+capture_right+" "+right_lim+" "+capture_top+" "+capture_bottom+" "+capture_pixel_border+" "+area_ratio;
+return ret;

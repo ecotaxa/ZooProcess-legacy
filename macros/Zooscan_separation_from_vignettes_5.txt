@@ -4,8 +4,11 @@
 // On doit tout d'abord faire un traitement avec la detection des doublons
 // On fait tourner cette routine sur la partie _1 de l'image en premier
 // Lorsque l'on traite la frame _2, on cherche le masque de la frame _1 et on recopie dans celui de la frame _2 la partie superposee.
-version = "5.08";
-date = "2008/10/17";
+// scanner
+
+version = "8.03";
+date = "2021/11/07";
+
 for (i=0; i<4; i++)	{	run("free memory");		wait(1000);	} // for
 
 args = getArgument();
@@ -36,7 +39,7 @@ if (File.exists(optionfile)) {	open(optionfile);
 } // if
 
 outlines = 0;	sep = 0;		testout = 0;	param = 1;	flag=0;		maximum = 0;		tag = 0;
-Hardware = "Perfection2450-Flatbed";
+scanner = "Perfection2450";
 PreviewXOffset= 0;		PreviewYOffset= 0;	XOffset = 0;	XSpacing =0;		YOffset = 0;		YSize = 0;	reduction = 1;
 
 //-----------------Lecture fichier de configuration---------------------------------------------------
@@ -249,11 +252,11 @@ while (check == 0) {
 		if (ctrl1>=0) { Deb=i+1;							} // if
 		ctrl2 = indexOf(pid[i],"Resolution");
 		if (ctrl2==0) { texte = pid[i];	res = split(texte,"\ ");		resolution = res[1];		} // if
-		//-------------------------------Type Hardware----------------
+		//-------------------------------Type scanner----------------
 		champ = pid[i];
 		// Conversion des mesures faites pour 4800 dpi par VUESCAN !
-		pos = indexOf(champ,"[Input-");
-		if (pos>=0) { 	fin = lastIndexOf(champ,"]");		Hardware= substring(champ,pos+7,fin);		} // if
+		pos = indexOf(champ,"[Crop-");
+		if (pos>=0) { 	aa = replace(champ,"-"," ");	info = split(aa,"\ ");	scanner= info[1];		} // if
 		posr = indexOf(champ,"TIFFSizeReduction");
 		if (posr>=0 ) {	deb= indexOf(champ,"=");		reduction= substring(champ,deb+1,deb+2);	reduction = parseInt(reduction);	} // if
 		//-------------------------------Unite----------------
@@ -261,13 +264,13 @@ while (check == 0) {
 		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	Unit = parseInt(val);	} // if
 	} // for
 	for (i=0; i<Deb; i++) {		champ = pid[i];
-		if (Unit==0 && (Hardware == "Perfection4990-Flatbed" || Hardware == "Perfection4490-Flatbed")) 	unit= "pixel";
+		if (Unit==0 && (scanner == "Perfection4990" || scanner == "Perfection4490")) 	unit= "pixel";
 		//-------------------------------Unite----------------
 		pos = indexOf(champ,"AutoOffset");
 		if (pos>=0) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	AutoOffset = parseInt(val);	} // if
 		//----------------- PreviewXOffset ----------------
 		pos1 = indexOf(champ,"PreviewXOffset");
-		if (pos1>=0 ) { 	deb= indexOf(champ,"=");		long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
+		if (pos1>=0 ) { 	deb= indexOf(champ,"=");	long= lengthOf(champ);	val = substring(champ,deb+1,long);	PreviewXOffset=parseInt(val);	} // if	
 		//----------------- X Offset ----------------
 		pos1 = indexOf(champ,"XOffset");
 		if (pos1>=0 ) {	deb= indexOf(champ,"=");
@@ -297,15 +300,12 @@ while (check == 0) {
 	} // for
 	resolution = toString(resolution);
 	// --------------------------- Biotom - Hydroptic v1 ----------------------------------------------
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4990-Flatbed" && resolution=="300" ) { reduction = 16; };
-	// -------------------------- Hydroptic v2 -----------------------------------------------------------
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="2400" ) { reduction = 2; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="1200" ) { reduction = 4; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="600" ) { reduction = 8; };
-	if (Hardware== "Perfection4490-Flatbed" && resolution=="300" ) { reduction = 16; };
+	if (scanner== "Perfection4990" || scanner== "Perfection4490" ){
+		// ------------------- Reduction --------------------------------
+		resolution = toString(resolution);		
+		reduction = runMacro("Zooscan_define_reduction.txt",scanner+" "+resolution);
+		reduction = parseInt(reduction);
+	}
 	// --------------------Correction du RATIO car ERREUR VUESCAN ------------------------------
 	PreviewXOffset= PreviewXOffset/reduction;
 	PreviewYOffset= PreviewYOffset/reduction;

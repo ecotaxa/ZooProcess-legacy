@@ -1,0 +1,70 @@
+// ----------------------- Zooprocess_flowcam_make_vignette ---------------
+version = "8.27";
+date = "2024/06/01";
+requires("1.41o");
+
+args = getArgument();
+arg = split(args," ");
+
+bx_vignette = 		parseInt(arg[0]);
+by_vignette = 		parseInt(arg[1]);
+width_vignette = 	parseInt(arg[2]);
+heigth_vignette= 	parseInt(arg[3]);
+longline =		parseInt(arg[4]);
+echelle_micro= 		toString(arg[5]);
+no_vig= 		parseInt(arg[6]);
+rgb_process=		arg[7];
+gamma=			toString(arg[8]);
+echelle_micro=		parseInt(arg[9]);
+no_image_texte=		arg[10];
+upper=			arg[11];
+
+added_width = 26;
+added_footer = 31;
+echelletext = 	toString(echelle_micro)+" µm";
+
+// ----------------------- Creation de la vignette --------------------------
+// ----------- Largeur pour scale ------------
+width_vignette_cor =	maxOf(width_vignette,longline);
+
+// ----------- Bordure blanche ----------
+width_vignette_cor_white = width_vignette_cor + added_width;
+Hfinal = heigth_vignette + added_width;
+text_larg_cor = "width="+width_vignette_cor_white+" height="+Hfinal+" position=Center";
+
+// ----------- Footer legende -----------
+heigth_vignette_cor = Hfinal + added_footer;
+text_larg_cor_footer = "width="+width_vignette_cor_white+" height="+heigth_vignette_cor+" position=Top-Center";
+
+//------------------- Vignette ------------------------------------------
+if (rgb_process == "yes") {	
+	selectImage("Image_couleur");	
+	makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
+	run("Duplicate...", "title=vignette_rgb");
+	ret = "vignette_rgb";
+	run("Colors...", "foreground=black background=white selection=red");
+}
+else {	// --------- Gamma -------------------------------
+	//				selectImage("vignette_grey_cleaned");
+	selectImage("vignette_grey");
+	run("Gamma...", "value="+gamma);
+	ret = "vignette_grey";
+	setColor(0, 0, 0);
+	//					getBoolean("Vignette cleaned \nFond = "+isOpen("Fond"));
+}	
+
+// ----------- Nouvelles dimensions -----			
+run("Canvas Size...", text_larg_cor);
+run("Canvas Size...", text_larg_cor_footer);
+
+// ------------------ Fond gris --------------
+if (ret == "vignette_grey") {	run("Max...", "value="+upper);	}
+
+// ----------- Legendes -----------------
+makeLine(added_width/2,Hfinal+added_width/2,added_width/2+longline,Hfinal+added_width/2);		run("Fill");
+makeLine(added_width/2,Hfinal+added_width/2,added_width/2,Hfinal+5);					run("Fill");
+makeLine(added_width/2+longline,Hfinal+added_width/2,added_width/2+longline,Hfinal+5);			run("Fill");
+drawString(echelletext+" "+no_image_texte,added_width/2,heigth_vignette_cor-3);
+
+// ----------------------------- FIN ----------------------------------------------
+return ret;

@@ -34,6 +34,8 @@ collabel = 0;	colbx = 0;		colby = 0;
 colwidth = 0;	colheight = 0;	colno = 0;
 path_work_sample = chemwork + titrered+"\\";	
 titre = "NOK";
+footer = "31";
+
 if (File.exists(path_work_sample)) {
 	if (isOpen("Log")) {		selectWindow("Log"); 	run("Close");					} // if
 //	aa = getBoolean("WORK SAMPLE : "+path_work_sample);
@@ -57,11 +59,15 @@ if (File.exists(path_work_sample)) {
 		//-----------------Recherche DATA section--------------------------
 		for (i=0; i<pid.length ; i++) {	ctrl1 = indexOf(pid[i],"[Data]");
 			if (ctrl1>=0) deb=i+1;
-			if (startsWith(pid[i],"Resolution")) { data = replace(pid[i],"="," "); data = replace(data,"  "," "); data = split(data,"\ "); resolution = parseInt(data[1]);	}
+			if (startsWith(pid[i],"Resolution")) 	{ data = replace(pid[i],"="," "); data = replace(data,"  "," "); data = split(data,"\ "); resolution = parseInt(data[1]);	}
+			if (startsWith(pid[i],"Threshold"))	{ data = replace(pid[i],"="," "); data = replace(data,"  "," "); data = split(data,"\ "); upper = parseInt(data[1]);	}
 		} // for
 		// ----------------- Resolution ---------------------------------------------
-		if (resolution == 300) {	longline = 5;		} // if
+		if (resolution == 300) {	longline = 2;		} // if
+		
 		vignettetext = toString(longline);
+		longline = 	toString(longline * resolution/25.4);
+		
 		//------------------Detection des N° de colonnes pour les champs-------------
 		coltag = 0;
 		a= replace(pid[deb],";"," ");
@@ -86,10 +92,12 @@ if (File.exists(path_work_sample)) {
 	setColor(0);
 	selectImage(titre);
 	setVoxelSize(1,1,1,"pixel");
+	image_name = titre;
+	
 //	aa = getBoolean("Image OPEN : "+titre);
 	// ------------------ Boucle sur les vignettes ----------------------------------
 	for (i= deb+1 ; i<pid.length ; i++) {	
-		val = replace(pid[i],";"," ");
+/*		val = replace(pid[i],";"," ");
 		data = split(val,"\ ");
 		No = data[colno];
 		titrered = data[collabel];
@@ -104,11 +112,34 @@ if (File.exists(path_work_sample)) {
 		if (l==1)  { 	showMessage("Error message : "+No+" vignette extraction failed                       "); 		} // if
 		selectImage(titrered+"_"+No);
 		close();	
+*/
+		// Data
+		val = replace(pid[i],";"," ");
+		data = split(val,"\ ");
+		
+		no = data[colno];
+		// nom vignette à sauver
+		nomvignette =titrered+"_"+no;
+		
+		// Dimensions
+		L_vignette = data[colwidth];;
+		H_vignette = data[colheight];	
+		Bx = data[colbx];
+		By = data[colby];
+		area = data[colarea];
+		
+		// --------------- Process UNE vignette --------------------
+		argum = path_work_sample+" "+nomvignette+" "+Bx+" "+By+" "+footer+" "+longline+" "+x1+" "+L_vignette+" "+H_vignette+" "+image_name+" "+upper+" "+area+" "+vignettetext;
+		ret = runMacro("Zooscan_vignettes_extract_unique",argum);
+		flag=toString(ret);
+		if (lengthOf(flag) ==1)  { 	showMessage("Error message : "+nomvignette+" vignette extraction failed.        "); 		} // if
+		
+		//----------------------------Suivi de la progression --------------
+		showProgress(i/(pid.length - deb));
 	}	
 }
 // ----------------- Fermeture de toutes les images par prudence -----------------------
 if (isOpen(titre)==true) {	selectImage(titre);	close();	}	
-//	while (nImages()>0) {selectImage(nImages());  		close();		} // while
 if (titre == "NOK") aa = getBoolean(titrered+"  vis image could not be found to extract the vignettes. \n \nPress YES to continue and check the dataset after the end of the process !");
 ret = titrered;
 return ret;

@@ -1,7 +1,9 @@
 //------------------------Zooscan_convert_main-------------
-version = "7.10";
-date = "2012/05/28";
+version = "7.44";
+date = "2021/08/27";
 requires("1.41o");
+
+// LOGS
 
 arg = 		getArgument(); 
 array = 		split(arg," ");
@@ -296,10 +298,11 @@ for (h=0 ; h<n ; h++) {
 			print("Date= ",dateheure);
 			print("Image = "+titrered);
 			print("Image CONVERTED");
-			selectWindow("Log");
-			sauve = "save=" + chemtemp +"Suivi_log.txt";
-			run("Text...",sauve);
-			run("Close");
+			if (isOpen("Log")) {	selectWindow("Log");
+				sauve = "save=" + chemtemp +"Suivi_log.txt";
+				run("Text...",sauve);	run("Close");
+			}
+			else {	showMessage("Log error in Zooscan_convert_main.txt for "+"Suivi_log.txt");	}
 			rettrtbatch = rettrtbatch+" "+titrered;
 		} // process_opt
 		long =		lengthOf(rawfile);
@@ -393,10 +396,11 @@ for (h=0 ; h<n ; h++) {
 					print("Order= ",sens);	print("Grey_mode_auto= ",adjust);	print("OD_range= ",odrange);	
 					print("Ratio= ",ratio);		
 					print("Median_level= ",median);
-					print("Mean_level= ",mean);
-					sauve = "save=" + chemwork+"_"+m+"\\" + titrered + "_"+m+"_log.txt";
-					selectWindow("Log");
-					run("Text...",sauve);
+					print("Mean_level= ",mean);					
+					if (isOpen("Log")) {	sauve = "save=" + chemwork+"_"+m+"\\" + titrered + "_"+m+"_log.txt";
+						selectWindow("Log");		run("Text...",sauve);	
+					}
+					else {	showMessage("Log error in Zooscan_convert_main.txt for "+chemwork+"_"+m+"\\" + titrered + "_"+m+"_log.txt");	}
 				} // if
 				// ------------ META -------------------------------
 				//	if (File.exists(chemwork+"_"+m+"\\" + titrered + "_"+m+"_meta.txt") == false || skip_opt == "0") {

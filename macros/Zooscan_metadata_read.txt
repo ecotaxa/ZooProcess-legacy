@@ -51,7 +51,7 @@ Zmax = array[16]; 		Zmin = array[17]; 		Vol = array[18]; 		FracId = array[19];
 Fracmin = array[20]; 		Fracsup = array[21]; 		Fracnb = array[22]; 		Observation = array[23];
 Code= array[24];		SubMethod= array[25]; 		CellPart= array[26];		Replicates= array[27]; 
 VolIni= array[28]; 		VolPrec= array[29]; 		
-if (array.length > 29 ) { 	
+if (array.length > 30 ) { 	
 	sample_comment = array[30];
 	vol_qc = array[31];			depth_qc = array[32];		sample_qc = array[33]; 			barcode = array[34];
 	latitude_end = array[35];		longitude_end = array[36];	net_duration = array[37];		ship_speed_knots = array[38];
