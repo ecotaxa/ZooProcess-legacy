@@ -4,43 +4,52 @@ date = "2024/10/10";
 
 // ------------------ Arguments ------------------
 //path = "C:\\flowcam_creocean_namibie_afrique_du_sud_2022_sn476";
-path = 	getArgument();
+path = getArgument();
 
-path_meta = 	path + "\\meta\\";
-path_results = 	path + "\\PID_process\\Pid_results\\";
-path_work = 	path+"\\work\\"
+path_meta = path + "\\meta\\";
+path_results = path + "\\PID_process\\Pid_results\\";
+path_work = path + "\\work\\"
 
 //--------------- Selection des fichiers META si plus d'un -------------------
-filelist  = 	getFileList(path+"\\meta\\");
+filelist = getFileList(path + "\\meta\\");
 j = 0;
 list = newArray(filelist.length);
-for (i=0; i<filelist.length ; i++) {	
-	ctrl = endsWith(filelist[i],".txt");
-	ctrl1 = startsWith(filelist[i],"Flowcam_header_");
-	ctrl2 = startsWith(filelist[i],"Generic_header_");
-	if (ctrl == 1 && (ctrl1 == 1 || ctrl2 == 1))	{rr = filelist[i]; 	list[j] = rr;	j++;		} // if
+for (i = 0; i < filelist.length; i++) {
+    ctrl = endsWith(filelist[i], ".txt");
+    ctrl1 = startsWith(filelist[i], "Flowcam_header_");
+    ctrl2 = startsWith(filelist[i], "Generic_header_");
+    if (ctrl == 1 && (ctrl1 == 1 || ctrl2 == 1)) {
+        rr = filelist[i];
+        list[j] = rr;
+        j++;
+    } // if
 } // for	
-if (j==0) { 
-	getBoolean("No header file in the "+path+"\\meta folder of the project. \n \nPress YES to end this process and fill metadata then !          ");
+if (j == 0) {
+    getBoolean("No header file in the " + path + "\\meta folder of the project. \n \nPress YES to end this process and fill metadata then !          ");
 } //
-else if (j==1) {
-	// ----------------- Un seul fichier selectionne tout seul ----------------------------------------
-	listaff = newArray(j);
-	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
-	metafile = listaff[0];	
-} 
-else { 	// ---------------------Choix manuel du fichier meta -------------------------------------
-	listaff = newArray(j);
-	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
-	Dialog.create("METADATA FILE          version : "+version);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	Dialog.addMessage("Project :  "+path);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	message = "SELECT Metadata FILE             " ;
-	Dialog.addMessage(message);
-	Dialog.addChoice("       ", listaff);
-	Dialog.show();
-	metafile = Dialog.getChoice();
+else if (j == 1) {
+    // ----------------- Un seul fichier selectionne tout seul ----------------------------------------
+    listaff = newArray(j);
+    for (i = 0; i < listaff.length; i++) {
+        rr = list[i];
+        listaff[i] = rr;
+    } // for
+    metafile = listaff[0];
+} else { // ---------------------Choix manuel du fichier meta -------------------------------------
+    listaff = newArray(j);
+    for (i = 0; i < listaff.length; i++) {
+        rr = list[i];
+        listaff[i] = rr;
+    } // for
+    Dialog.create("METADATA FILE          version : " + version);
+    Dialog.addMessage("--------------------------------------------------------------------------------   ");
+    Dialog.addMessage("Project :  " + path);
+    Dialog.addMessage("--------------------------------------------------------------------------------   ");
+    message = "SELECT Metadata FILE             ";
+    Dialog.addMessage(message);
+    Dialog.addChoice("       ", listaff);
+    Dialog.show();
+    metafile = Dialog.getChoice();
 } // else
 
 // ---------------------- Ouverture META ---------------------------------------------------------------
@@ -48,105 +57,122 @@ open(path_meta + metafile);
 wait(100);
 metadata = getInfo();
 run('Close');
-if (indexOf(metadata,";") < 0 ) {	aa = getBoolean("The "+metafile+" has been modified outside of Zooprocess and is now TAB separated instead of dot-coma. \n \nPress Cancel to abort. \nCorrect your file\nRestart the process !");	}
-array = split(metadata,"\n");
+if (indexOf(metadata, ";") < 0) {
+    aa = getBoolean("The " + metafile + " has been modified outside of Zooprocess and is now TAB separated instead of dot-coma. \n \nPress Cancel to abort. \nCorrect your file\nRestart the process !");
+}
+array = split(metadata, "\n");
 
 
 // ================= Boucle sur les PID des WORK =================
-if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-warn_OK = 	"Reconstructed sample : \n \n ";
-warn_NOK = 	"Samples not reconstructed (missing original PID or measurement file) : \n \n ";
-warn_split = 	"Samples not reconstructed (TSV file splited) : \n \n ";
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
+warn_OK = "Reconstructed sample : \n \n ";
+warn_NOK = "Samples not reconstructed (missing original PID or measurement file) : \n \n ";
+warn_split = "Samples not reconstructed (TSV file splited) : \n \n ";
 
-for (m=1; m<array.length ; m++) { 
-	// ----------------- Nom de fichier ---------------------------------------
-	ligne = replace(array[m],";"," ");
-	ligne = split(ligne,"\ ");
-	SampleId =	ligne[3];
-	
-	// ------------------ Si PID et measurements existent ------------------
-	pathprofile = 	path_work + SampleId+"\\";
-	path_pid = 	pathprofile + "\\"+SampleId+"_dat1.pid";
-	path_meas = 	pathprofile + "\\"+SampleId+"_measurements.txt";
-	path_pid_results = 	 path_results + SampleId+"_dat1.pid";
-	path_tsv_splitted_high = pathprofile + "\\ecotaxa_"+SampleId+"_high.tsv";
-	path_tsv_splitted_low = pathprofile + "\\ecotaxa_"+SampleId+"_low.tsv";
-	
-	// ------------------ Si TSV splitted ----------------------------------
-	if (File.exists(path_tsv_splitted_high) || File.exists(path_tsv_splitted_low) ) { 
-		warn_split = warn_split + SampleId + "\n ";
-	}
-	
-	else if (File.exists(path_pid) && File.exists(path_meas)) {
-		// ------------------ Ouverture PID et lecture jusque [Data] ------------------
-		open(path_pid);
-		wait(200);				
-		pid_all_text = getInfo();
-		run("Close");
-		pid_data = split(pid_all_text,"\n");
-		p = 0;
-		data_line = 0;
-		while (p < pid_data.length) {
-			datatxt = pid_data[p];
-			if (datatxt == "[Data]") {	data_line = p; p = pid_data.length;	}
-			p++;
-		} // for
-		
-		// ------------------ Sauvegarde copie du PID ------------------
-		if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
-		print(pid_all_text);
-		dateheurestart =	runMacro("Zooscan_get_time_5");
-		sauvetxt = "save=" + pathprofile + SampleId +"_before_reconstruction_"+dateheurestart+"_dat1.pid";	
-		selectWindow("Log");
-		run("Text...",sauvetxt);
-		
-		// ------------------ Ouverture measurements ------------------
-		open(path_meas);
-		wait(100);
-		measurements = getInfo();
-		run("Close");
-		measurements = split(measurements,"\n");
-		
-		// ------------------ Ecriture section LOG ------------------
-		if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if       
-		
-		for (p = 0; p < data_line ; p++) {
-			to_print = replace(pid_data[p],"=  ","= ");
-			to_print = replace(pid_data[p],"Fluid Volume Imaged","Fluid_Volume_Imaged");
-			print(to_print);	
-		}		
-		
-		// ------------------ Ajout section [Data] ------------------
-		print("[Data]");
-		for (i = 0 ; i < measurements.length ; i++) {
-			line = measurements[i];
-			if (i == 0) { line = "!Item" + line;		}
-			line = replace(line," \t","\t");
-			line = replace(line,"\t",";");
-			print(line);
-		}
-		
-		// ------------------ Enregistrement dans WORK ------------------
-		selectWindow("Log");
-		sauvepid = "save=" + path_pid;			
-		run("Text...",sauvepid);		
-		
-		// ------------------ Enregistrement dans PID_results ------------------
-		selectWindow("Log");
-		sauvepid = "save=" + path_pid_results;			
-		run("Text...",sauvepid);
-		
-		// ----------------- PID to Ecotaxa ----------------------------------------
-		link = "http://piqv.imev-mer.fr//";
-		ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathprofile+" "+SampleId+"_dat1.pid pid false true new "+link);
-		flag=toString(ret);
-		l= lengthOf(flag);
-		if (l==1)  { 	showMessage("Error message : ''Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic'' process aborted for "+SampleId+".                       "); 	} // if
-		
-		// ----------------- Message updated -------------------------------
-		warn_OK = warn_OK + SampleId + "\n ";
-	}
-	else {	warn_NOK = warn_NOK + SampleId + "\n ";	}
+for (m = 1; m < array.length; m++) {
+    // ----------------- Nom de fichier ---------------------------------------
+    ligne = replace(array[m], ";", " ");
+    ligne = split(ligne, "\ ");
+    SampleId = ligne[3];
+
+    // ------------------ Si PID et measurements existent ------------------
+    pathprofile = path_work + SampleId + "\\";
+    path_pid = pathprofile + "\\" + SampleId + "_dat1.pid";
+    path_meas = pathprofile + "\\" + SampleId + "_measurements.txt";
+    path_pid_results = path_results + SampleId + "_dat1.pid";
+    path_tsv_splitted_high = pathprofile + "\\ecotaxa_" + SampleId + "_high.tsv";
+    path_tsv_splitted_low = pathprofile + "\\ecotaxa_" + SampleId + "_low.tsv";
+
+    // ------------------ Si TSV splitted ----------------------------------
+    if (File.exists(path_tsv_splitted_high) || File.exists(path_tsv_splitted_low)) {
+        warn_split = warn_split + SampleId + "\n ";
+    } else if (File.exists(path_pid) && File.exists(path_meas)) {
+        // ------------------ Ouverture PID et lecture jusque [Data] ------------------
+        open(path_pid);
+        wait(200);
+        pid_all_text = getInfo();
+        run("Close");
+        pid_data = split(pid_all_text, "\n");
+        p = 0;
+        data_line = 0;
+        while (p < pid_data.length) {
+            datatxt = pid_data[p];
+            if (datatxt == "[Data]") {
+                data_line = p;
+                p = pid_data.length;
+            }
+            p++;
+        } // for
+
+        // ------------------ Sauvegarde copie du PID ------------------
+        if (isOpen("Log")) {
+            selectWindow("Log");
+            run("Close");
+        } // if
+        print(pid_all_text);
+        dateheurestart = runMacro("Zooscan_get_time_5");
+        sauvetxt = "save=" + pathprofile + SampleId + "_before_reconstruction_" + dateheurestart + "_dat1.pid";
+        selectWindow("Log");
+        run("Text...", sauvetxt);
+
+        // ------------------ Ouverture measurements ------------------
+        open(path_meas);
+        wait(100);
+        measurements = getInfo();
+        run("Close");
+        measurements = split(measurements, "\n");
+
+        // ------------------ Ecriture section LOG ------------------
+        if (isOpen("Log")) {
+            selectWindow("Log");
+            run("Close");
+        } // if       
+
+        for (p = 0; p < data_line; p++) {
+            to_print = replace(pid_data[p], "=  ", "= ");
+            to_print = replace(pid_data[p], "Fluid Volume Imaged", "Fluid_Volume_Imaged");
+            print(to_print);
+        }
+
+        // ------------------ Ajout section [Data] ------------------
+        print("[Data]");
+        for (i = 0; i < measurements.length; i++) {
+            line = measurements[i];
+            if (i == 0) {
+                line = "!Item" + line;
+            }
+            line = replace(line, " \t", "\t");
+            line = replace(line, "\t", ";");
+            print(line);
+        }
+
+        // ------------------ Enregistrement dans WORK ------------------
+        selectWindow("Log");
+        sauvepid = "save=" + path_pid;
+        run("Text...", sauvepid);
+
+        // ------------------ Enregistrement dans PID_results ------------------
+        selectWindow("Log");
+        sauvepid = "save=" + path_pid_results;
+        run("Text...", sauvepid);
+
+        // ----------------- PID to Ecotaxa ----------------------------------------
+        link = "http://piqv.imev-mer.fr//";
+        ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic", path + " " + pathprofile + " " + SampleId + "_dat1.pid pid false true new " + link);
+        flag = toString(ret);
+        l = lengthOf(flag);
+        if (l == 1) {
+            showMessage("Error message : ''Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic'' process aborted for " + SampleId + ".                       ");
+        } // if
+
+        // ----------------- Message updated -------------------------------
+        warn_OK = warn_OK + SampleId + "\n ";
+    } else {
+        warn_NOK = warn_NOK + SampleId + "\n ";
+    }
 }
 showMessage("NORMAL END of PID reconstruction : \n \n " + warn_OK + "\n------------------------------------------ \n" + warn_NOK + "\n------------------------------------------ \n" + warn_split);
 // ------------------ FIN ------------------

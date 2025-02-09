@@ -4,35 +4,36 @@ date = "2024/09/23";
 vuescan_default = "9.7.67";
 
 // --------------------- Recherche du logiciel vuescan ------------------------------------------
-chemvue= "unknown";
+chemvue = "unknown";
 
 
 
-mat = newArray("C:\\Program Files\\Vuescan\\","C:\\Vuescan\\","D:\\Vuescan\\","E:\\Vuescan\\","F:\\Vuescan\\","G:\\Vuescan\\","H:\\Vuescan\\");
-vuescan = 	"unknown";     
-i= 0;
-while (i<mat.length)  { 
-	if (File.exists(mat[i]) == true ) { 		
-		if (File.exists(mat[i]+"\\"+"vuescan.exe") == true ){
-			chemvue = mat[i];		i=mat.length+1;	
-			// --------- Vérification de la version -----------
-			if (File.exists(chemvue+"\\vuescan.log")) {
-				open(chemvue+"\\vuescan.log");
-				wait(100);
-				data = getInfo();
-				selectWindow("vuescan.log");
-				run("Close");
-				if (indexOf(data,"9.7.67") > 1) 	vuescan = "9.7.67";	
-			}				
-		}
-		
-	} // if
-	i++;
+mat = newArray("C:\\Program Files\\Vuescan\\", "C:\\Vuescan\\", "D:\\Vuescan\\", "E:\\Vuescan\\", "F:\\Vuescan\\", "G:\\Vuescan\\", "H:\\Vuescan\\");
+vuescan = "unknown";
+i = 0;
+while (i < mat.length) {
+    if (File.exists(mat[i]) == true) {
+        if (File.exists(mat[i] + "\\" + "vuescan.exe") == true) {
+            chemvue = mat[i];
+            i = mat.length + 1;
+            // --------- Vï¿½rification de la version -----------
+            if (File.exists(chemvue + "\\vuescan.log")) {
+                open(chemvue + "\\vuescan.log");
+                wait(100);
+                data = getInfo();
+                selectWindow("vuescan.log");
+                run("Close");
+                if (indexOf(data, "9.7.67") > 1) vuescan = "9.7.67";
+            }
+        }
+
+    } // if
+    i++;
 } // while...
 //	if (vuescan == "unknown") showMessage("Vuescan "+vuescan_default+" is not properly installed on your computer. \nVuescan and its log file must be installed in a folder placed on the root of a drive.");
 
 // --------------------- FIN -----------------------------------
-chemvue = replace(chemvue," ","_");
+chemvue = replace(chemvue, " ", "_");
 //aa = getBoolean(chemvue);
 ret = vuescan + " " + chemvue;
 return ret;

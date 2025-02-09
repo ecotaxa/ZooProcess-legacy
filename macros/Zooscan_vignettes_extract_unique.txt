@@ -2,8 +2,8 @@
 version = "8.09";
 date = "2022/01/24";
 
-arg = getArgument(); 
-array = split(arg," ");
+arg = getArgument();
+array = split(arg, " ");
 
 chemwork = array[0];
 nomvignette = array[1];
@@ -19,27 +19,27 @@ upper = parseInt(array[10]);
 area = parseInt(array[11]);
 vignettetext = array[12];
 
-L_final = round(maxOf(L_vignette * 1.4,longline + 2*x1));
+L_final = round(maxOf(L_vignette * 1.4, longline + 2 * x1));
 H_final = round(H_vignette * 1.4 + 2 * footer);
 y1 = H_final - 5 - footer;
 x2 = x1 + longline;
 
 // copier ROI
 selectImage(image_name);
-makeRectangle(Bx,By,L_vignette,H_vignette);
+makeRectangle(Bx, By, L_vignette, H_vignette);
 run("Copy");
 
-// nouvelle vignette même taille	
-newImage("full_vignette", "8-bit White",L_vignette,H_vignette, 1);
+// nouvelle vignette mï¿½me taille	
+newImage("full_vignette", "8-bit White", L_vignette, H_vignette, 1);
 
-// Coller dans la vignette de même taille
+// Coller dans la vignette de mï¿½me taille
 run("Paste");
 
 // Agrandissement au centre
-run("Canvas Size...", "width="+L_final+" height="+H_final+" position=Center");
+run("Canvas Size...", "width=" + L_final + " height=" + H_final + " position=Center");
 
 // Ajustement taille
-makeRectangle(0 ,footer,L_final,H_final);
+makeRectangle(0, footer, L_final, H_final);
 run("Crop");
 
 // -------------- Nettoyage -------------------
@@ -54,57 +54,68 @@ run("Convert to Mask");
 // ------------------- Nettoyage autour du plus gros objet --------
 run("Set Measurements...", "area centroid bounding fit redirect=[msk_vignette] decimal=1");
 lim_inf = round(area * 0.7);
-text_settings = "size="+lim_inf+"-Infinity circularity=0.00-1.00 show=Nothing exclude include record";
+text_settings = "size=" + lim_inf + "-Infinity circularity=0.00-1.00 show=Nothing exclude include record";
 run("Analyze Particles...", text_settings);
-updateResults();	
+updateResults();
 
 // ---------------------- Si probleme de vignette blanche -----------------------------------
 nbobj = nResults;
-if (nbobj == 0) {					
-	selectImage("msk_vignette");
-	saveAs("Jpeg",chemwork+nomvignette+"_blank_vignette");
-	rename(	"msk_vignette");
-	showMessage("BLANK VIGNETTE : \nArea = "+area+"\nUpper = "+upper+"\nImage saved as "+nomvignette+"_blank_vignette.jpg \n \nPress YES to CONTINUE !  ");		
+if (nbobj == 0) {
+    selectImage("msk_vignette");
+    saveAs("Jpeg", chemwork + nomvignette + "_blank_vignette");
+    rename("msk_vignette");
+    showMessage("BLANK VIGNETTE : \nArea = " + area + "\nUpper = " + upper + "\nImage saved as " + nomvignette + "_blank_vignette.jpg \n \nPress YES to CONTINUE !  ");
 } //
 
-// --------------------- Recherche objet de même dimensions ---------------
-ligne = 0;	g = 0;	vig = false;			
-while (g < nbobj) {		
-	obj_largeur = false;
-	obj_hauteur = false;
-	ystart =	getResult("YStart", g);
-	obj_width = 	getResult("Width", g);
-	obj_height = 	getResult("Height", g);		
-	// --------------- Test si les dimensions concordent exactement ---------------
-	if (obj_width == L_vignette) obj_largeur = true;
-	if (obj_height == H_vignette ) obj_hauteur = true;
-	if (obj_largeur == true && obj_hauteur == true )	{ ligne = g; g = nbobj;	vig = true;			} 				
-	g++;		
+// --------------------- Recherche objet de mï¿½me dimensions ---------------
+ligne = 0;
+g = 0;
+vig = false;
+while (g < nbobj) {
+    obj_largeur = false;
+    obj_hauteur = false;
+    ystart = getResult("YStart", g);
+    obj_width = getResult("Width", g);
+    obj_height = getResult("Height", g);
+    // --------------- Test si les dimensions concordent exactement ---------------
+    if (obj_width == L_vignette) obj_largeur = true;
+    if (obj_height == H_vignette) obj_hauteur = true;
+    if (obj_largeur == true && obj_hauteur == true) {
+        ligne = g;
+        g = nbobj;
+        vig = true;
+    }
+    g++;
 } // for
-// -------------------- Si pas trouvé, on élargit la recherche --------------				
-if (vig== false ) {	
-	ligne = 0;	g = 0;	Ratio = 0.05;	
-	while (g < nbobj) {		
-		obj_largeur = false;
-		obj_hauteur = false;
-		ystart =	getResult("YStart", g);
-		obj_width = 	getResult("Width", g);
-		obj_height = 	getResult("Height", g);		
-		// --------------- Test si les dimensions concordent approximativement ---------------
-		if (obj_width > L_vignette * (1-Ratio)  && obj_width < L_vignette * (1+Ratio)) obj_largeur = true;
-		if (obj_height > H_vignette * (1-Ratio) && obj_height < H_vignette * (1+Ratio)) obj_hauteur = true;
-		if (obj_largeur == true && obj_hauteur == true )	{ 		ligne = g; g = nbobj;				} 
-		g++;		
-	} // for
+// -------------------- Si pas trouvï¿½, on ï¿½largit la recherche --------------				
+if (vig == false) {
+    ligne = 0;
+    g = 0;
+    Ratio = 0.05;
+    while (g < nbobj) {
+        obj_largeur = false;
+        obj_hauteur = false;
+        ystart = getResult("YStart", g);
+        obj_width = getResult("Width", g);
+        obj_height = getResult("Height", g);
+        // --------------- Test si les dimensions concordent approximativement ---------------
+        if (obj_width > L_vignette * (1 - Ratio) && obj_width < L_vignette * (1 + Ratio)) obj_largeur = true;
+        if (obj_height > H_vignette * (1 - Ratio) && obj_height < H_vignette * (1 + Ratio)) obj_hauteur = true;
+        if (obj_largeur == true && obj_hauteur == true) {
+            ligne = g;
+            g = nbobj;
+        }
+        g++;
+    } // for
 }
-xstart = 	getResult("XStart", ligne);
-ystart =	getResult("YStart", ligne);	
+xstart = getResult("XStart", ligne);
+ystart = getResult("YStart", ligne);
 
 // --------------- nettoyage autour du plus gros objet -------------
 selectImage("msk_vignette");
-doWand(xstart,ystart);
+doWand(xstart, ystart);
 run("Clear Outside");
-run("Select None");	
+run("Select None");
 run("Invert");
 run("Image Calculator...", "image1=full_vignette operation=Add image2=msk_vignette");
 selectImage("msk_vignette");
@@ -113,18 +124,19 @@ close();
 //--------------------- Ecriture de la legende --------------
 selectImage("full_vignette");
 setFont("SansSerif", 9);
-drawString(vignettetext+" mm",x1,H_final-8-footer);
+drawString(vignettetext + " mm", x1, H_final - 8 - footer);
 
 //---------------------Trace de l'echelle dans la vignette ---------
 setLineWidth(2);
-drawLine(x1,y1,x2,y1);
+drawLine(x1, y1, x2, y1);
 
 // --------------------- Close Results ------------------------
-selectWindow("Results");	run("Close");	
+selectWindow("Results");
+run("Close");
 
 //-------------------------------Sauvegarde des vignettes-----------
 selectImage("full_vignette");
-saveAs("Jpeg",chemwork+nomvignette);
+saveAs("Jpeg", chemwork + nomvignette);
 
 //------------------------------------ FIN ------------------
 ret = arg;

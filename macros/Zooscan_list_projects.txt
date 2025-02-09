@@ -2,8 +2,8 @@
 version = "8.12";
 date = "2022/04/18";
 
-args = 	getArgument();
-arg = 	split(args," ");
+args = getArgument();
+arg = split(args, " ");
 chem = arg[0];
 previouspath = arg[1];
 print_file = arg[2];
@@ -12,19 +12,26 @@ deb_print = 0;
 if (previouspath == "copy") deb_print = 1;
 
 // ------------------------------ Catalogue automatique des projets -----------------------------------------------------------------------------------------
-if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 //drives = newArray("C:\\");
-drives = newArray("C:\\","A:\\","B:\\","D:\\","E:\\","F:\\","G:\\","H:\\","I:\\","J:\\","K:\\","L:\\","M:\\","N:\\","O:\\","P:\\","Q:\\","R:\\","S:\\","T:\\","U:\\","V:\\","W:\\","X:\\","Y:\\","Z:\\");
+drives = newArray("C:\\", "A:\\", "B:\\", "D:\\", "E:\\", "F:\\", "G:\\", "H:\\", "I:\\", "J:\\", "K:\\", "L:\\", "M:\\", "N:\\", "O:\\", "P:\\", "Q:\\", "R:\\", "S:\\", "T:\\", "U:\\", "V:\\", "W:\\", "X:\\", "Y:\\", "Z:\\");
 affdrive = newArray(25);
 ind = 0;
-t= 0;
+t = 0;
 print("====================================================================================");
 print("Zooprocess is scanning the computer to find the projects. BE PATIENT !!!! ");
-while (t<drives.length) {
-	print("Scanning "+drives[t]+" drive for projects.");
-	showStatus("Scanning "+drives[t]+" drive.    WAIT !");
-	if (File.exists(drives[t])) { 	ex = drives[t];	affdrive[ind] = ex;	ind++;	} // if
-	t++;
+while (t < drives.length) {
+    print("Scanning " + drives[t] + " drive for projects.");
+    showStatus("Scanning " + drives[t] + " drive.    WAIT !");
+    if (File.exists(drives[t])) {
+        ex = drives[t];
+        affdrive[ind] = ex;
+        ind++;
+    } // if
+    t++;
 } // while
 print("====================================================================================");
 aff = newArray(ind);
@@ -36,50 +43,55 @@ pathlist[0] = previouspath;
 j = 1;
 list = newArray(1000);
 display = newArray(1000);
-for (r=0;r<ind;r++) { 
-	drive = affdrive[r];
-	showStatus("Scanning "+drive+" drive for projects.    WAIT !");
-	listrep = getFileList(drive);
-	// ------------ Si finit par / et commence par zooscan ---------------------------------
-	for (x=0;x<listrep.length;x++) {
-		rep = listrep[x];
-		if (endsWith(rep,"/") && startsWith(rep,"Zooscan_")) { 
-			long = 	lengthOf(rep);
-			dir = 	substring(rep,0,long-1);
-			dirdisplay = 	substring(rep,8,long-1);
-			// --------------- test du projet ----------------------------------------------
-			proj = dirdisplay;
-			path = drive+"Zooscan_"+proj;
-			pathconfig =	path+"\\"+"\\Zooscan_config\\";
-			pathmeta = 	path+"\\"+"\\Zooscan_meta\\";
-			pathback = 	path+"\\"+"\\Zooscan_back\\";
-			pathscan = 	path+"\\"+"\\Zooscan_scan";
-			pathwork = 	path+"\\"+"\\Zooscan_scan\\"+"\\_work";
-			pathraw = 	path+"\\"+"\\Zooscan_scan\\"+"\\_raw";
-			pathresults = 	path+"\\"+"\\Zooscan_results";
-			if (File.exists(pathback) && File.exists(pathconfig) && File.exists(pathmeta) && File.exists(pathscan)   && File.exists(pathwork) && File.exists(pathraw) && File.exists(pathresults)) {
-				display[j] = dirdisplay;
-				pathlist[j] = drive+"\\"+dir;
-				j++;  
-			} // if
-		} // if
-	} // for
-}// for
+for (r = 0; r < ind; r++) {
+    drive = affdrive[r];
+    showStatus("Scanning " + drive + " drive for projects.    WAIT !");
+    listrep = getFileList(drive);
+    // ------------ Si finit par / et commence par zooscan ---------------------------------
+    for (x = 0; x < listrep.length; x++) {
+        rep = listrep[x];
+        if (endsWith(rep, "/") && startsWith(rep, "Zooscan_")) {
+            long = lengthOf(rep);
+            dir = substring(rep, 0, long - 1);
+            dirdisplay = substring(rep, 8, long - 1);
+            // --------------- test du projet ----------------------------------------------
+            proj = dirdisplay;
+            path = drive + "Zooscan_" + proj;
+            pathconfig = path + "\\" + "\\Zooscan_config\\";
+            pathmeta = path + "\\" + "\\Zooscan_meta\\";
+            pathback = path + "\\" + "\\Zooscan_back\\";
+            pathscan = path + "\\" + "\\Zooscan_scan";
+            pathwork = path + "\\" + "\\Zooscan_scan\\" + "\\_work";
+            pathraw = path + "\\" + "\\Zooscan_scan\\" + "\\_raw";
+            pathresults = path + "\\" + "\\Zooscan_results";
+            if (File.exists(pathback) && File.exists(pathconfig) && File.exists(pathmeta) && File.exists(pathscan) && File.exists(pathwork) && File.exists(pathraw) && File.exists(pathresults)) {
+                display[j] = dirdisplay;
+                pathlist[j] = drive + "\\" + dir;
+                j++;
+            } // if
+        } // if
+    } // for
+} // for
 
 // ---------------- Impression -------------------------------
 if (print_file == true) {
-	if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-	if (j>1) {
-		for ( i = deb_print; i < j ; i++) {		print(pathlist[i]);	}
-	}
-	else { print("NEW");	}
-	//-------------------Sauvegarde--------------------------------------------------
-	selectWindow("Log");
-	run("Text...","save=" + chem + "zooprocess.txt");
-	run("Close");
+    if (isOpen("Log")) {
+        selectWindow("Log");
+        run("Close");
+    } // if
+    if (j > 1) {
+        for (i = deb_print; i < j; i++) {
+            print(pathlist[i]);
+        }
+    } else {
+        print("NEW");
+    }
+    //-------------------Sauvegarde--------------------------------------------------
+    selectWindow("Log");
+    run("Text...", "save=" + chem + "zooprocess.txt");
+    run("Close");
 }
 
 // ---------------- FIN ----------------------
-ret = chem+" "+j;
+ret = chem + " " + j;
 return ret;
-

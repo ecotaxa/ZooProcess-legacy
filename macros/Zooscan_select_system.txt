@@ -3,47 +3,66 @@ version = "8.03";
 date = "2021/12/05";
 
 // LOGS
-// Selection automatique et forcée du scanner
+// Selection automatique et forcï¿½e du scanner
 
 //arg = getArgument(); 
 
 arg = "C:\\Zooscan\\";
-array = split(arg," ");
-chem= 		array[0]; 
+array = split(arg, " ");
+chem = array[0];
 vuescan = "unknown";
 vuescan_default = "9.7.67";
 vuescanexist = false;
 
 // --------------------- Test de l'existence du logiciel vuescan et recherche version ------------------------------------------
 ret = runMacro("Zooscan_check_vuescan_pictures");
-flag=toString(ret);
-if (lengthOf(flag)==1)  { getBoolean("Zooscan_check_vuescan_pictures.txt macro aborted? \n \nPress Cancel to abort !    ");	} // if
-else {	argret = split(flag," ");	vuescan = argret[0];	chemvue = argret[1];			} // else
+flag = toString(ret);
+if (lengthOf(flag) == 1) {
+    getBoolean("Zooscan_check_vuescan_pictures.txt macro aborted? \n \nPress Cancel to abort !    ");
+} // if
+else {
+    argret = split(flag, " ");
+    vuescan = argret[0];
+    chemvue = argret[1];
+} // else
 //aa = getBoolean(chemvue);
-if (vuescan == "unknown") {	aa = getBoolean("Vuescan is not properly installed. Check that you installed version "+vuescan_default);	}
-else {				vuescanexist = true;	}
+if (vuescan == "unknown") {
+    aa = getBoolean("Vuescan is not properly installed. Check that you installed version " + vuescan_default);
+} else {
+    vuescanexist = true;
+}
 
 // --------------------- Detection du scanner connecte au PC --------------
-arg = runMacro("Zooscan_check_scanner.txt",chemvue);
-if (lengthOf(arg) == 1)  { 	aa = getBoolean("Zooscan_check_scanner.txt macro aborted? \n \nPress Cancel to abort !    ");	} // if
-else { data = split(arg," ");
-	scanner = data[0];
-	source = data[1];	
-	if (scanner == "no") { 	aa = getBoolean("No Zooscan detected. \n Press Cancel to abort ! ");				}	
+arg = runMacro("Zooscan_check_scanner.txt", chemvue);
+if (lengthOf(arg) == 1) {
+    aa = getBoolean("Zooscan_check_scanner.txt macro aborted? \n \nPress Cancel to abort !    ");
+} // if
+else {
+    data = split(arg, " ");
+    scanner = data[0];
+    source = data[1];
+    if (scanner == "no") {
+        aa = getBoolean("No Zooscan detected. \n Press Cancel to abort ! ");
+    }
 }
 
 //------------------- Impression dans le fichier ---------------------------
-if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 print(scanner);
-print(vuescan);	
+print(vuescan);
 print(source);
-if (isOpen("Log")) {	text =  "save=" + chem+"\\Zooscan.txt";
-	selectWindow("Log");
-	run("Text...",text);	
-	run("Close");	
+if (isOpen("Log")) {
+    text = "save=" + chem + "\\Zooscan.txt";
+    selectWindow("Log");
+    run("Text...", text);
+    run("Close");
+} else {
+    showMessage("Log error in Zooscan_select_system.txt for " + chem + "\\Zooscan.txt");
 }
-else {	showMessage("Log error in Zooscan_select_system.txt for "+chem+"\\Zooscan.txt");	}
 
 // --------------------------------------- FIN -----------------------------------
-ret = scanner+" "+vuescan+" "+source;
+ret = scanner + " " + vuescan + " " + source;
 return ret;

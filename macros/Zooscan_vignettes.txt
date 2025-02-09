@@ -5,146 +5,200 @@ version = "8.09";
 date = "2022/01/24";
 
 //-------------------INITIALISATION-----------------------------------------
-arg = getArgument(); 
-array = split(arg," ");
-chemconfig= array[0]; 	chem= array[1]; 		configfile= array[2]; 	param= array[3]; 	titre= array[4]; 
-sep= array[5]; 		tag= array[6]; 		meta= array[7];  	par= array[8]; 	maskop= array[9]; 	masktag= array[10];  maskpar= array[11]; 
-chemscan= array[12]; 	chemwork1= array[13];	savevig= array[14];	savezip= array[15];	maskod= array[16];	ident= array[17];	maskident= array[18];
-vis=array[19];		maskvis= array[20];		scan= array[21];	resolution=array[22];	savetag= array[23];
+arg = getArgument();
+array = split(arg, " ");
+chemconfig = array[0];
+chem = array[1];
+configfile = array[2];
+param = array[3];
+titre = array[4];
+sep = array[5];
+tag = array[6];
+meta = array[7];
+par = array[8];
+maskop = array[9];
+masktag = array[10];
+maskpar = array[11];
+chemscan = array[12];
+chemwork1 = array[13];
+savevig = array[14];
+savezip = array[15];
+maskod = array[16];
+ident = array[17];
+maskident = array[18];
+vis = array[19];
+maskvis = array[20];
+scan = array[21];
+resolution = array[22];
+savetag = array[23];
 
 setBatchMode(true);
 code_text = true;
-// ---------------- Option par défaut pour le néttoyage des vignettes => nettoyage général --------------------
+// ---------------- Option par dï¿½faut pour le nï¿½ttoyage des vignettes => nettoyage gï¿½nï¿½ral --------------------
 legend = "2";
 
 // ----------------- Ouverture et chargement des configurations -----------------------------------
 // ----------------- Le fichier config est defini (choisi) dans la macro Zooscan_trt_1.txt --------
-openconfig = chemconfig +configfile;
+openconfig = chemconfig + configfile;
 open(openconfig);
 wait(100);
 config = getInfo();
-array = split(config,"\n");
-for (i=0; i<array.length; i++)	{
-	texte = array[i];
-	ssarray = split(texte," ");
-	array[i] = ssarray[1];
+array = split(config, "\n");
+for (i = 0; i < array.length; i++) {
+    texte = array[i];
+    ssarray = split(texte, " ");
+    array[i] = ssarray[1];
 }
-enhance = array[1]		vuescanrep = array[2]; 	jpeg = array[3];
-zip = array[4];		greycor = array[5];		// resolution = array[6];
-xminref = array[7];		yminref = array[8];		doyofset = array[9];		doxpos = array[10];	xdimref = array[11];
-ydimref =array[12];		dostd = array[13];		doecart = array[14];		subimgx = array[15];	lower = array[16];	upper = array[17];	greyref = array[18];	voxelwidth = array[19];
-voxelheigth = array[20];	voxeldepth = array[21];	voxelunit = array[22];		backval = array[23];	minsize = array[24];	maxsize = array[25];	longline = array[26];	doxabspos = array[27];	
-doyabspos = array[28];	bleft= array[29];		broll= array[30];		bright= array[31];	contrast= array[32];
+enhance = array[1] vuescanrep = array[2];
+jpeg = array[3];
+zip = array[4];
+greycor = array[5]; // resolution = array[6];
+xminref = array[7];
+yminref = array[8];
+doyofset = array[9];
+doxpos = array[10];
+xdimref = array[11];
+ydimref = array[12];
+dostd = array[13];
+doecart = array[14];
+subimgx = array[15];
+lower = array[16];
+upper = array[17];
+greyref = array[18];
+voxelwidth = array[19];
+voxelheigth = array[20];
+voxeldepth = array[21];
+voxelunit = array[22];
+backval = array[23];
+minsize = array[24];
+maxsize = array[25];
+longline = array[26];
+doxabspos = array[27];
+doyabspos = array[28];
+bleft = array[29];
+broll = array[30];
+bright = array[31];
+contrast = array[32];
 
 // -------------------- Fermeure de la fenetre config ----------------------
 selectWindow(configfile);
 run("Close");
 // -------------------- Suppression des info de type de fichier ------------
 long = lengthOf(titre);
-titrered = substring(titre, 0, long-4);
+titrered = substring(titre, 0, long - 4);
 
-chemwork = chemwork1+titrered+"\\";
-File.makeDirectory(chemwork+"\\multiples_to_separate");
+chemwork = chemwork1 + titrered + "\\";
+File.makeDirectory(chemwork + "\\multiples_to_separate");
 chemtemp = chem + "Zooscan_temp\\";
-text= "jpeg="+jpeg+" file=.xls";
-run("Input/Output...",text);
-maskout = 	0;
-maskclear = 	1;
-masksave = 	1;
-gamma = 	parseFloat(contrast);	
+text = "jpeg=" + jpeg + " file=.xls";
+run("Input/Output...", text);
+maskout = 0;
+maskclear = 1;
+masksave = 1;
+gamma = parseFloat(contrast);
 x1 = "10";
 footer = "31";
 image_name = "Source";
 
 //-------------------FIN INITIALISATION-------------------------------------
-if (param == "1") {	
-	Dialog.create("EXTRACT VIGNETTE tool   v : "+version+"                 ");
-	Dialog.addMessage( "-------------------------------------------------------------------------------");
-	Dialog.addMessage( "Sample =  "+titrered);
-	Dialog.addMessage( "-------------------------------------------------------------------------------");
-	Dialog.addMessage("- If gamma > 1=> contrast enhanced              ");
-	Dialog.addMessage("- If gamma < 1=> image smoothed              ");
-	Dialog.addMessage("- If gamma = 1=> No gamma correction              ");
-	Dialog.addNumber("                      SET gamma (0.5 - 5) ",gamma);
-	Dialog.addCheckbox("ADD outlines on vignettes ?", false);
-	Dialog.addCheckbox("CLEAR outside outlines ?", false);
-	Dialog.addMessage( "-------------------------------------------------------------------------------");
-	Dialog.show();
-	gamma =		Dialog.getNumber();
-	gamma = 	maxOf(gamma,0.5);
-	gamma = 	minOf(gamma,5);
-	maskout = 	Dialog.getCheckbox();
-	maskclear = 	Dialog.getCheckbox();
-}  // if
+if (param == "1") {
+    Dialog.create("EXTRACT VIGNETTE tool   v : " + version + "                 ");
+    Dialog.addMessage("-------------------------------------------------------------------------------");
+    Dialog.addMessage("Sample =  " + titrered);
+    Dialog.addMessage("-------------------------------------------------------------------------------");
+    Dialog.addMessage("- If gamma > 1=> contrast enhanced              ");
+    Dialog.addMessage("- If gamma < 1=> image smoothed              ");
+    Dialog.addMessage("- If gamma = 1=> No gamma correction              ");
+    Dialog.addNumber("                      SET gamma (0.5 - 5) ", gamma);
+    Dialog.addCheckbox("ADD outlines on vignettes ?", false);
+    Dialog.addCheckbox("CLEAR outside outlines ?", false);
+    Dialog.addMessage("-------------------------------------------------------------------------------");
+    Dialog.show();
+    gamma = Dialog.getNumber();
+    gamma = maxOf(gamma, 0.5);
+    gamma = minOf(gamma, 5);
+    maskout = Dialog.getCheckbox();
+    maskclear = Dialog.getCheckbox();
+} // if
 
-resolution= 	parseInt(resolution);
-longline = 	parseFloat(longline);
-if (resolution <= 300) { longline = longline*2;		} // if
-vignettetext = 	toString(longline);
-longline = 	toString(longline * resolution/25.4);
+resolution = parseInt(resolution);
+longline = parseFloat(longline);
+if (resolution <= 300) {
+    longline = longline * 2;
+} // if
+vignettetext = toString(longline);
+longline = toString(longline * resolution / 25.4);
 
 //---------------- Extraction des vignettes et sauvegarde en utilisant le RESULT--------------------------
-print("Vignettes_BackUp= YES");	
+print("Vignettes_BackUp= YES");
 showStatus("Thumbnail Images Calculation");
 
 //-----------------------------Ouverture de l'image source corrigee du fond 
-open(chemtemp+"temp_vis1.tif");
+open(chemtemp + "temp_vis1.tif");
 rename(titrered);
 
 Larg = getWidth();
 Haut = getHeight();
 
 //---------------------CLEAR BACKGROUND -----------------------------------------
-if (maskclear == 1 && legend != "2") {	
-	// --------------------- Ouverturte MSK1------------------------------------------
-	openfile = chemwork+ titrered+"_msk1.gif";
-	open(openfile);
-	test = 1;	
-	rename("MASK");
-	text =  "image1=MASK operation=Add image2="+titrered;
-	run("Image Calculator...", text);
-	if (isOpen(titrered)) 	{	selectImage(titrered);	
-		close();		
-		saveAs("Tiff",chemtemp+"temp_vis1.tif");
-		close();
-		run("free memory");		wait(500);	
-		run("free memory");		wait(500);	
-		run("free memory");		wait(500);	
-		run("free memory");		wait(500);
-		open(chemtemp+"temp_vis1.tif");
-		rename(titrered);
-		selectImage(titrered);
-		setVoxelSize(1,1,1,"pixel");
-		Larg = getWidth();
-		Haut = getHeight();
-	} // if	
-	else { message = "No msk1.gif  file available for the selected image.              " ;	print(message);		} // else	
+if (maskclear == 1 && legend != "2") {
+    // --------------------- Ouverturte MSK1------------------------------------------
+    openfile = chemwork + titrered + "_msk1.gif";
+    open(openfile);
+    test = 1;
+    rename("MASK");
+    text = "image1=MASK operation=Add image2=" + titrered;
+    run("Image Calculator...", text);
+    if (isOpen(titrered)) {
+        selectImage(titrered);
+        close();
+        saveAs("Tiff", chemtemp + "temp_vis1.tif");
+        close();
+        run("free memory");
+        wait(500);
+        run("free memory");
+        wait(500);
+        run("free memory");
+        wait(500);
+        run("free memory");
+        wait(500);
+        open(chemtemp + "temp_vis1.tif");
+        rename(titrered);
+        selectImage(titrered);
+        setVoxelSize(1, 1, 1, "pixel");
+        Larg = getWidth();
+        Haut = getHeight();
+    } // if	
+    else {
+        message = "No msk1.gif  file available for the selected image.              ";
+        print(message);
+    } // else	
 } // if
 
 //---------------------Ouverture des outlines -----------------------------------------
-if (maskout == 1  && legend != "2") {	
-	// --------------------- Ouverture outlines------------------------------------------
-	openfile = chemwork+ titrered+"_out1.gif";
-	open(openfile);	
-	test = 1;		
-	rename("Contours");	
-	selectImage(titrered);
-	run("Invert");
-	text =  "image1=Contours operation=Add image2="+titrered;
-	run("Image Calculator...", text);
-	selectImage(titrered);	
-	close();	
-	run("Invert");
-	rename(titrered);
-	selectImage(titrered);
-	setVoxelSize(1,1,1,"pixel");
-	Larg = getWidth();
-	Haut = getHeight();
+if (maskout == 1 && legend != "2") {
+    // --------------------- Ouverture outlines------------------------------------------
+    openfile = chemwork + titrered + "_out1.gif";
+    open(openfile);
+    test = 1;
+    rename("Contours");
+    selectImage(titrered);
+    run("Invert");
+    text = "image1=Contours operation=Add image2=" + titrered;
+    run("Image Calculator...", text);
+    selectImage(titrered);
+    close();
+    run("Invert");
+    rename(titrered);
+    selectImage(titrered);
+    setVoxelSize(1, 1, 1, "pixel");
+    Larg = getWidth();
+    Haut = getHeight();
 } // if
 rename(image_name);
 run("Colors...", "foreground=red background=white selection=black");
 setColor(0);
-setVoxelSize(voxelwidth,voxelheigth,voxeldepth,voxelunit);
+setVoxelSize(voxelwidth, voxelheigth, voxeldepth, voxelunit);
 ind = 0;
 
 // --------------------------- Creation des vecteurs -----------------------------
@@ -154,57 +208,65 @@ ha_vect = newArray(nbblobs);
 bx_vect = newArray(nbblobs);
 by_vect = newArray(nbblobs);
 area_vect = newArray(nbblobs);
-for (i=0; i<nbblobs; i++) {
-	tag_vect[i] = getResult("Tag",i); 
-	la_vect[i] = getResult("Width", i)/voxelwidth;
-	ha_vect[i] = getResult("Height", i)/voxelwidth;
-	bx_vect[i] = getResult("BX", i)/voxelwidth;
-	by_vect[i] = getResult("BY", i)/voxelheigth;
-	area_vect[i] = getResult("Area", i);
+for (i = 0; i < nbblobs; i++) {
+    tag_vect[i] = getResult("Tag", i);
+    la_vect[i] = getResult("Width", i) / voxelwidth;
+    ha_vect[i] = getResult("Height", i) / voxelwidth;
+    bx_vect[i] = getResult("BX", i) / voxelwidth;
+    by_vect[i] = getResult("BY", i) / voxelheigth;
+    area_vect[i] = getResult("Area", i);
 } // for
 // ------------------------- Fermeture RESULTS -------------------------------------------
-if (isOpen("Results")) { selectWindow("Results");		run('Close'); 	} // if
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run('Close');
+} // if
 
 // --------------------------------- Boucle sur le nombre de vignettes -------------------
-for (i=0; i<la_vect.length; i++) {
-	if (i/50 == 10+floor(i/50) ) {		run("free memory");		wait(500);		} // if
-	// On considère par defaut que les objets tagges 0 ou 2 (doublons) NE DOIVENT PAS ETRE EXTRAITS sauf si savetag=1
-	// tagval prend sa valeur dans RESULTS... si elle existe !
-	if (tag==0) { tagval=1; 
-		// Il ne devrait PAS y avoir de valeur dans le RESULTS, on extrait donc TOUTES les vignettes
-	}
-	else { tagval = tag_vect[i]; 
-		// Il devrait y avoir des valeurs dans le RESULTS 
-	} // else 
-	if (tagval==1 || savetag==1) { 		
-		no = toString(i+1);
-		// nom vignette à sauver
-		nomvignette =titrered+"_"+no;
-		
-		// Dimensions
-		L_vignette = toString(la_vect[i]);
-		H_vignette = toString(ha_vect[i]);	
-		Bx = toString(bx_vect[i]);
-		By = toString(by_vect[i]);
-		area = toString(area_vect[i]);
-		
-		// --------------- Process UNE vignette --------------------
-		argum = chemwork+" "+nomvignette+" "+Bx+" "+By+" "+footer+" "+longline+" "+x1+" "+L_vignette+" "+H_vignette+" "+image_name+" "+upper+" "+area+" "+vignettetext;
-		ret = runMacro("Zooscan_vignettes_extract_unique",argum);
-		flag=toString(ret);
-		if (lengthOf(flag) ==1)  { 	showMessage("Error message : "+nomvignette+" vignette extraction failed.        "); 		} // if
-		
-		//----------------------------Suivi de la progression --------------
-		showProgress(i/la_vect.length);
-		ind++;
-	} // if tagval ==1
+for (i = 0; i < la_vect.length; i++) {
+    if (i / 50 == 10 + floor(i / 50)) {
+        run("free memory");
+        wait(500);
+    } // if
+    // On considï¿½re par defaut que les objets tagges 0 ou 2 (doublons) NE DOIVENT PAS ETRE EXTRAITS sauf si savetag=1
+    // tagval prend sa valeur dans RESULTS... si elle existe !
+    if (tag == 0) {
+        tagval = 1;
+        // Il ne devrait PAS y avoir de valeur dans le RESULTS, on extrait donc TOUTES les vignettes
+    } else {
+        tagval = tag_vect[i];
+        // Il devrait y avoir des valeurs dans le RESULTS 
+    } // else 
+    if (tagval == 1 || savetag == 1) {
+        no = toString(i + 1);
+        // nom vignette ï¿½ sauver
+        nomvignette = titrered + "_" + no;
+
+        // Dimensions
+        L_vignette = toString(la_vect[i]);
+        H_vignette = toString(ha_vect[i]);
+        Bx = toString(bx_vect[i]);
+        By = toString(by_vect[i]);
+        area = toString(area_vect[i]);
+
+        // --------------- Process UNE vignette --------------------
+        argum = chemwork + " " + nomvignette + " " + Bx + " " + By + " " + footer + " " + longline + " " + x1 + " " + L_vignette + " " + H_vignette + " " + image_name + " " + upper + " " + area + " " + vignettetext;
+        ret = runMacro("Zooscan_vignettes_extract_unique", argum);
+        flag = toString(ret);
+        if (lengthOf(flag) == 1) {
+            showMessage("Error message : " + nomvignette + " vignette extraction failed.        ");
+        } // if
+
+        //----------------------------Suivi de la progression --------------
+        showProgress(i / la_vect.length);
+        ind++;
+    } // if tagval ==1
 } // for
 // ------------------- Fermeture de l'image ----------------------------
 selectImage(image_name);
 close();
-print("Vignettes_extracted= ",ind);
+print("Vignettes_extracted= ", ind);
 
 //------------------------------------ FIN ------------------
 ret = arg;
 return ret;
-

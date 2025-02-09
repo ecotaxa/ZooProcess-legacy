@@ -2,19 +2,19 @@
 version = "8.27";
 date = "2024/06/20";
 
-args = 	getArgument();
-arg = 	split(args," ");
-pathraw = 		arg[0];
-profileraw = 		arg[1];
+args = getArgument();
+arg = split(args, " ");
+pathraw = arg[0];
+profileraw = arg[1];
 
 // ------------------ Liste des fichiers ------------------
-filelist_raw  = 	getFileList(pathraw+profileraw);
-if (filelist_raw.length == 0) {	
-	aa = getBoolean("No file in "+pathraw + profileraw +"\n \nPress Cancel to abort and check the folder and the header file");
+filelist_raw = getFileList(pathraw + profileraw);
+if (filelist_raw.length == 0) {
+    aa = getBoolean("No file in " + pathraw + profileraw + "\n \nPress Cancel to abort and check the folder and the header file");
 }
-list = 			newArray(filelist_raw.length);
+list = newArray(filelist_raw.length);
 ctx_file = 0;
-sum_file = 0;                                                             
+sum_file = 0;
 search_file = true;
 k = 0;
 lenstype = "99x";
@@ -25,88 +25,121 @@ capture_right = 9999;
 capture_top = 9999;
 capture_pixel_border = 9999;
 print("=========================== CHECKS ==========================");
-print("Checking "+profileraw);
+print("Checking " + profileraw);
 while (search_file == true) {
-	if ((endsWith(filelist_raw[k],"_run_summary.txt") == true || endsWith(filelist_raw[k],"summary.csv")) && sum_file == 0)	{
-		// ------------------- Ouverture et vérification de la présence de "Total" tant que pas trouvé ------------------
-		open (pathraw+profileraw+"\\"+filelist_raw[k]);
-		wait(100);
-		summary = getInfo();
-		run("Close");	
-		if (indexOf(summary,",,,,") >0) {		
-			summary = replace(summary,",,,,,","");
-			summary = replace(summary,",,,,","");
-			summary = replace(summary,",,,","");
-			summary = replace(summary,",,","");
-			print(filelist_raw[k] +" contains ,,,,,");		
-		}
-		if (indexOf(summary,"Total") > 0 ) {
-			conf  = split(summary,"\n");
-			for (i=0; i<conf.length; i++) {
-				text = toString(conf[i]);
-				if (indexOf(text,"Magnification") > -1 ) {
-					aa = replace(text,":"," ");
-					aa = replace(aa,","," ");
-					aa = replace(aa,"="," ");
-					bb = split(aa,"\ ");
-					lenstype = bb[bb.length -1];
-				} // if
-				if (indexOf(text,"Calibration") > -1) {		
-					aa = replace(text,": "," ");
-					aa = replace(text,":"," ");
-					aa = replace(aa,","," ");
-					aa = replace(aa,"="," ");
-					bb = split(aa,"\ ");
-					Calibration_Factor = bb[bb.length -1];
-				} // if
-			} // for
-			// -------------------- Ce summary est valide -------
-			sum_file++;
-			summary_file = filelist_raw[k];
-		} // if
-	}
-	if (endsWith(filelist_raw[k],".ctx") == true )	{ ctxfile = filelist_raw[k];	ctx_file++;	} // if
-	k++;
-	if (sum_file > 0 && ctx_file > 0) {	search_file = false;	}
-	if (k == filelist_raw.length) {		search_file = false;	}
-}		
-if (sum_file < 1 || ctx_file < 1) { getBoolean("WARNING : \n \nThe summary file and/or CTX file are not found or NOK in the "+pathraw+profileraw+" folder.  \n \nPress Cancel to abort !");	} // if
-if (ctx_file > 1) { getBoolean("WARNING : \n \n "+ ctx_file + " *.ctx files have been exported from VS5 in the "+pathraw+profileraw+" folder. \nDelete the useless files to keep only one. \nPress Cancel to abort and restart process afterward !");}
+    if ((endsWith(filelist_raw[k], "_run_summary.txt") == true || endsWith(filelist_raw[k], "summary.csv")) && sum_file == 0) {
+        // ------------------- Ouverture et vï¿½rification de la prï¿½sence de "Total" tant que pas trouvï¿½ ------------------
+        open(pathraw + profileraw + "\\" + filelist_raw[k]);
+        wait(100);
+        summary = getInfo();
+        run("Close");
+        if (indexOf(summary, ",,,,") > 0) {
+            summary = replace(summary, ",,,,,", "");
+            summary = replace(summary, ",,,,", "");
+            summary = replace(summary, ",,,", "");
+            summary = replace(summary, ",,", "");
+            print(filelist_raw[k] + " contains ,,,,,");
+        }
+        if (indexOf(summary, "Total") > 0) {
+            conf = split(summary, "\n");
+            for (i = 0; i < conf.length; i++) {
+                text = toString(conf[i]);
+                if (indexOf(text, "Magnification") > -1) {
+                    aa = replace(text, ":", " ");
+                    aa = replace(aa, ",", " ");
+                    aa = replace(aa, "=", " ");
+                    bb = split(aa, "\ ");
+                    lenstype = bb[bb.length - 1];
+                } // if
+                if (indexOf(text, "Calibration") > -1) {
+                    aa = replace(text, ": ", " ");
+                    aa = replace(text, ":", " ");
+                    aa = replace(aa, ",", " ");
+                    aa = replace(aa, "=", " ");
+                    bb = split(aa, "\ ");
+                    Calibration_Factor = bb[bb.length - 1];
+                } // if
+            } // for
+            // -------------------- Ce summary est valide -------
+            sum_file++;
+            summary_file = filelist_raw[k];
+        } // if
+    }
+    if (endsWith(filelist_raw[k], ".ctx") == true) {
+        ctxfile = filelist_raw[k];
+        ctx_file++;
+    } // if
+    k++;
+    if (sum_file > 0 && ctx_file > 0) {
+        search_file = false;
+    }
+    if (k == filelist_raw.length) {
+        search_file = false;
+    }
+}
+if (sum_file < 1 || ctx_file < 1) {
+    getBoolean("WARNING : \n \nThe summary file and/or CTX file are not found or NOK in the " + pathraw + profileraw + " folder.  \n \nPress Cancel to abort !");
+} // if
+if (ctx_file > 1) {
+    getBoolean("WARNING : \n \n " + ctx_file + " *.ctx files have been exported from VS5 in the " + pathraw + profileraw + " folder. \nDelete the useless files to keep only one. \nPress Cancel to abort and restart process afterward !");
+}
 if (lenstype == "99x") aa = getBoolean("the Calibration factor is not detected in the summary file. \n \nPress Cancel to abort !");
 
 // ---------------------- Lecture CTX ----------------------------------
 //showMessage(pathraw+profileraw+"\\"+ctxfile + " OPENING");
-open (pathraw+profileraw+"\\"+ctxfile);
+open(pathraw + profileraw + "\\" + ctxfile);
 wait(100);
 ctx_settings = getInfo();
 run("Close");
 
-// ----------------------- Lecture des valeurs de CROP utilisées par VS --------------------
-ctx_data = split(ctx_settings,"\n");
+// ----------------------- Lecture des valeurs de CROP utilisï¿½es par VS --------------------
+ctx_data = split(ctx_settings, "\n");
 i = 0;
-while ( i < ctx_data.length){
-	aa = split(ctx_data[i],"=");
-	if (aa.length == 2) {
-		if (aa[0] == "AcceptableBottom") {	print(aa[0]+"--"+aa[1]);	capture_bottom = parseInt(aa[1]);}
-		if (aa[0] == "AcceptableLeft") 	{	print(aa[0]+"--"+aa[1]);	capture_left = parseInt(aa[1]);}
-		if (aa[0] == "AcceptableRight") {	print(aa[0]+"--"+aa[1]);	capture_right = parseInt(aa[1]);}
-		if (aa[0] == "AcceptableTop") 	{	print(aa[0]+"--"+aa[1]);	capture_top = parseInt(aa[1]);}
-		if (aa[0] == "ImagePixelBorder") {	print(aa[0]+"--"+aa[1]);	capture_pixel_border = parseInt(aa[1]);	}
-		if (aa[0] == "CalibrationConstant" && Calibration_Factor == 9999) {	print(aa[0]+"--"+aa[1]);	Calibration_Factor = parseFloat(aa[1]);	}
-	}
-	i++;
+while (i < ctx_data.length) {
+    aa = split(ctx_data[i], "=");
+    if (aa.length == 2) {
+        if (aa[0] == "AcceptableBottom") {
+            print(aa[0] + "--" + aa[1]);
+            capture_bottom = parseInt(aa[1]);
+        }
+        if (aa[0] == "AcceptableLeft") {
+            print(aa[0] + "--" + aa[1]);
+            capture_left = parseInt(aa[1]);
+        }
+        if (aa[0] == "AcceptableRight") {
+            print(aa[0] + "--" + aa[1]);
+            capture_right = parseInt(aa[1]);
+        }
+        if (aa[0] == "AcceptableTop") {
+            print(aa[0] + "--" + aa[1]);
+            capture_top = parseInt(aa[1]);
+        }
+        if (aa[0] == "ImagePixelBorder") {
+            print(aa[0] + "--" + aa[1]);
+            capture_pixel_border = parseInt(aa[1]);
+        }
+        if (aa[0] == "CalibrationConstant" && Calibration_Factor == 9999) {
+            print(aa[0] + "--" + aa[1]);
+            Calibration_Factor = parseFloat(aa[1]);
+        }
+    }
+    i++;
 }
-if (capture_bottom+capture_left+capture_right+capture_top+capture_pixel_border > 10000) {
-	aa = getBoolean("The CTX file "+ctxfile+" does not contain all the necessary information. \n \nPress Cancel to abort and check the file.");
+if (capture_bottom + capture_left + capture_right + capture_top + capture_pixel_border > 10000) {
+    aa = getBoolean("The CTX file " + ctxfile + " does not contain all the necessary information. \n \nPress Cancel to abort and check the file.");
 }
 //showMessage(pathraw+profileraw+"\\"+ctxfile + " READ");
 
-// ---------------- après 8.09 (8.15 pour recherche ctx) ------------------------
-if (Calibration_Factor == 9999) { aa = getBoolean("The ''Calibration Factor'' field could not be read in any of the "+summaryfile+" or "+ctxfile+" file. \n \nPress Cancel to abort.");	}
+// ---------------- aprï¿½s 8.09 (8.15 pour recherche ctx) ------------------------
+if (Calibration_Factor == 9999) {
+    aa = getBoolean("The ''Calibration Factor'' field could not be read in any of the " + summaryfile + " or " + ctxfile + " file. \n \nPress Cancel to abort.");
+}
 
-aa = 999*Calibration_Factor;
-if (isNaN(aa)) { aa = getBoolean("The summary file "+summary_file+" must contain somme ''. \n \nPress Cancel to end process and restart after cleaning.");	}
+aa = 999 * Calibration_Factor;
+if (isNaN(aa)) {
+    aa = getBoolean("The summary file " + summary_file + " must contain somme ''. \n \nPress Cancel to end process and restart after cleaning.");
+}
 
 // ----------------------------- FIN ----------------------------------------------
-ret = toString(Calibration_Factor)+" "+capture_bottom+" "+capture_left+" "+capture_right+" "+capture_top+" "+capture_pixel_border+" "+ctxfile+" "+summary_file;
+ret = toString(Calibration_Factor) + " " + capture_bottom + " " + capture_left + " " + capture_right + " " + capture_top + " " + capture_pixel_border + " " + ctxfile + " " + summary_file;
 return ret;

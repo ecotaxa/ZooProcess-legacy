@@ -11,7 +11,7 @@ jar_disturb_liste = newArray("not_documented","no","one_or_few","soup","not_pres
 depth_qc_liste = newArray("not_documented","measured","calculated_from_cable_length","estimated");
 vol_qc_liste = newArray("not_documented","recorded_from_flowmeter","calculated_from_mean_other_nets","estimated_from_area_distance"); //,"0 : to be LATER documented");
 */
-jar_air_qc_liste = "not_documented"+" "+"ok"+" "+"nok"+" "+"not_preserved"+" "+"fresh_sample"; 
+jar_air_qc_liste = "not_documented" + " " + "ok" + " " + "nok" + " " + "not_preserved" + " " + "fresh_sample";
 
 // ---------------- FIN ------------------
 ret = jar_air_qc_liste;

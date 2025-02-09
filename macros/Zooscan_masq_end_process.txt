@@ -1,5 +1,5 @@
 //--------------------Controle de fin de process du masque--------------------------------------------
-listaff = newArray("YES","EDIT","RESET");
+listaff = newArray("YES", "EDIT", "RESET");
 Dialog.create("SEPARATION MASK CONTROL");
 Dialog.addMessage("Choosing RESET will lead you to a TIME CONSUMING PROCESS !..                     ");
 Dialog.addMessage(" YES accept the mask \n EDIT to complete EXISTING mask \n RESET to erase all and compute NEW mask \n ");

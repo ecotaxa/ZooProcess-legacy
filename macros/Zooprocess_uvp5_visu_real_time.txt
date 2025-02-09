@@ -3,7 +3,7 @@ version = "8.20";
 date = "2023/06/08";
 
 args = getArgument();
-arg = split(args," ");
+arg = split(args, " ");
 pathconfig = arg[0];
 path = arg[1];
 chem = arg[2];
@@ -12,165 +12,177 @@ run("serial ext");
 nb_moy = 20;
 
 // ---------------- UVP5 sn ------------------------------
-aa = indexOf(path,"uvp5_sn");
-uvp_sn = substring(path,aa+7,aa+10);
-if (indexOf(path,"sn000") >=0) uvp_sn = "000";
+aa = indexOf(path, "uvp5_sn");
+uvp_sn = substring(path, aa + 7, aa + 10);
+if (indexOf(path, "sn000") >= 0) uvp_sn = "000";
 starting_time = 40;
-if (uvp_sn == "000" ) starting_time = 70;
+if (uvp_sn == "000") starting_time = 70;
 stop_time = 30;
-if (uvp_sn == "000" ) stop_time = 40;
+if (uvp_sn == "000") stop_time = 40;
 
 // ---------------- MODE FILES ---------------------------
-mode_user = 	pathconfig+"\\mode_file_user.txt";
-mode_advanced = pathconfig+"\\mode_file_advanced.txt";
+mode_user = pathconfig + "\\mode_file_user.txt";
+mode_advanced = pathconfig + "\\mode_file_advanced.txt";
 advanced_mode = false;
 if (File.exists(mode_advanced)) advanced_mode = true;
 
-pathconfig = pathconfig+"\\"+"uvp5_settings\\";
+pathconfig = pathconfig + "\\" + "uvp5_settings\\";
 if (File.exists(pathconfig) == 0) File.makeDirectory(pathconfig);
-pathlog = path+"\\pilot_logs\\";
+pathlog = path + "\\pilot_logs\\";
 if (File.exists(pathlog) == 0) File.makeDirectory(pathlog);
-pathraw = 	path+"\\"+"\\raw\\";
-pathresults = 	path+"\\"+"\\results\\";
+pathraw = path + "\\" + "\\raw\\";
+pathresults = path + "\\" + "\\results\\";
 
 // --------------- Choix profile TIME / DEPTH ------------------------------------
 plot_profile = true;
-Dialog.create("UVP5 RS232 DATA MONITORING from SERIAL link     version :  "+version);
+Dialog.create("UVP5 RS232 DATA MONITORING from SERIAL link     version :  " + version);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------      ");
-Dialog.addMessage("Instrument :  UVP5sn"+uvp_sn);
-Dialog.addMessage("Project :        "+path);
+Dialog.addMessage("Instrument :  UVP5sn" + uvp_sn);
+Dialog.addMessage("Project :        " + path);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------      ");
 Dialog.addMessage("This tool allows to monitor and (plot data) sent by UVP via its SERIAL link ONLY.");
 Dialog.addMessage("- Check that UVP5 is powered (Deck Unit or Battery shunt).");
 Dialog.addMessage("- Check that MOTOCROSS or TeraTerm is closed to free the com port. ");
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------      ");
-Dialog.addCheckbox("       PLOT DATA        ",       true           );
-Dialog.addNumber("         Enter the averaging number  ",nb_moy);
+Dialog.addCheckbox("       PLOT DATA        ", true);
+Dialog.addNumber("         Enter the averaging number  ", nb_moy);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------      ");
 Dialog.show;
-plot_profile = 		Dialog.getCheckbox();
-nb_moy = 		Dialog.getNumber();
+plot_profile = Dialog.getCheckbox();
+nb_moy = Dialog.getNumber();
 
 // ------------- Settings ---------------------------
 active = 0;
 setBatchMode(false);
 
 // -------------------- LOG -------------------------------------------------------------------
-if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
-dateheure =	runMacro("Zooscan_get_time_5");
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
+dateheure = runMacro("Zooscan_get_time_5");
 print("--------------------------------------------------------------------------------------------------------------");
-print("UVP5 RS232 MONITORING Module, version "+version+"    "+date);
-print("Module Starting Time : "+dateheure);
-print("Project path : "+path);
+print("UVP5 RS232 MONITORING Module, version " + version + "    " + date);
+print("Module Starting Time : " + dateheure);
+print("Project path : " + path);
 print("--------------------------------------------------------------------------------------------------------------");
 
-// ------- Vérification existence du fichier de configuration du module de pilotage ------------
-openconfig = pathconfig+"\\uvp5_configuration_file.txt";
+// ------- Vï¿½rification existence du fichier de configuration du module de pilotage ------------
+openconfig = pathconfig + "\\uvp5_configuration_file.txt";
 test = File.exists(openconfig);
 config_option = "edit";
-if (test == 0) 	{
-	config_option = "create";
-	// ------- Si absent, création ---------------                                                                        
-	config_option = runMacro("uvp5_edit_configuration",pathconfig+" "+chem+" "+config_option+" "+ports);
+if (test == 0) {
+    config_option = "create";
+    // ------- Si absent, crï¿½ation ---------------                                                                        
+    config_option = runMacro("uvp5_edit_configuration", pathconfig + " " + chem + " " + config_option + " " + ports);
 } // if
 
-// ---------------- Lecture des paramètres UVP ---------------------------------
-if (File.exists(pathconfig+"\\uvp5_configuration_data.txt")) {
-	open(pathconfig+"\\uvp5_configuration_data.txt");
-	wait(100);
-	config = getInfo();
-	run("Close");
-	conf  = split(config,"\n");
-	for (i=1;i<conf.length;i++){
-		data = replace(conf[i],"="," ");
-		dat = split(data," ");		
-		if (startsWith(dat[0],"img_vol"))		img_vol = parseFloat(dat[1]);
-		if (startsWith(dat[0],"aa_calib"))		aa_calib = parseFloat(dat[1]);
-		if (startsWith(dat[0],"exp_calib"))		exp_calib = parseFloat(dat[1]);
-	}// for
-}// if
-else { showMessage(pathconfig+"\\uvp5_configuration_data.txt does not exists. \nPress CANCEL to ABORT and check project settings !");	}
+// ---------------- Lecture des paramï¿½tres UVP ---------------------------------
+if (File.exists(pathconfig + "\\uvp5_configuration_data.txt")) {
+    open(pathconfig + "\\uvp5_configuration_data.txt");
+    wait(100);
+    config = getInfo();
+    run("Close");
+    conf = split(config, "\n");
+    for (i = 1; i < conf.length; i++) {
+        data = replace(conf[i], "=", " ");
+        dat = split(data, " ");
+        if (startsWith(dat[0], "img_vol")) img_vol = parseFloat(dat[1]);
+        if (startsWith(dat[0], "aa_calib")) aa_calib = parseFloat(dat[1]);
+        if (startsWith(dat[0], "exp_calib")) exp_calib = parseFloat(dat[1]);
+    } // for
+} // if
+else {
+    showMessage(pathconfig + "\\uvp5_configuration_data.txt does not exists. \nPress CANCEL to ABORT and check project settings !");
+}
 
 // ------- Lecture du fichier de configuration du module de pilotage ------------
-config_ret = runMacro("uvp5_read_config",pathconfig);
-config_data = split(config_ret," ");
-PilotBR= config_data[0];
-comport= config_data[1];
-databits= config_data[2];
-stopbits= config_data[3];
-parity= config_data[4];
+config_ret = runMacro("uvp5_read_config", pathconfig);
+config_data = split(config_ret, " ");
+PilotBR = config_data[0];
+comport = config_data[1];
+databits = config_data[2];
+stopbits = config_data[3];
+parity = config_data[4];
 
 //	aa = getBoolean("\n--------------------------------------------------------------------\nWARNING !\n--------------------------------------------------------------------\nThis tool allows to monitor and plot data sent by UVP via its SERIAL link ONLY.\n \n- Check that UVP5 is powered (Deck Unit or Battery shunt). \n- Check that MOTOCROSS or TeraTerm is closed. \n \nPRESS YES to continue. \nPRESS CANCEL to abort.");
 port_status = "nok";
 edit_config = false;
 while (port_status == "nok") {
-	// -------------------- Vérification des ports ------------------------------------------------
-	print("=>  Checking COMPUTER Communication ports");
-	showStatus("CHECKING COM PORTS, WAIT !");
-	wait(500);
-	toto = "nok";
-	while (toto == "nok") {
-		ports = Ext.ports();
-		// ------------- Suite vérification -------------------------------------
-		port_list = split(ports,";");
-		com = "failed";
-		print("Port list = "+ports);
-		if (indexOf(ports,"COM") != 0) {
-			// ------------ NO PORT ---------------------
-			print("No com port available !");
-			aa = getBoolean("NO available com port ! \n \n-Check COM PORTS \n-Close other Terminal application (MOTOCROSS) \n-Check computer configuration \nPRESS CANCEL to abort and RESTART ImageJ. \nPRESS YES to try again after freeing port ! ");	
-		} // if
-		else {		port_status = "ok";	toto = "ok";	} // else
-	}//
-	// ------------ Vérification de la configuration ---------------
-	com = "failed";
-	for (i=0;i<port_list.length;i++) {
-		port_nbe = port_list[i];
-		port_nb = substring(port_nbe,3,lengthOf(port_nbe));
-		if (comport == port_nb) com = "passed";
-	}// for
-	// ------------------- Si port défini n'éxiste pas -----------
-	if (com == "failed") {
-		aa= getBoolean("COM"+comport+" cannot be opened. \n \nIt may already be open \n \nCheck that COM port is not openend by another application (MOTOCROSS) and PRESS YES to try again \nPRESS CANCEL to exit MONITORING module and either check configuration or restart ImageJ to recover com port !");
-	}
-}// while
+    // -------------------- Vï¿½rification des ports ------------------------------------------------
+    print("=>  Checking COMPUTER Communication ports");
+    showStatus("CHECKING COM PORTS, WAIT !");
+    wait(500);
+    toto = "nok";
+    while (toto == "nok") {
+        ports = Ext.ports();
+        // ------------- Suite vï¿½rification -------------------------------------
+        port_list = split(ports, ";");
+        com = "failed";
+        print("Port list = " + ports);
+        if (indexOf(ports, "COM") != 0) {
+            // ------------ NO PORT ---------------------
+            print("No com port available !");
+            aa = getBoolean("NO available com port ! \n \n-Check COM PORTS \n-Close other Terminal application (MOTOCROSS) \n-Check computer configuration \nPRESS CANCEL to abort and RESTART ImageJ. \nPRESS YES to try again after freeing port ! ");
+        } // if
+        else {
+            port_status = "ok";
+            toto = "ok";
+        } // else
+    } //
+    // ------------ Vï¿½rification de la configuration ---------------
+    com = "failed";
+    for (i = 0; i < port_list.length; i++) {
+        port_nbe = port_list[i];
+        port_nb = substring(port_nbe, 3, lengthOf(port_nbe));
+        if (comport == port_nb) com = "passed";
+    } // for
+    // ------------------- Si port dï¿½fini n'ï¿½xiste pas -----------
+    if (com == "failed") {
+        aa = getBoolean("COM" + comport + " cannot be opened. \n \nIt may already be open \n \nCheck that COM port is not openend by another application (MOTOCROSS) and PRESS YES to try again \nPRESS CANCEL to exit MONITORING module and either check configuration or restart ImageJ to recover com port !");
+    }
+} // while
 
 // ------------------- Ouverture controlee du port COM ---------------------
 
-text1 = "COM"+comport;
-text2 = "DATABITS_"+databits+" STOPBITS_"+stopbits+" PARITY_"+parity;
-Ext.open(text1,PilotBR,text2);
+text1 = "COM" + comport;
+text2 = "DATABITS_" + databits + " STOPBITS_" + stopbits + " PARITY_" + parity;
+Ext.open(text1, PilotBR, text2);
 // -------------------- Attente 30 secondes pour ouverture ------------------------
 time = 0;
 while (time < 30) {
-	wait(1000);
-	active = Ext.alive();			// returns "0" or "1"
-	if (active == 1 || active == "1") {	time = 3000;	print("> COM"+comport+" OPEN NOW");	}
-	if (time == 29) {
-		// ---------------- FERMETURE ------------------------------------
-		Ext.close();
-		getBoolean("COM"+comport+" could not be opened. Check Configuration !\n \nCHECK that COM is not open in other application. \n \nPRESS CANCEL to ABORT ");
-	}
-}// while
+    wait(1000);
+    active = Ext.alive(); // returns "0" or "1"
+    if (active == 1 || active == "1") {
+        time = 3000;
+        print("> COM" + comport + " OPEN NOW");
+    }
+    if (time == 29) {
+        // ---------------- FERMETURE ------------------------------------
+        Ext.close();
+        getBoolean("COM" + comport + " could not be opened. Check Configuration !\n \nCHECK that COM is not open in other application. \n \nPRESS CANCEL to ABORT ");
+    }
+} // while
 
 // ------------------------- MONITORING ET GRAPH ------------------------------------------
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-stop_button = false;	
+stop_button = false;
 print("--------------------------------------------------------------------------------------------------------------");
 print("WARNING : YOU CANNOT SEND ANY COMMAND TO UVP5 USING THIS TOOL !");
 if (plot_profile == true) {
-	print("The plotted data are updated every second");
-	print("--- CLOSE graph image to change scales (do not save the graph)");
-	print("--- ACTIVATE ImageJ and PRESS SPACE bar to END");	
-	print("--------------------------------------------------------------------------------------------------------------");
+    print("The plotted data are updated every second");
+    print("--- CLOSE graph image to change scales (do not save the graph)");
+    print("--- ACTIVATE ImageJ and PRESS SPACE bar to END");
+    print("--------------------------------------------------------------------------------------------------------------");
 } // if
-else {	print("=> ACTIVATE ImageJ and PRESS SPACE bar to END");	
-	print("--------------------------------------------------------------------------------------------------------------");
+else {
+    print("=> ACTIVATE ImageJ and PRESS SPACE bar to END");
+    print("--------------------------------------------------------------------------------------------------------------");
 }
-lpm_nb = 	newArray(1000000);
-lpm_esd = 	newArray(1000000);
-lpm_grey = 	newArray(1000000);
-lpm_depth =  	newArray(1000000);
+lpm_nb = newArray(1000000);
+lpm_esd = newArray(1000000);
+lpm_grey = newArray(1000000);
+lpm_depth = newArray(1000000);
 index_data = 0;
 v092 = false;
 zmax = 6000;
@@ -187,237 +199,269 @@ print_old = "skip";
 
 print("=> WAITING for RS232 DATA messages");
 // --------------- START time ------------------
-dateheuremmss =	runMacro("uvp5_get_time");
-print("Start time "+dateheuremmss+" Index 0");
+dateheuremmss = runMacro("uvp5_get_time");
+print("Start time " + dateheuremmss + " Index 0");
 while (stop_button == false) {
-	if (plot_profile == true && isOpen("UVP5 profile") == false) {
-		// -------------------- Creation de l'image VIDE ------------------------
-		texte = uvp_sn+ " "+path+" "+depth_max+" "+time_max+" "+maxixab+" "+maxixsize+" "+maxixgrey+" "+graphtype;
-		message = runMacro("Zooprocess_uvp5_uplink_graph.txt",texte);
-		param_plot = split(message," ");
-		zmax = 		parseInt(param_plot[2]);
-		tmax = 		parseInt(param_plot[3]);
-		maxixab = 	parseInt(param_plot[4]);
-		maxixsize = 	parseInt(param_plot[5]);
-		maxixgrey = 	parseInt(param_plot[6]);
-		graphtype = 	param_plot[7];
-		plot_larg = 	parseInt(param_plot[8]);
-		plot_haut =	parseInt(param_plot[9]);
-		x_offset = 	parseInt(param_plot[10]);
-		y_offset = 	parseInt(param_plot[11]);	
-		// ------------ Ajout des anciens points dans l'image VIDE -------
-		selectImage("UVP5 profile");
-		// --------- NB -----------------------								
-		setColor(255, 0, 0);
-		run("Colors...", "foreground=red background=white selection=red");
-		for (k = 0; k < index_data ; k++) {
-			x= x_offset + plot_larg * lpm_nb[k]/maxixab;	
-			if (graphtype == "depth") 	{	y= y_offset + plot_haut * lpm_depth[k]/zmax;	}
-			else if (graphtype == "time") 	{	y= y_offset + plot_haut * (k/60)/tmax;		}
-			y= minOf(y,y_offset + plot_haut);
-			makeLine(x,y,x,y);
-			run("Fill");
-			updateDisplay();
-		}// for
-		
-		for (m = 0; m < index_data ; m++) {
-			// ---------------- Donnees moyennées -------------
-			if (m/nb_moy == floor(m/nb_moy) && m > 0) {
-				nb_per_litre = lpm_nb[m];
-				data_grey_tp = lpm_grey[m];
-				lpm_esd_um = lpm_esd[m];
-				depth_tp = lpm_depth[m];
-				for (k =1; k < nb_moy ;k++) {
-					nb_per_litre = nb_per_litre +lpm_nb[m - k];
-					data_grey_tp = data_grey_tp + lpm_grey[m - k];
-					lpm_esd_um = lpm_esd_um + lpm_esd[m - k];
-					depth_tp = depth_tp + lpm_depth[m - k];
-				}
-				nb_per_litre = nb_per_litre / nb_moy;
-				data_grey_tp = data_grey_tp / nb_moy;
-				lpm_esd_um  = lpm_esd_um / nb_moy;
-				depth_tp = depth_tp / nb_moy;
-				
-				if (graphtype == "depth") 	{	y_ratio = depth_tp/zmax;	}
-				else if (graphtype == "time") 	{	y_ratio = ((m - nb_moy/2)/60)/tmax;	}
-				y_ratio = minOf(y_ratio,1);
-				y = y_offset + plot_haut * y_ratio;
-				
-				// --------- NB -----------------------
-				x_nb= x_offset + plot_larg * nb_per_litre/maxixab;
-				setColor(255, 255, 255);
-				run("Colors...", "foreground=white background=white selection=red");
-				makeLine(x_nb,y,x_nb,y);
-				run("Fill");
-				// --------- GREY -----------------------
-				x_grey= x_offset + plot_larg * data_grey_tp/maxixgrey;
-				setColor(0, 0, 255);
-				run("Colors...", "foreground=blue background=white selection=red");
-				makeLine(x_grey,y,x_grey,y);
-				run("Fill");
-				// --------- ESD -----------------------
-				x_esd= x_offset + plot_larg * lpm_esd_um/maxixsize;
-				setColor(0, 255, 0);
-				run("Colors...", "foreground=green background=white selection=red");
-				makeLine(x_esd,y,x_esd,y);
-				run("Fill");
-				updateDisplay();
-			}
-		}	
-	} // if
-	// -------------------------- LECTURE du PORT SERIE ------------------
-	ff = Ext.read();
-	
-	//	ff = "C110DATA*0000000000*01000*00005*00025*00010*00180*00180*00253*30000*11111*11111*11111*11111*11111*11111*11111!";
-	ff_v = split(ff,"\n");						
-	time = 0;				
-	// ------------------ Messages -------------------------------------------
-	//	h = ff_v.length - 1 ;
-	plot_data = false;
-	//	while( plot_data == true && ff_v.length > 0 ) {
-	for (h = 0; h < ff_v.length ; h++ ) {
-		//		ind = maxOf(ff_v.length,1);
-		trame_rs232 = ff_v[h];
-		//		h = h - 1 ;
-		//		if ( h == 0 ) plot_data = false;
-		if (lengthOf(trame_rs232) >= 4) data_long = parseInt(substring(trame_rs232,1,4));
-		if (indexOf(trame_rs232,"C110") >=0 && lengthOf(trame_rs232)== data_long && indexOf(trame_rs232,"aaa") < 1 && plot_data == false) {
-			// ------------- On a UNE donnée, on passe à la suivante -----------------
-			plot_data = true;
-			// -------------- Décodage DATA ----------------------
-			flag = runMacro("uvp5_get_data_from_c110.txt",trame_rs232);
-			data_to_plot = split(flag," ");
-			angle_tp = 	parseInt(data_to_plot[0]);
-			temp_tp = 	parseInt(data_to_plot[1]);
-			voltage_tp = 	parseInt(data_to_plot[2]);
-			depth_tp = 	parseInt(data_to_plot[3]);
-			data_nb_tp = 	parseInt(data_to_plot[4]);
-			data_size_tp = 	parseInt(data_to_plot[5]);
-			data_grey_tp = 	parseInt(data_to_plot[6]);
-			fd_space_tp = 	parseInt(data_to_plot[7]);
-			cam_temp = 	parseFloat(data_to_plot[8]);
-			// --------------- UNITES  ---------------
-			nb_per_litre = data_nb_tp/img_vol;
-			lpm_esd_raw = aa_calib * pow(data_size_tp,exp_calib);
-			lpm_esd_um = 	1000*2* pow(lpm_esd_raw/3.1416,0.5);
-			conc = floor(nb_per_litre);
-			esd = floor(lpm_esd_um);
-			message  = "ACQ: "+angle_tp+"° "+temp_tp+"°C "+voltage_tp+"V "+depth_tp+"m "+conc+"#/L "+esd+"µm "+cam_temp+"°C";
-			
-			// --------------- Vecteurs ---------------------------
-			lpm_nb[index_data] = 	nb_per_litre;
-			lpm_esd[index_data] =	lpm_esd_um;
-			lpm_grey[index_data] =	data_grey_tp;
-			lpm_depth[index_data] = depth_tp;
-			time_max = maxOf(time_max,index_data/60);
-			depth_max = maxOf(depth_tp,depth_max);
-			
-			index_data++;
-			//  = index_data + 10 ;	
-			//				print("PROC: "+nb_per_litre+"  "+lpm_esd_um+"  "+data_grey_tp+" "+index_data);
-			if (isOpen("UVP5 profile")) {
-				// -------------- Ajout des points NB/image -------------
-				if (graphtype == "depth") 	{	y_ratio = depth_tp/zmax;	}
-				else if (graphtype == "time") 	{	y_ratio = (index_data/60)/tmax;	}
-				y_ratio = minOf(y_ratio,1);
-				y = y_offset + plot_haut * y_ratio;
-				selectImage("UVP5 profile");
-				// --------- NB -----------------------
-				x_nb= x_offset + plot_larg * nb_per_litre/maxixab;
-				setColor(255, 0, 0);
-				run("Colors...", "foreground=red background=white selection=red");
-				makeLine(x_nb,y,x_nb,y);
-				run("Fill");
-				
-				// ---------------- Donnees moyennées -------------
-				if (index_data/nb_moy == floor(index_data/nb_moy) && index_data > 0) {
-					nb_per_litre = lpm_nb[index_data];
-					data_grey_tp = lpm_grey[index_data];
-					lpm_esd_um = lpm_esd[index_data];
-					depth_tp = lpm_depth[index_data];
-					for (k =1; k < nb_moy ;k++) {
-						nb_per_litre = nb_per_litre +lpm_nb[index_data - k];
-						data_grey_tp = data_grey_tp + lpm_grey[index_data - k];
-						lpm_esd_um = lpm_esd_um + lpm_esd[index_data - k];
-						depth_tp = depth_tp + lpm_depth[index_data - k];
-					}
-					nb_per_litre = nb_per_litre / nb_moy;
-					data_grey_tp = data_grey_tp / nb_moy;
-					lpm_esd_um  = lpm_esd_um / nb_moy;
-					depth_tp = depth_tp / nb_moy;
-					
-					if (graphtype == "depth") 	{	y_ratio = depth_tp/zmax;	}
-					else if (graphtype == "time") 	{	y_ratio = ((index_data - nb_moy/2)/60)/tmax;	}
-					y_ratio = minOf(y_ratio,1);
-					y= y_offset + plot_haut * y_ratio;
-					
-					// --------- NB -----------------------
-					x_nb= x_offset + plot_larg * nb_per_litre/maxixab;
-					setColor(255, 255, 255);
-					run("Colors...", "foreground=white background=white selection=red");
-					makeLine(x_nb,y,x_nb,y);
-					run("Fill");
-					// --------- GREY -----------------------
-					x_grey= x_offset + plot_larg * data_grey_tp/maxixgrey;
-					setColor(0, 0, 255);
-					run("Colors...", "foreground=blue background=white selection=red");
-					makeLine(x_grey,y,x_grey,y);
-					run("Fill");
-					// --------- ESD -----------------------
-					x_esd= x_offset + plot_larg * lpm_esd_um/maxixsize;
-					setColor(0, 255, 0);
-					run("Colors...", "foreground=green background=white selection=red");
-					makeLine(x_esd,y,x_esd,y);
-					run("Fill");
-					updateDisplay();
-				}
-			}//
-			// -------------- Donnees dans status ----------------
-			if (message_old != message) {	showStatus(message);	message_old = message;	}//
-		} // if
-		else if ((startsWith(trame_rs232,"V") || startsWith(trame_rs232,"U")) && lengthOf(trame_rs232) < 30  && indexOf(trame_rs232,"DA") < 0 && lengthOf(trame_rs232)== data_long)	{ 
-			if (print_old != trame_rs232) {	print(trame_rs232);	showStatus(trame_rs232);		print_old = trame_rs232;	} // 
-			// ------------- On a UNE donnée, on passe à la suivante -----------------
-			//			plot_data = false;
-		} // 
-		if (indexOf(trame_rs232,"V092DATA_")>=0 && lengthOf(trame_rs232)== data_long) {	
-			message_v092 = runMacro("uvp5_show_status_messages.txt",trame_rs232);	
-			if(message_v092 != message_v092_old) {showStatus(message_v092);	message_v092_old = message_v092;	}
-			if (v092 == false)	{ print("=> V092 (first) message received.");	v092 = true;	}//if
-		}
-		//	showStatus("WAIT !     "+index_data);
-		
-	} // for
-	// ------------------ TEMPO une seconde ------------------------------
-	while (time < 10) {		
-		keyd = isKeyDown("space"   );
-		if (keyd == 1 ) {
-			wait(200);
-			res1 = getBoolean("Do you want to stop display ? \n \nPRESS YES to stop \n \nPRESS NO to continue !");
-			if (res1 == 1)	{	
-				stop_button = true;					
-				// -------------------- Heure fin ----------------------
-				dateheuremmss =	runMacro("uvp5_get_time");
-				print("Stop time "+dateheuremmss+"  Index "+index_data);
-			}
-		}//
-		wait(45);			time++;		
-	}
+    if (plot_profile == true && isOpen("UVP5 profile") == false) {
+        // -------------------- Creation de l'image VIDE ------------------------
+        texte = uvp_sn + " " + path + " " + depth_max + " " + time_max + " " + maxixab + " " + maxixsize + " " + maxixgrey + " " + graphtype;
+        message = runMacro("Zooprocess_uvp5_uplink_graph.txt", texte);
+        param_plot = split(message, " ");
+        zmax = parseInt(param_plot[2]);
+        tmax = parseInt(param_plot[3]);
+        maxixab = parseInt(param_plot[4]);
+        maxixsize = parseInt(param_plot[5]);
+        maxixgrey = parseInt(param_plot[6]);
+        graphtype = param_plot[7];
+        plot_larg = parseInt(param_plot[8]);
+        plot_haut = parseInt(param_plot[9]);
+        x_offset = parseInt(param_plot[10]);
+        y_offset = parseInt(param_plot[11]);
+        // ------------ Ajout des anciens points dans l'image VIDE -------
+        selectImage("UVP5 profile");
+        // --------- NB -----------------------								
+        setColor(255, 0, 0);
+        run("Colors...", "foreground=red background=white selection=red");
+        for (k = 0; k < index_data; k++) {
+            x = x_offset + plot_larg * lpm_nb[k] / maxixab;
+            if (graphtype == "depth") {
+                y = y_offset + plot_haut * lpm_depth[k] / zmax;
+            } else if (graphtype == "time") {
+                y = y_offset + plot_haut * (k / 60) / tmax;
+            }
+            y = minOf(y, y_offset + plot_haut);
+            makeLine(x, y, x, y);
+            run("Fill");
+            updateDisplay();
+        } // for
+
+        for (m = 0; m < index_data; m++) {
+            // ---------------- Donnees moyennï¿½es -------------
+            if (m / nb_moy == floor(m / nb_moy) && m > 0) {
+                nb_per_litre = lpm_nb[m];
+                data_grey_tp = lpm_grey[m];
+                lpm_esd_um = lpm_esd[m];
+                depth_tp = lpm_depth[m];
+                for (k = 1; k < nb_moy; k++) {
+                    nb_per_litre = nb_per_litre + lpm_nb[m - k];
+                    data_grey_tp = data_grey_tp + lpm_grey[m - k];
+                    lpm_esd_um = lpm_esd_um + lpm_esd[m - k];
+                    depth_tp = depth_tp + lpm_depth[m - k];
+                }
+                nb_per_litre = nb_per_litre / nb_moy;
+                data_grey_tp = data_grey_tp / nb_moy;
+                lpm_esd_um = lpm_esd_um / nb_moy;
+                depth_tp = depth_tp / nb_moy;
+
+                if (graphtype == "depth") {
+                    y_ratio = depth_tp / zmax;
+                } else if (graphtype == "time") {
+                    y_ratio = ((m - nb_moy / 2) / 60) / tmax;
+                }
+                y_ratio = minOf(y_ratio, 1);
+                y = y_offset + plot_haut * y_ratio;
+
+                // --------- NB -----------------------
+                x_nb = x_offset + plot_larg * nb_per_litre / maxixab;
+                setColor(255, 255, 255);
+                run("Colors...", "foreground=white background=white selection=red");
+                makeLine(x_nb, y, x_nb, y);
+                run("Fill");
+                // --------- GREY -----------------------
+                x_grey = x_offset + plot_larg * data_grey_tp / maxixgrey;
+                setColor(0, 0, 255);
+                run("Colors...", "foreground=blue background=white selection=red");
+                makeLine(x_grey, y, x_grey, y);
+                run("Fill");
+                // --------- ESD -----------------------
+                x_esd = x_offset + plot_larg * lpm_esd_um / maxixsize;
+                setColor(0, 255, 0);
+                run("Colors...", "foreground=green background=white selection=red");
+                makeLine(x_esd, y, x_esd, y);
+                run("Fill");
+                updateDisplay();
+            }
+        }
+    } // if
+    // -------------------------- LECTURE du PORT SERIE ------------------
+    ff = Ext.read();
+
+    //	ff = "C110DATA*0000000000*01000*00005*00025*00010*00180*00180*00253*30000*11111*11111*11111*11111*11111*11111*11111!";
+    ff_v = split(ff, "\n");
+    time = 0;
+    // ------------------ Messages -------------------------------------------
+    //	h = ff_v.length - 1 ;
+    plot_data = false;
+    //	while( plot_data == true && ff_v.length > 0 ) {
+    for (h = 0; h < ff_v.length; h++) {
+        //		ind = maxOf(ff_v.length,1);
+        trame_rs232 = ff_v[h];
+        //		h = h - 1 ;
+        //		if ( h == 0 ) plot_data = false;
+        if (lengthOf(trame_rs232) >= 4) data_long = parseInt(substring(trame_rs232, 1, 4));
+        if (indexOf(trame_rs232, "C110") >= 0 && lengthOf(trame_rs232) == data_long && indexOf(trame_rs232, "aaa") < 1 && plot_data == false) {
+            // ------------- On a UNE donnï¿½e, on passe ï¿½ la suivante -----------------
+            plot_data = true;
+            // -------------- Dï¿½codage DATA ----------------------
+            flag = runMacro("uvp5_get_data_from_c110.txt", trame_rs232);
+            data_to_plot = split(flag, " ");
+            angle_tp = parseInt(data_to_plot[0]);
+            temp_tp = parseInt(data_to_plot[1]);
+            voltage_tp = parseInt(data_to_plot[2]);
+            depth_tp = parseInt(data_to_plot[3]);
+            data_nb_tp = parseInt(data_to_plot[4]);
+            data_size_tp = parseInt(data_to_plot[5]);
+            data_grey_tp = parseInt(data_to_plot[6]);
+            fd_space_tp = parseInt(data_to_plot[7]);
+            cam_temp = parseFloat(data_to_plot[8]);
+            // --------------- UNITES  ---------------
+            nb_per_litre = data_nb_tp / img_vol;
+            lpm_esd_raw = aa_calib * pow(data_size_tp, exp_calib);
+            lpm_esd_um = 1000 * 2 * pow(lpm_esd_raw / 3.1416, 0.5);
+            conc = floor(nb_per_litre);
+            esd = floor(lpm_esd_um);
+            message = "ACQ: " + angle_tp + "ï¿½ " + temp_tp + "ï¿½C " + voltage_tp + "V " + depth_tp + "m " + conc + "#/L " + esd + "ï¿½m " + cam_temp + "ï¿½C";
+
+            // --------------- Vecteurs ---------------------------
+            lpm_nb[index_data] = nb_per_litre;
+            lpm_esd[index_data] = lpm_esd_um;
+            lpm_grey[index_data] = data_grey_tp;
+            lpm_depth[index_data] = depth_tp;
+            time_max = maxOf(time_max, index_data / 60);
+            depth_max = maxOf(depth_tp, depth_max);
+
+            index_data++;
+            //  = index_data + 10 ;	
+            //				print("PROC: "+nb_per_litre+"  "+lpm_esd_um+"  "+data_grey_tp+" "+index_data);
+            if (isOpen("UVP5 profile")) {
+                // -------------- Ajout des points NB/image -------------
+                if (graphtype == "depth") {
+                    y_ratio = depth_tp / zmax;
+                } else if (graphtype == "time") {
+                    y_ratio = (index_data / 60) / tmax;
+                }
+                y_ratio = minOf(y_ratio, 1);
+                y = y_offset + plot_haut * y_ratio;
+                selectImage("UVP5 profile");
+                // --------- NB -----------------------
+                x_nb = x_offset + plot_larg * nb_per_litre / maxixab;
+                setColor(255, 0, 0);
+                run("Colors...", "foreground=red background=white selection=red");
+                makeLine(x_nb, y, x_nb, y);
+                run("Fill");
+
+                // ---------------- Donnees moyennï¿½es -------------
+                if (index_data / nb_moy == floor(index_data / nb_moy) && index_data > 0) {
+                    nb_per_litre = lpm_nb[index_data];
+                    data_grey_tp = lpm_grey[index_data];
+                    lpm_esd_um = lpm_esd[index_data];
+                    depth_tp = lpm_depth[index_data];
+                    for (k = 1; k < nb_moy; k++) {
+                        nb_per_litre = nb_per_litre + lpm_nb[index_data - k];
+                        data_grey_tp = data_grey_tp + lpm_grey[index_data - k];
+                        lpm_esd_um = lpm_esd_um + lpm_esd[index_data - k];
+                        depth_tp = depth_tp + lpm_depth[index_data - k];
+                    }
+                    nb_per_litre = nb_per_litre / nb_moy;
+                    data_grey_tp = data_grey_tp / nb_moy;
+                    lpm_esd_um = lpm_esd_um / nb_moy;
+                    depth_tp = depth_tp / nb_moy;
+
+                    if (graphtype == "depth") {
+                        y_ratio = depth_tp / zmax;
+                    } else if (graphtype == "time") {
+                        y_ratio = ((index_data - nb_moy / 2) / 60) / tmax;
+                    }
+                    y_ratio = minOf(y_ratio, 1);
+                    y = y_offset + plot_haut * y_ratio;
+
+                    // --------- NB -----------------------
+                    x_nb = x_offset + plot_larg * nb_per_litre / maxixab;
+                    setColor(255, 255, 255);
+                    run("Colors...", "foreground=white background=white selection=red");
+                    makeLine(x_nb, y, x_nb, y);
+                    run("Fill");
+                    // --------- GREY -----------------------
+                    x_grey = x_offset + plot_larg * data_grey_tp / maxixgrey;
+                    setColor(0, 0, 255);
+                    run("Colors...", "foreground=blue background=white selection=red");
+                    makeLine(x_grey, y, x_grey, y);
+                    run("Fill");
+                    // --------- ESD -----------------------
+                    x_esd = x_offset + plot_larg * lpm_esd_um / maxixsize;
+                    setColor(0, 255, 0);
+                    run("Colors...", "foreground=green background=white selection=red");
+                    makeLine(x_esd, y, x_esd, y);
+                    run("Fill");
+                    updateDisplay();
+                }
+            } //
+            // -------------- Donnees dans status ----------------
+            if (message_old != message) {
+                showStatus(message);
+                message_old = message;
+            } //
+        } // if
+        else if ((startsWith(trame_rs232, "V") || startsWith(trame_rs232, "U")) && lengthOf(trame_rs232) < 30 && indexOf(trame_rs232, "DA") < 0 && lengthOf(trame_rs232) == data_long) {
+            if (print_old != trame_rs232) {
+                print(trame_rs232);
+                showStatus(trame_rs232);
+                print_old = trame_rs232;
+            } // 
+            // ------------- On a UNE donnï¿½e, on passe ï¿½ la suivante -----------------
+            //			plot_data = false;
+        } // 
+        if (indexOf(trame_rs232, "V092DATA_") >= 0 && lengthOf(trame_rs232) == data_long) {
+            message_v092 = runMacro("uvp5_show_status_messages.txt", trame_rs232);
+            if (message_v092 != message_v092_old) {
+                showStatus(message_v092);
+                message_v092_old = message_v092;
+            }
+            if (v092 == false) {
+                print("=> V092 (first) message received.");
+                v092 = true;
+            } //if
+        }
+        //	showStatus("WAIT !     "+index_data);
+
+    } // for
+    // ------------------ TEMPO une seconde ------------------------------
+    while (time < 10) {
+        keyd = isKeyDown("space");
+        if (keyd == 1) {
+            wait(200);
+            res1 = getBoolean("Do you want to stop display ? \n \nPRESS YES to stop \n \nPRESS NO to continue !");
+            if (res1 == 1) {
+                stop_button = true;
+                // -------------------- Heure fin ----------------------
+                dateheuremmss = runMacro("uvp5_get_time");
+                print("Stop time " + dateheuremmss + "  Index " + index_data);
+            }
+        } //
+        wait(45);
+        time++;
+    }
 } // while
 // ------------------------- Sauvegarde de l'image --------------------------------------------
 if (isOpen("UVP5 profile")) {
-	aa = getBoolean("DO YOU WANT TO SAVE IMAGE OF THE PROFILE ? (do not press CANCEL)");
-	if (aa == true) {
-		selectImage("UVP5 profile");
-		texte = pathresults +  "\\Real_time_plot_"+dateheuremmss;
-		saveAs("jpg", pathresults+"\\Real_time_plot_"+dateheuremmss+".jpg"); 
-		showMessage("Real_time_plot_"+dateheuremmss+".jpg saved in \n \n"+pathresults);
-	}
+    aa = getBoolean("DO YOU WANT TO SAVE IMAGE OF THE PROFILE ? (do not press CANCEL)");
+    if (aa == true) {
+        selectImage("UVP5 profile");
+        texte = pathresults + "\\Real_time_plot_" + dateheuremmss;
+        saveAs("jpg", pathresults + "\\Real_time_plot_" + dateheuremmss + ".jpg");
+        showMessage("Real_time_plot_" + dateheuremmss + ".jpg saved in \n \n" + pathresults);
+    }
 }
 
-active = Ext.alive();			// returns "0" or "1"
-if (active == 1 || active == "1"){	Ext.close();	print("> COM"+comport+" CLOSED NOW");	}//if
+active = Ext.alive(); // returns "0" or "1"
+if (active == 1 || active == "1") {
+    Ext.close();
+    print("> COM" + comport + " CLOSED NOW");
+} //if
 print("--------------------------------------------------------------------------------------------------------------");
-if (isOpen("UVP5 profile")) {selectImage("UVP5 profile");	close();	}//
+if (isOpen("UVP5 profile")) {
+    selectImage("UVP5 profile");
+    close();
+} //
 // ------------------ Fin --------------------------
 return args;

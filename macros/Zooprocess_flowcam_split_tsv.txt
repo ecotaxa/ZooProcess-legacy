@@ -4,10 +4,10 @@ date = "2025/01/07";
 
 // ----------------- arguments ---------------
 //	arg = "C:\\flowcam_creocean_namibie_afrique_du_sud_2022_sn476\\";
-arg = 		getArgument(); 
+arg = getArgument();
 
-array = 	split(arg," ");
-projfolder = 		array[0];
+array = split(arg, " ");
+projfolder = array[0];
 
 config_folder = projfolder + "\\config\\";
 
@@ -18,94 +18,105 @@ process_loops = 1;
 subset_ratio_low = 0;
 subset_ratio_high = 0;
 
-// ------------ Verification de la présence du fichier de config et lecture --------
-if (File.exists(config_folder+"\\subset_settings.txt") == false)  {	
-	// -------------------- Pas de fichier de settings -----------------
-	aa = getBoolean("WARINING : \n \nThe settings for the subset does not exists in "+config_folder+". \n \nPress YES to create this file now \nPress Cancel to abort now.");	
-	if (aa == true) {	// -------------- Creation des settings -----------------
-		ret = runMacro("Zooprocess_flowcam_subset_edit.txt",projfolder);
-	}
+// ------------ Verification de la prï¿½sence du fichier de config et lecture --------
+if (File.exists(config_folder + "\\subset_settings.txt") == false) {
+    // -------------------- Pas de fichier de settings -----------------
+    aa = getBoolean("WARINING : \n \nThe settings for the subset does not exists in " + config_folder + ". \n \nPress YES to create this file now \nPress Cancel to abort now.");
+    if (aa == true) { // -------------- Creation des settings -----------------
+        ret = runMacro("Zooprocess_flowcam_subset_edit.txt", projfolder);
+    }
 }
 
-// -------------- Lecture des paramètres ----------------------------------
-open(config_folder+"\\subset_settings.txt");	
+// -------------- Lecture des paramï¿½tres ----------------------------------
+open(config_folder + "\\subset_settings.txt");
 wait(100);
 config_data = getInfo();
 run("Close");
-conf_data  = split(config_data,"\n");
-for (hh=0;hh<conf_data.length;hh++){
-	data_conf = replace(conf_data[hh],"= "," ");
-	dat_conf = split(data_conf," ");		
-	if (startsWith(dat_conf[0],"subset_nb_max_low"))	nb_object_low_in_config = parseInt(dat_conf[1]);
-	if (startsWith(dat_conf[0],"subset_nb_max_high"))	nb_object_high_in_config = parseInt(dat_conf[1]);	
-	if (startsWith(dat_conf[0],"subset_esd_um"))		subset_esd_in_config = parseInt(dat_conf[1]);
-	if (startsWith(dat_conf[0],"subset_percent_low"))	percent_object_low_in_config = parseFloat(dat_conf[1]);
-	if (startsWith(dat_conf[0],"subset_percent_high"))	percent_object_high_in_config = parseFloat(dat_conf[1]);
-}// for
+conf_data = split(config_data, "\n");
+for (hh = 0; hh < conf_data.length; hh++) {
+    data_conf = replace(conf_data[hh], "= ", " ");
+    dat_conf = split(data_conf, " ");
+    if (startsWith(dat_conf[0], "subset_nb_max_low")) nb_object_low_in_config = parseInt(dat_conf[1]);
+    if (startsWith(dat_conf[0], "subset_nb_max_high")) nb_object_high_in_config = parseInt(dat_conf[1]);
+    if (startsWith(dat_conf[0], "subset_esd_um")) subset_esd_in_config = parseInt(dat_conf[1]);
+    if (startsWith(dat_conf[0], "subset_percent_low")) percent_object_low_in_config = parseFloat(dat_conf[1]);
+    if (startsWith(dat_conf[0], "subset_percent_high")) percent_object_high_in_config = parseFloat(dat_conf[1]);
+} // for
 // --------------- Gestion NB / % ----------------------
-if ((nb_object_low_in_config < 1 && nb_object_high_in_config < 1) || (percent_object_low_in_config == 0 && percent_object_high_in_config == 0)) {	
-	aa = getBoolean("The settings in "+config_folder+"\\subset_settings.txt are NOK \n \nPress Cancel to abord, edit the subset settings and restart the split process.");
+if ((nb_object_low_in_config < 1 && nb_object_high_in_config < 1) || (percent_object_low_in_config == 0 && percent_object_high_in_config == 0)) {
+    aa = getBoolean("The settings in " + config_folder + "\\subset_settings.txt are NOK \n \nPress Cancel to abord, edit the subset settings and restart the split process.");
 }
 
 // ===================================== Menu principal =====================================
 //--------------- Selection des fichiers META si plus d'un -------------------
-filelist  = 	getFileList(projfolder+"\\meta\\");
+filelist = getFileList(projfolder + "\\meta\\");
 j = 0;
 list = newArray(filelist.length);
-for (i=0; i<filelist.length ; i++) {	
-	ctrl = endsWith(filelist[i],".txt");
-	ctrl1 = startsWith(filelist[i],"Flowcam_header_");
-	ctrl2 = startsWith(filelist[i],"Generic_header_");
-	if (ctrl == 1 && (ctrl1 == 1 || ctrl2 == 1))	{rr = filelist[i]; 	list[j] = rr;	j++;		} // if
+for (i = 0; i < filelist.length; i++) {
+    ctrl = endsWith(filelist[i], ".txt");
+    ctrl1 = startsWith(filelist[i], "Flowcam_header_");
+    ctrl2 = startsWith(filelist[i], "Generic_header_");
+    if (ctrl == 1 && (ctrl1 == 1 || ctrl2 == 1)) {
+        rr = filelist[i];
+        list[j] = rr;
+        j++;
+    } // if
 } // for	
-if (j==0) { 
-	getBoolean("No header file in the "+projfolder+"\\meta folder of the project. \n \nPress YES to end this process and fill metadata then !          ");
+if (j == 0) {
+    getBoolean("No header file in the " + projfolder + "\\meta folder of the project. \n \nPress YES to end this process and fill metadata then !          ");
 } //
-else if (j==1) {
-	// ----------------- Un seul fichier selectionne tout seul ----------------------------------------
-	listaff = newArray(j);
-	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
-	metafile = listaff[0];	
-} 
-else { 	// ---------------------Choix manuel du fichier meta -------------------------------------
-	listaff = newArray(j);
-	for (i=0; i<listaff.length ; i++) {	rr = list[i];		listaff[i] = rr;	} // for
-	Dialog.create("METADATA FILE          version : "+version);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	Dialog.addMessage("Project :  "+projfolder);
-	Dialog.addMessage("--------------------------------------------------------------------------------   ");
-	message = "SELECT Metadata FILE             " ;
-	Dialog.addMessage(message);
-	Dialog.addChoice("       ", listaff);
-	Dialog.show();
-	metafile = Dialog.getChoice();
+else if (j == 1) {
+    // ----------------- Un seul fichier selectionne tout seul ----------------------------------------
+    listaff = newArray(j);
+    for (i = 0; i < listaff.length; i++) {
+        rr = list[i];
+        listaff[i] = rr;
+    } // for
+    metafile = listaff[0];
+} else { // ---------------------Choix manuel du fichier meta -------------------------------------
+    listaff = newArray(j);
+    for (i = 0; i < listaff.length; i++) {
+        rr = list[i];
+        listaff[i] = rr;
+    } // for
+    Dialog.create("METADATA FILE          version : " + version);
+    Dialog.addMessage("--------------------------------------------------------------------------------   ");
+    Dialog.addMessage("Project :  " + projfolder);
+    Dialog.addMessage("--------------------------------------------------------------------------------   ");
+    message = "SELECT Metadata FILE             ";
+    Dialog.addMessage(message);
+    Dialog.addChoice("       ", listaff);
+    Dialog.show();
+    metafile = Dialog.getChoice();
 } // else
 
 // -------------------------------- Lecture du meta pour liste des fichiers ----------------
-open(projfolder+"\\meta\\"+metafile);
+open(projfolder + "\\meta\\" + metafile);
 wait(100);
 metadata = getInfo();
 run('Close');
-if (indexOf(metadata,";") < 0 ) {	aa = getBoolean("The "+metafile+" has been modified outside of Zooprocess and is now TAB separated instead of dot-coma. \n \nPress Cancel to abort. \nCorrect your file\nRestart the process !");	}
-array = split(metadata,"\n");
+if (indexOf(metadata, ";") < 0) {
+    aa = getBoolean("The " + metafile + " has been modified outside of Zooprocess and is now TAB separated instead of dot-coma. \n \nPress Cancel to abort. \nCorrect your file\nRestart the process !");
+}
+array = split(metadata, "\n");
 nb_sample = array.length - 1;
 
 // -------------------------------- Menu -----------------------------------
-Dialog.create("Process SUBSET files            version :  "+version);
+Dialog.create("Process SUBSET files            version :  " + version);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
 Dialog.addMessage("Instrument :  FlowCam");
-Dialog.addMessage("Project :        "+projfolder);
+Dialog.addMessage("Project :        " + projfolder);
 Dialog.addMessage("---- LOWER -----------------------------------------------------------------------------------------------------------------------------------------------------      ");
-Dialog.addMessage("        MAXIMUM percentage of vignettes for the lower fraction ( 0 < M <= 1 ) =  "+percent_object_low_in_config);
-Dialog.addMessage("             MAXIMUM number of vignettes for the lower fraction ( > 0 )=  "+nb_object_low_in_config);
+Dialog.addMessage("        MAXIMUM percentage of vignettes for the lower fraction ( 0 < M <= 1 ) =  " + percent_object_low_in_config);
+Dialog.addMessage("             MAXIMUM number of vignettes for the lower fraction ( > 0 )=  " + nb_object_low_in_config);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
-Dialog.addMessage("  MAXIMUM Equivalent Spherical Diameter for the lower fraction [µm] = "+subset_esd_in_config);
+Dialog.addMessage("  MAXIMUM Equivalent Spherical Diameter for the lower fraction [ï¿½m] = " + subset_esd_in_config);
 Dialog.addMessage("---- HIGHER ----------------------------------------------------------------------------------------------------------------------------------------------------      ");
-Dialog.addMessage("        MAXIMUM percentage of vignettes for the upper fraction ( 0 < M <= 1 ) =  "+percent_object_high_in_config);
-Dialog.addMessage("             MAXIMUM number of vignettes for the upper fraction ( > 0 )=  "+nb_object_high_in_config);
+Dialog.addMessage("        MAXIMUM percentage of vignettes for the upper fraction ( 0 < M <= 1 ) =  " + percent_object_high_in_config);
+Dialog.addMessage("             MAXIMUM number of vignettes for the upper fraction ( > 0 )=  " + nb_object_high_in_config);
 Dialog.addMessage("--------------------------------------------------------------------------------------------------------------------------------------------------------------------      ");
-Dialog.addMessage("Zooprocess will create the subset using the parameter which will provide subsets with LESS vignettes.");	
-Dialog.addMessage("All "+nb_sample+" samples of the project will be processed if not yet done.");
+Dialog.addMessage("Zooprocess will create the subset using the parameter which will provide subsets with LESS vignettes.");
+Dialog.addMessage("All " + nb_sample + " samples of the project will be processed if not yet done.");
 Dialog.addMessage("The tool checks the existence of previously low/high TSV files and skip the sample if they exist.");
 Dialog.addMessage("The process can be long. Be patient !");
 Dialog.addMessage("Press CANCEL to abort if you do not want to continue.");
@@ -116,381 +127,413 @@ Dialog.show;
 // +++++++++++++++++++++++++++ Boucle sur les sample +++++++++++++++++++++++++++
 processed_sample = 0;
 texte = "Samples processed : \n \n";
-for (sample_no = 0 ; sample_no < nb_sample ; sample_no++) {
-	presence_config_ok = false;
-	presence_splited_tsv = false;
-	presence_tsv_all = false;
-	col_pixel = 0;
-	col_area = 0;
-	
-	// ------------------- Sample name ----------------------------------
-	line = array[sample_no+1];
-	metadata = split(line,";");
-	sampleId = metadata[3];
-	
-	sample_folder = projfolder + "\\work"+"\\"+sampleId+"\\";
-	ecotaxa_file = "ecotaxa_"+ sampleId;
-	
-	// ---------------------- Controle des valeurs ----------------------------------------------------
-	if (subset_esd_in_config != 99999999 && (nb_object_low_in_config != 1 || nb_object_high_in_config != 1)) {	
-		presence_config_ok = true;	
-	}
-	
-	// ------------ vérification de la présence de TSV splités -------------------------
-	if (File.exists(sample_folder + "\\" + ecotaxa_file+"_low.tsv") || File.exists(sample_folder + "\\" + ecotaxa_file+"_high.tsv")) {
-		presence_splited_tsv = true;
-	}
-	// ------------ vérification présence TSV all ----------------------------------------------
-	if (File.exists(sample_folder + "\\" + ecotaxa_file+".tsv")) {	
-		presence_tsv_all = true;	
-	}
-	
-	// ++++++++++++++++++++++++++++++++++++++ creation des TSV ++++++++++++++++++++++++++++++++++++++++++++
-	if (presence_config_ok == true && presence_splited_tsv == false && presence_tsv_all == true) {
-		// ---------- Comptage des sample traités --------
-		processed_sample++;
-		texte = texte + sampleId+"\n";
-		
-		// --------- On calcule des subsets ----------
-		subset_process = true;	
-		process_loops = 2;
-		
-		// ------------ Ouverture du TSV global --------------------------------------------
-		open(sample_folder + "\\" + ecotaxa_file+".tsv");
-		wait(100);
-		tsv_data = getInfo();
-		run("Close");
-		tsv_data  = split(tsv_data,"\n");
-		
-		// ------------------- Recherche des colonnes AREA et PIXEL -------------------
-		entete = split(tsv_data[0],"\t");
-		for (i = 0; i < entete.length ; i++) {
-			//	getBoolean(entete[i]);
-			if (entete[i] == "object_area") {	col_area = i;	}
-			if (entete[i] == "process_pixel") {	col_pixel = i;	}
-			if (entete[i] == "sample_id") {		col_sample = i;	}
-			if (entete[i] == "acq_id")	{	col_acq_id = i;	}
-			
-		}
-		// ----------------- acq_id --------------------------------------------
-		aa = split(tsv_data[2],"\t");
-		acq_Id = aa[col_acq_id];
-		
-		// ----------------- Valeur du pixel ------------------------------------------
-		data_for_pixel = split(tsv_data[2],"\t ");
-		pixel = data_for_pixel[col_pixel];
-		
-		// ------------------ Calcul de l'area limite en pixel --------------
-		subset_area_um = PI * pow((subset_esd_in_config / 2),2);
-		if (subset_area_um / pow(pixel,2) > floor(subset_area_um / pow(pixel,2))) {
-			subset_area_px = floor(subset_area_um / pow(pixel,2));
-		}
-		else {	subset_area_px = (subset_area_um / pow(pixel,2)) - 1;		}
-		
-		// ------------ Archivage des précédents TSV splités  --------------------------------------------
-		if (File.exists(sample_folder + "\\" + ecotaxa_file+"_low.tsv")) {
-			File.rename(sample_folder + "\\" + ecotaxa_file+"_low.tsv",sample_folder + "\\_" + ecotaxa_file+"_low_"+dateheure+".tsv");
-		}
-		if (File.exists(sample_folder + "\\" + ecotaxa_file+"_high.tsv")) {
-			File.rename(sample_folder + "\\" + ecotaxa_file+"_high.tsv",sample_folder + "\\_" + ecotaxa_file+"_high_"+dateheure+".tsv");
-		}
-		
-		// ------------ Création des vecteurs a partir du TSV global ------------------------
-		// --------------------- Vecteur random, data et area ----------------------------
-		object_data_ligne_vector = 	newArray(tsv_data.length - 2);
-		random_vector = 		newArray(object_data_ligne_vector.length);
-		data_vector = 			newArray(object_data_ligne_vector.length);
-		data_vector_area_sorted_area = 	newArray(object_data_ligne_vector.length);
-		area_vector = 			newArray(object_data_ligne_vector.length);
-		for (j = 0;j < data_vector.length;j++) { 
-			data_vector[j] = tsv_data[j+2];
-			data_vector_area_sorted_area[j] = tsv_data[j+2];
-			data = split(data_vector[j],"\t");
-			area_vector[j] = data[col_area];
-			random_vector[j] = round(random*10000);
-		}
-		
-		// --------------------- Tri des objets par taille -----------------
-		// -------------- Recherche Area min --------------------
-		area_min = 1000000000000000000;
-		area_max = 0;
-		for (j = 0;j < area_vector.length;j++) {
-			area_min = minOf(area_min,parseInt(area_vector[j]));
-			area_max = maxOf(area_max,parseInt(area_vector[j]));
-		}	
-		//	aa = getBoolean("area : "+area_min+"  "+subset_area_px+"  "+area_max);
-		
-		// -------------- Type de process -------------------------- 
-		if (area_min > subset_area_px ) {
-			// ---------------- Pas d'objet LOW ----------------
-			process_low = false;	
-			process_high = true;
-			area_sorting = false;	
-			nb_object_low_detected = 0;
-			nb_object_high_detected = area_vector.length;
-			subset_ratio_low == 0;
-			if (percent_object_high_in_config == 0 || percent_object_high_in_config >= 1) {	
-				// -------------priorité nombres -----------------
-				subset_ratio_high = 	minOf(1,nb_object_high_in_config/nb_object_high_detected);	
-			}
-			else if (percent_object_high_in_config < 1){
-				// -------------on prend celui qui aboutit au moins de vignettes ----------
-				subset_ratio_high = 	minOf(percent_object_high_in_config,nb_object_high_in_config/nb_object_high_detected);			
-			}
-		}
-		else if (area_max < subset_area_px ) {
-			// ---------------- Pas d'objet high ------------
-			process_low = true;
-			process_high = false;
-			area_sorting = false;
-			nb_object_low_detected = area_vector.length;
-			nb_object_high_detected = 0;
-			if (percent_object_low_in_config == 0 || percent_object_low_in_config >= 1) {	
-				// -------------priorité nombres -----------------
-				subset_ratio_low = 	minOf(1,nb_object_low_in_config/nb_object_low_detected);
-			}
-			else if (percent_object_low_in_config < 1){
-				// -------------on prend celui qui aboutit au moins de vignettes ----------
-				subset_ratio_low = 	minOf(percent_object_low_in_config,nb_object_low_in_config/nb_object_low_detected);			
-			}			
-			subset_ratio_high = 0;
-		}
-		else {	// ---------------- Des objets LOW et HIGH ------
-			process_low = true;
-			process_high = true;	
-			area_sorting = true;
-			// -------------- TRI sur les area croissantes -----------------
-			i = 0;
-			nb_object_low_detected = 0;
-			for (area = area_min ; area < area_max+1 ; area++){
-				if (area == 100*round(area/100)) {	showStatus("Sorting area = "+area+" / "+area_max+ " [pixels]");	}
-				for (j = 0;j < area_vector.length;j++) {
-					if (area_vector[j] == area) {
-						data_vector_area_sorted_area[i] = data_vector[j];
-						//						random_vector[i] = round(random*10000);
-						// ------------- index limite entre les deux TSV ---------
-						if (area == subset_area_px) {	nb_object_low_detected = i;	}
-						i++;				
-					}
-				}
-				if (area == subset_area_px) {	nb_object_low_detected = i;}
-			}
-			// --------------------- Nombre d'objects high --------------------------
-			nb_object_high_detected = area_vector.length - nb_object_low_detected;
-			
-			// ------------------ Ratio dans subsets ------------------------------------------
-			if (percent_object_low_in_config == 0 || percent_object_low_in_config >= 1) {	
-				// -------------priorité nombres -----------------
-				subset_ratio_low = 	minOf(1,nb_object_low_in_config/nb_object_low_detected);	
-			}
-			else if (percent_object_low_in_config < 1){
-				// -------------on prend celui qui aboutit au moins de vignettes ----------
-				subset_ratio_low = 	minOf(percent_object_low_in_config,nb_object_low_in_config/nb_object_low_detected);			
-			}
-			if (percent_object_high_in_config == 0 || percent_object_high_in_config >= 1) {	
-				// -------------priorité nombres -----------------
-				subset_ratio_high = 	minOf(1,nb_object_high_in_config/nb_object_high_detected);	
-			}
-			else if (percent_object_high_in_config < 1){
-				// -------------on prend celui qui aboutit au moins de vignettes ----------
-				subset_ratio_high = 	minOf(percent_object_high_in_config,nb_object_high_in_config/nb_object_high_detected);			
-			}
-		}
-		// ---------------------- Nb objets to process ----------------------------------
-		nb_object_low_to_process = 	round(subset_ratio_low * nb_object_low_detected);
-		nb_object_high_to_process = 	round(subset_ratio_high * nb_object_high_detected);
-		
-		//	aa = getBoolean(nb_object_low_detected);	
-		//	aa = getBoolean("process_low= "+process_low+" process_high= "+process_high+"  subset_ratio_low= "+subset_ratio_low+" subset_ratio_high= "+subset_ratio_high);
-		//	aa = getBoolean("nb_object_low_to_process= "+nb_object_low_to_process+" nb_object_high_to_process= "+nb_object_high_to_process); 
-		/*	
-		// --------------------------- Impression du vecteur pour contrôle ------------------------- 
-		//	if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-		if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-		for (j = 0;j < area_vector.length;j++) { 	print(data_vector_area_sorted_area[j]); 		}
-		print("nb_objet_total = "+area_vector.length);
-		print("nb_object_low_detected = "+nb_object_low_detected);
-		text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_area_sorted.txt";
-		selectWindow("Log");
-		run("Text...",text);
-		// fichier bien trié par taille croissante !
-		//	aa = getBoolean("nb_object_low_detected= "+nb_object_low_detected+"  nb_object_low_in_config= "+nb_object_low_in_config);
-		*/	
-		// =================================== LOW ================================================================================
-		if (process_low == true) {
-			// --------------------- Tri par random des objets low si necessaire ------------------	
-			// ----------- Recherche random min et max ------------------------------
-			data_vector_area_sorted_area_low_random_sorted = newArray(nb_object_low_detected);
-			
-			random_min = 99999999;
-			random_max = 0;
-			for (i = 0 ; i < nb_object_low_to_process ; i++) {
-				random_min = minOf(random_min,random_vector[i]);
-				random_max = maxOf(random_max,random_vector[i]);		
-			}	
-			//			aa = getBoolean("Random LOW: "+random_min+"  "+random_max);
-			// ----------- TRI par ordre de random low ----------------------------------
-			i = 0;
-			for(random_val = random_min; random_val < random_max + 1; random_val++) {
-				if (random_val == 100*round(random_val/100)){	showStatus("Sorting random low = "+random_val+" / "+random_max);	} 
-				for (m = 0; m < nb_object_low_detected; m++) {
-					if (random_vector[m] == random_val) {
-						data_vector_area_sorted_area_low_random_sorted[i] = data_vector_area_sorted_area[m];
-						i++;				
-					}			
-				}		
-			}
-			/*		
-			// --------------------------- Impression du vecteur low pour contrôle ------------------------- 
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-			for (j = 0;j < data_vector_area_sorted_area_low_random_sorted.length;j++) { 	print(data_vector_area_sorted_area_low_random_sorted[j]); 		}
-			text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_low_random_sorted.txt";
-			selectWindow("Log");
-			run("Text...",text);
-			*/		
-			//		aa= getBoolean("LOW printed");
-		}
-		//	else {	aa= getBoolean("LOW not processed !");	}
-		
-		// =================================== HIGH ================================================================================
-		if (process_high == true) {
-			
-			// --------------------- Creation vecteurs high ----------------------------------------
-			data_vector_area_sorted_area_high = 	newArray(nb_object_high_detected);
-			random_vector_high = 			newArray(nb_object_high_detected);				
-			data_vector_area_sorted_area_high_random_sorted = newArray(nb_object_high_detected);
-			//				data_vector_area_sorted_area_high_random_sorted = newArray(nb_object_high_to_process);
-			
-			// ---------------------- Data et Random vector HIGH --------------------------
-			for (i = 0; i < data_vector_area_sorted_area_high.length ;i++) {
-				aa = data_vector_area_sorted_area[i+nb_object_low_detected];
-				data_vector_area_sorted_area_high[i] = data_vector_area_sorted_area[i+nb_object_low_detected];
-				random_vector_high[i] = round(random*10000);
-			}
-			/*
-			// --------------------------- Impression du vecteur random pour contrôle ------------------------- 
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-			for (i = 0;i < random_vector_high.length;i++) { 	print(random_vector_high[i]); 		}
-			text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_high_random_vector_"+dateheure+".txt";
-			selectWindow("Log");
-			run("Text...",text);
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//			
-			*/
-			// ----------- Recherche random min et max ------------------------------
-			random_min = 99999999;
-			random_max = 0;
-			for (i = 0; i < random_vector_high.length; i++) {
-				random_min = minOf(random_min,random_vector_high[i]);
-				random_max = maxOf(random_max,random_vector_high[i]);	
-			}
-			//			aa = getBoolean("Random HIGH: "+random_min+"  "+random_max);
-			// ----------- TRI par ordre de random high ----------------------------------
-			i = 0;
-			for(random_val = random_min; random_val < random_max + 1; random_val++) {
-				if (random_val == 100*round(random_val/100)){	showStatus("Sorting random high = "+random_val+" / "+random_max);	}
-				for (m = 0; m < nb_object_high_detected; m++) {
-					//					for (m = 0; m < nb_object_high_to_process; m++) {
-					if (random_vector_high[m] == random_val) {
-						data_vector_area_sorted_area_high_random_sorted[i] = data_vector_area_sorted_area_high[m];
-						i++;				
-					}			
-				}		
-			}			
-			/*					
-			// --------------------------- Impression du vecteur high pour contrôle ------------------------- 
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-			for (j = 0;j < data_vector_area_sorted_area_high_random_sorted.length;j++) { 	print(data_vector_area_sorted_area_high_random_sorted[j]); 		}
-			text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_high_random_sorted_"+dateheure+".txt";
-			selectWindow("Log");
-			run("Text...",text);
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-			*/
-		}
-		//	else {	aa= getBoolean("HIGH not processed !");	}
-		
-		// +++++++++++++++++ IMPRESSION +++++++++++++++++++++++++++++++
-		for (k = 0; k < 2 ; k++){
-			// ----------------- Création Entete ---------------------------------------------------------------
-			line_header = entete[0];
-			type_header = split(tsv_data[1],"\t ");
-			line_type = type_header[0];
-			for (i = 1; i < col_area ; i++) {	
-				line_header = line_header+"\t"+entete[i];
-				line_type = line_type+"\t"+type_header[i];
-			}
-			line_header = line_header + "\t" + "process_fraction_type";
-			line_header = line_header + "\t" + "process_id_ratio";
-			line_header = line_header + "\t" + "process_min_esd_µm";
-			line_header = line_header + "\t" + "process_max_esd_µm";	
-			line_type = line_type + "\t" + "[f]";	
-			line_type = line_type + "\t" + "[f]";
-			line_type = line_type + "\t" + "[f]";
-			line_type = line_type + "\t" + "[f]";
-			for (i = col_area ; i < entete.length ; i++) {	
-				line_header = line_header+"\t"+entete[i];
-				line_type = line_type+"\t"+type_header[i];
-			}
-			if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}
-			// --------------- Entete ----------------------------------------------------
-			print(line_header);
-			print(line_type);
-			// --------------- DATA ----------------------------------------------------------------------
-			if (k == 0 && process_low == true) {
-				// ------------------ DATA Low ------------------------------------------------
-				for (m = 0 ; m < nb_object_low_to_process ; m++) {
-					//				for (m = 0 ; m < data_vector_area_sorted_area_low_random_sorted.length ; m++) {
-					line_data_splited = split(data_vector_area_sorted_area_low_random_sorted[m]);
-					line_data = line_data_splited[0];
-					for (i = 1; i < col_area ; i++) {		line_data = line_data+"\t"+line_data_splited[i];	}
-					line_data = line_data + "\t" + "low";
-					line_data = line_data + "\t" + subset_ratio_low;
-					line_data = line_data + "\t" + "nan";
-					line_data = line_data + "\t" + subset_esd_in_config;
-					
-					for (i = col_area ; i < col_acq_id ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}
-					line_data = line_data + "\t" + acq_Id +"_low";
-					
-					for (i = col_acq_id + 1 ; i < col_sample ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}					
-					for (i = col_sample ; i < entete.length ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}
-					print(line_data);
-				}
-				text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_low.tsv";	
-				selectWindow("Log");
-				run("Text...",text);			
-			}
-			if (k == 1 && process_high == true) {	
-				// ---------------------- DATA High -------------------
-				for (m = 0 ; m < nb_object_high_to_process ; m++) {
-					//				for (m = 0 ; m < data_vector_area_sorted_area_high_random_sorted.length ; m++) {			
-					line_data_splited = split(data_vector_area_sorted_area_high_random_sorted[m]);
-					line_data = line_data_splited[0];
-					for (i = 1; i < col_area ; i++) {		line_data = line_data+"\t"+line_data_splited[i];	}
-					line_data = line_data + "\t" + "high";
-					line_data = line_data + "\t" + subset_ratio_high;
-					line_data = line_data + "\t" + subset_esd_in_config;
-					line_data = line_data + "\t" + "nan";
-					
-					for (i = col_area; i < col_acq_id ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}
-					line_data = line_data + "\t" + acq_Id +"_high";
-					
-					for (i = col_acq_id + 1; i < col_sample ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}					
-					for (i = col_sample; i < entete.length ; i++) {	line_data = line_data+"\t"+line_data_splited[i];}
-					print(line_data);
-				}
-				text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_high.tsv";	
-				selectWindow("Log");
-				run("Text...",text);
-			}
-		}
-				
-		// ------------ Creation d'une archive du TSV global ---------------------------------------------
-		dateheure =	runMacro("Zooscan_get_time_5");
-		File.rename(sample_folder + "\\" + ecotaxa_file+".tsv",sample_folder + "\\_" + ecotaxa_file+"_"+dateheure+".tsv");
-		
-	}
-	//else { showMessage("No split");
+for (sample_no = 0; sample_no < nb_sample; sample_no++) {
+    presence_config_ok = false;
+    presence_splited_tsv = false;
+    presence_tsv_all = false;
+    col_pixel = 0;
+    col_area = 0;
+
+    // ------------------- Sample name ----------------------------------
+    line = array[sample_no + 1];
+    metadata = split(line, ";");
+    sampleId = metadata[3];
+
+    sample_folder = projfolder + "\\work" + "\\" + sampleId + "\\";
+    ecotaxa_file = "ecotaxa_" + sampleId;
+
+    // ---------------------- Controle des valeurs ----------------------------------------------------
+    if (subset_esd_in_config != 99999999 && (nb_object_low_in_config != 1 || nb_object_high_in_config != 1)) {
+        presence_config_ok = true;
+    }
+
+    // ------------ vï¿½rification de la prï¿½sence de TSV splitï¿½s -------------------------
+    if (File.exists(sample_folder + "\\" + ecotaxa_file + "_low.tsv") || File.exists(sample_folder + "\\" + ecotaxa_file + "_high.tsv")) {
+        presence_splited_tsv = true;
+    }
+    // ------------ vï¿½rification prï¿½sence TSV all ----------------------------------------------
+    if (File.exists(sample_folder + "\\" + ecotaxa_file + ".tsv")) {
+        presence_tsv_all = true;
+    }
+
+    // ++++++++++++++++++++++++++++++++++++++ creation des TSV ++++++++++++++++++++++++++++++++++++++++++++
+    if (presence_config_ok == true && presence_splited_tsv == false && presence_tsv_all == true) {
+        // ---------- Comptage des sample traitï¿½s --------
+        processed_sample++;
+        texte = texte + sampleId + "\n";
+
+        // --------- On calcule des subsets ----------
+        subset_process = true;
+        process_loops = 2;
+
+        // ------------ Ouverture du TSV global --------------------------------------------
+        open(sample_folder + "\\" + ecotaxa_file + ".tsv");
+        wait(100);
+        tsv_data = getInfo();
+        run("Close");
+        tsv_data = split(tsv_data, "\n");
+
+        // ------------------- Recherche des colonnes AREA et PIXEL -------------------
+        entete = split(tsv_data[0], "\t");
+        for (i = 0; i < entete.length; i++) {
+            //	getBoolean(entete[i]);
+            if (entete[i] == "object_area") {
+                col_area = i;
+            }
+            if (entete[i] == "process_pixel") {
+                col_pixel = i;
+            }
+            if (entete[i] == "sample_id") {
+                col_sample = i;
+            }
+            if (entete[i] == "acq_id") {
+                col_acq_id = i;
+            }
+
+        }
+        // ----------------- acq_id --------------------------------------------
+        aa = split(tsv_data[2], "\t");
+        acq_Id = aa[col_acq_id];
+
+        // ----------------- Valeur du pixel ------------------------------------------
+        data_for_pixel = split(tsv_data[2], "\t ");
+        pixel = data_for_pixel[col_pixel];
+
+        // ------------------ Calcul de l'area limite en pixel --------------
+        subset_area_um = PI * pow((subset_esd_in_config / 2), 2);
+        if (subset_area_um / pow(pixel, 2) > floor(subset_area_um / pow(pixel, 2))) {
+            subset_area_px = floor(subset_area_um / pow(pixel, 2));
+        } else {
+            subset_area_px = (subset_area_um / pow(pixel, 2)) - 1;
+        }
+
+        // ------------ Archivage des prï¿½cï¿½dents TSV splitï¿½s  --------------------------------------------
+        if (File.exists(sample_folder + "\\" + ecotaxa_file + "_low.tsv")) {
+            File.rename(sample_folder + "\\" + ecotaxa_file + "_low.tsv", sample_folder + "\\_" + ecotaxa_file + "_low_" + dateheure + ".tsv");
+        }
+        if (File.exists(sample_folder + "\\" + ecotaxa_file + "_high.tsv")) {
+            File.rename(sample_folder + "\\" + ecotaxa_file + "_high.tsv", sample_folder + "\\_" + ecotaxa_file + "_high_" + dateheure + ".tsv");
+        }
+
+        // ------------ Crï¿½ation des vecteurs a partir du TSV global ------------------------
+        // --------------------- Vecteur random, data et area ----------------------------
+        object_data_ligne_vector = newArray(tsv_data.length - 2);
+        random_vector = newArray(object_data_ligne_vector.length);
+        data_vector = newArray(object_data_ligne_vector.length);
+        data_vector_area_sorted_area = newArray(object_data_ligne_vector.length);
+        area_vector = newArray(object_data_ligne_vector.length);
+        for (j = 0; j < data_vector.length; j++) {
+            data_vector[j] = tsv_data[j + 2];
+            data_vector_area_sorted_area[j] = tsv_data[j + 2];
+            data = split(data_vector[j], "\t");
+            area_vector[j] = data[col_area];
+            random_vector[j] = round(random * 10000);
+        }
+
+        // --------------------- Tri des objets par taille -----------------
+        // -------------- Recherche Area min --------------------
+        area_min = 1000000000000000000;
+        area_max = 0;
+        for (j = 0; j < area_vector.length; j++) {
+            area_min = minOf(area_min, parseInt(area_vector[j]));
+            area_max = maxOf(area_max, parseInt(area_vector[j]));
+        }
+        //	aa = getBoolean("area : "+area_min+"  "+subset_area_px+"  "+area_max);
+
+        // -------------- Type de process -------------------------- 
+        if (area_min > subset_area_px) {
+            // ---------------- Pas d'objet LOW ----------------
+            process_low = false;
+            process_high = true;
+            area_sorting = false;
+            nb_object_low_detected = 0;
+            nb_object_high_detected = area_vector.length;
+            subset_ratio_low == 0;
+            if (percent_object_high_in_config == 0 || percent_object_high_in_config >= 1) {
+                // -------------prioritï¿½ nombres -----------------
+                subset_ratio_high = minOf(1, nb_object_high_in_config / nb_object_high_detected);
+            } else if (percent_object_high_in_config < 1) {
+                // -------------on prend celui qui aboutit au moins de vignettes ----------
+                subset_ratio_high = minOf(percent_object_high_in_config, nb_object_high_in_config / nb_object_high_detected);
+            }
+        } else if (area_max < subset_area_px) {
+            // ---------------- Pas d'objet high ------------
+            process_low = true;
+            process_high = false;
+            area_sorting = false;
+            nb_object_low_detected = area_vector.length;
+            nb_object_high_detected = 0;
+            if (percent_object_low_in_config == 0 || percent_object_low_in_config >= 1) {
+                // -------------prioritï¿½ nombres -----------------
+                subset_ratio_low = minOf(1, nb_object_low_in_config / nb_object_low_detected);
+            } else if (percent_object_low_in_config < 1) {
+                // -------------on prend celui qui aboutit au moins de vignettes ----------
+                subset_ratio_low = minOf(percent_object_low_in_config, nb_object_low_in_config / nb_object_low_detected);
+            }
+            subset_ratio_high = 0;
+        } else { // ---------------- Des objets LOW et HIGH ------
+            process_low = true;
+            process_high = true;
+            area_sorting = true;
+            // -------------- TRI sur les area croissantes -----------------
+            i = 0;
+            nb_object_low_detected = 0;
+            for (area = area_min; area < area_max + 1; area++) {
+                if (area == 100 * round(area / 100)) {
+                    showStatus("Sorting area = " + area + " / " + area_max + " [pixels]");
+                }
+                for (j = 0; j < area_vector.length; j++) {
+                    if (area_vector[j] == area) {
+                        data_vector_area_sorted_area[i] = data_vector[j];
+                        //						random_vector[i] = round(random*10000);
+                        // ------------- index limite entre les deux TSV ---------
+                        if (area == subset_area_px) {
+                            nb_object_low_detected = i;
+                        }
+                        i++;
+                    }
+                }
+                if (area == subset_area_px) {
+                    nb_object_low_detected = i;
+                }
+            }
+            // --------------------- Nombre d'objects high --------------------------
+            nb_object_high_detected = area_vector.length - nb_object_low_detected;
+
+            // ------------------ Ratio dans subsets ------------------------------------------
+            if (percent_object_low_in_config == 0 || percent_object_low_in_config >= 1) {
+                // -------------prioritï¿½ nombres -----------------
+                subset_ratio_low = minOf(1, nb_object_low_in_config / nb_object_low_detected);
+            } else if (percent_object_low_in_config < 1) {
+                // -------------on prend celui qui aboutit au moins de vignettes ----------
+                subset_ratio_low = minOf(percent_object_low_in_config, nb_object_low_in_config / nb_object_low_detected);
+            }
+            if (percent_object_high_in_config == 0 || percent_object_high_in_config >= 1) {
+                // -------------prioritï¿½ nombres -----------------
+                subset_ratio_high = minOf(1, nb_object_high_in_config / nb_object_high_detected);
+            } else if (percent_object_high_in_config < 1) {
+                // -------------on prend celui qui aboutit au moins de vignettes ----------
+                subset_ratio_high = minOf(percent_object_high_in_config, nb_object_high_in_config / nb_object_high_detected);
+            }
+        }
+        // ---------------------- Nb objets to process ----------------------------------
+        nb_object_low_to_process = round(subset_ratio_low * nb_object_low_detected);
+        nb_object_high_to_process = round(subset_ratio_high * nb_object_high_detected);
+
+        //	aa = getBoolean(nb_object_low_detected);	
+        //	aa = getBoolean("process_low= "+process_low+" process_high= "+process_high+"  subset_ratio_low= "+subset_ratio_low+" subset_ratio_high= "+subset_ratio_high);
+        //	aa = getBoolean("nb_object_low_to_process= "+nb_object_low_to_process+" nb_object_high_to_process= "+nb_object_high_to_process); 
+        /*	
+        // --------------------------- Impression du vecteur pour contrï¿½le ------------------------- 
+        //	if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+        if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+        for (j = 0;j < area_vector.length;j++) { 	print(data_vector_area_sorted_area[j]); 		}
+        print("nb_objet_total = "+area_vector.length);
+        print("nb_object_low_detected = "+nb_object_low_detected);
+        text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_area_sorted.txt";
+        selectWindow("Log");
+        run("Text...",text);
+        // fichier bien triï¿½ par taille croissante !
+        //	aa = getBoolean("nb_object_low_detected= "+nb_object_low_detected+"  nb_object_low_in_config= "+nb_object_low_in_config);
+        */
+        // =================================== LOW ================================================================================
+        if (process_low == true) {
+            // --------------------- Tri par random des objets low si necessaire ------------------	
+            // ----------- Recherche random min et max ------------------------------
+            data_vector_area_sorted_area_low_random_sorted = newArray(nb_object_low_detected);
+
+            random_min = 99999999;
+            random_max = 0;
+            for (i = 0; i < nb_object_low_to_process; i++) {
+                random_min = minOf(random_min, random_vector[i]);
+                random_max = maxOf(random_max, random_vector[i]);
+            }
+            //			aa = getBoolean("Random LOW: "+random_min+"  "+random_max);
+            // ----------- TRI par ordre de random low ----------------------------------
+            i = 0;
+            for (random_val = random_min; random_val < random_max + 1; random_val++) {
+                if (random_val == 100 * round(random_val / 100)) {
+                    showStatus("Sorting random low = " + random_val + " / " + random_max);
+                }
+                for (m = 0; m < nb_object_low_detected; m++) {
+                    if (random_vector[m] == random_val) {
+                        data_vector_area_sorted_area_low_random_sorted[i] = data_vector_area_sorted_area[m];
+                        i++;
+                    }
+                }
+            }
+            /*		
+            // --------------------------- Impression du vecteur low pour contrï¿½le ------------------------- 
+            if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+            for (j = 0;j < data_vector_area_sorted_area_low_random_sorted.length;j++) { 	print(data_vector_area_sorted_area_low_random_sorted[j]); 		}
+            text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_low_random_sorted.txt";
+            selectWindow("Log");
+            run("Text...",text);
+            */
+            //		aa= getBoolean("LOW printed");
+        }
+        //	else {	aa= getBoolean("LOW not processed !");	}
+
+        // =================================== HIGH ================================================================================
+        if (process_high == true) {
+
+            // --------------------- Creation vecteurs high ----------------------------------------
+            data_vector_area_sorted_area_high = newArray(nb_object_high_detected);
+            random_vector_high = newArray(nb_object_high_detected);
+            data_vector_area_sorted_area_high_random_sorted = newArray(nb_object_high_detected);
+            //				data_vector_area_sorted_area_high_random_sorted = newArray(nb_object_high_to_process);
+
+            // ---------------------- Data et Random vector HIGH --------------------------
+            for (i = 0; i < data_vector_area_sorted_area_high.length; i++) {
+                aa = data_vector_area_sorted_area[i + nb_object_low_detected];
+                data_vector_area_sorted_area_high[i] = data_vector_area_sorted_area[i + nb_object_low_detected];
+                random_vector_high[i] = round(random * 10000);
+            }
+            /*
+            // --------------------------- Impression du vecteur random pour contrï¿½le ------------------------- 
+            if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+            for (i = 0;i < random_vector_high.length;i++) { 	print(random_vector_high[i]); 		}
+            text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_high_random_vector_"+dateheure+".txt";
+            selectWindow("Log");
+            run("Text...",text);
+            if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//			
+            */
+            // ----------- Recherche random min et max ------------------------------
+            random_min = 99999999;
+            random_max = 0;
+            for (i = 0; i < random_vector_high.length; i++) {
+                random_min = minOf(random_min, random_vector_high[i]);
+                random_max = maxOf(random_max, random_vector_high[i]);
+            }
+            //			aa = getBoolean("Random HIGH: "+random_min+"  "+random_max);
+            // ----------- TRI par ordre de random high ----------------------------------
+            i = 0;
+            for (random_val = random_min; random_val < random_max + 1; random_val++) {
+                if (random_val == 100 * round(random_val / 100)) {
+                    showStatus("Sorting random high = " + random_val + " / " + random_max);
+                }
+                for (m = 0; m < nb_object_high_detected; m++) {
+                    //					for (m = 0; m < nb_object_high_to_process; m++) {
+                    if (random_vector_high[m] == random_val) {
+                        data_vector_area_sorted_area_high_random_sorted[i] = data_vector_area_sorted_area_high[m];
+                        i++;
+                    }
+                }
+            }
+            /*					
+            // --------------------------- Impression du vecteur high pour contrï¿½le ------------------------- 
+            if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+            for (j = 0;j < data_vector_area_sorted_area_high_random_sorted.length;j++) { 	print(data_vector_area_sorted_area_high_random_sorted[j]); 		}
+            text =  "save=" + sample_folder + "\\" + ecotaxa_file+"_high_random_sorted_"+dateheure+".txt";
+            selectWindow("Log");
+            run("Text...",text);
+            if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
+            */
+        }
+        //	else {	aa= getBoolean("HIGH not processed !");	}
+
+        // +++++++++++++++++ IMPRESSION +++++++++++++++++++++++++++++++
+        for (k = 0; k < 2; k++) {
+            // ----------------- Crï¿½ation Entete ---------------------------------------------------------------
+            line_header = entete[0];
+            type_header = split(tsv_data[1], "\t ");
+            line_type = type_header[0];
+            for (i = 1; i < col_area; i++) {
+                line_header = line_header + "\t" + entete[i];
+                line_type = line_type + "\t" + type_header[i];
+            }
+            line_header = line_header + "\t" + "process_fraction_type";
+            line_header = line_header + "\t" + "process_id_ratio";
+            line_header = line_header + "\t" + "process_min_esd_ï¿½m";
+            line_header = line_header + "\t" + "process_max_esd_ï¿½m";
+            line_type = line_type + "\t" + "[f]";
+            line_type = line_type + "\t" + "[f]";
+            line_type = line_type + "\t" + "[f]";
+            line_type = line_type + "\t" + "[f]";
+            for (i = col_area; i < entete.length; i++) {
+                line_header = line_header + "\t" + entete[i];
+                line_type = line_type + "\t" + type_header[i];
+            }
+            if (isOpen("Log")) {
+                selectWindow("Log");
+                run("Close");
+            }
+            // --------------- Entete ----------------------------------------------------
+            print(line_header);
+            print(line_type);
+            // --------------- DATA ----------------------------------------------------------------------
+            if (k == 0 && process_low == true) {
+                // ------------------ DATA Low ------------------------------------------------
+                for (m = 0; m < nb_object_low_to_process; m++) {
+                    //				for (m = 0 ; m < data_vector_area_sorted_area_low_random_sorted.length ; m++) {
+                    line_data_splited = split(data_vector_area_sorted_area_low_random_sorted[m]);
+                    line_data = line_data_splited[0];
+                    for (i = 1; i < col_area; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    line_data = line_data + "\t" + "low";
+                    line_data = line_data + "\t" + subset_ratio_low;
+                    line_data = line_data + "\t" + "nan";
+                    line_data = line_data + "\t" + subset_esd_in_config;
+
+                    for (i = col_area; i < col_acq_id; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    line_data = line_data + "\t" + acq_Id + "_low";
+
+                    for (i = col_acq_id + 1; i < col_sample; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    for (i = col_sample; i < entete.length; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    print(line_data);
+                }
+                text = "save=" + sample_folder + "\\" + ecotaxa_file + "_low.tsv";
+                selectWindow("Log");
+                run("Text...", text);
+            }
+            if (k == 1 && process_high == true) {
+                // ---------------------- DATA High -------------------
+                for (m = 0; m < nb_object_high_to_process; m++) {
+                    //				for (m = 0 ; m < data_vector_area_sorted_area_high_random_sorted.length ; m++) {			
+                    line_data_splited = split(data_vector_area_sorted_area_high_random_sorted[m]);
+                    line_data = line_data_splited[0];
+                    for (i = 1; i < col_area; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    line_data = line_data + "\t" + "high";
+                    line_data = line_data + "\t" + subset_ratio_high;
+                    line_data = line_data + "\t" + subset_esd_in_config;
+                    line_data = line_data + "\t" + "nan";
+
+                    for (i = col_area; i < col_acq_id; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    line_data = line_data + "\t" + acq_Id + "_high";
+
+                    for (i = col_acq_id + 1; i < col_sample; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    for (i = col_sample; i < entete.length; i++) {
+                        line_data = line_data + "\t" + line_data_splited[i];
+                    }
+                    print(line_data);
+                }
+                text = "save=" + sample_folder + "\\" + ecotaxa_file + "_high.tsv";
+                selectWindow("Log");
+                run("Text...", text);
+            }
+        }
+
+        // ------------ Creation d'une archive du TSV global ---------------------------------------------
+        dateheure = runMacro("Zooscan_get_time_5");
+        File.rename(sample_folder + "\\" + ecotaxa_file + ".tsv", sample_folder + "\\_" + ecotaxa_file + "_" + dateheure + ".tsv");
+
+    }
+    //else { showMessage("No split");
 }
-showMessage("END of the subset tool. \n \n"+texte);
+showMessage("END of the subset tool. \n \n" + texte);
 
 // ----------------------- END ----------------------
 ret = "OK";

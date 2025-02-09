@@ -3,12 +3,12 @@ version = "7.10";
 date = "2012/05/28";
 requires("1.41o");
 
-arg = 		getArgument(); 
-array = 	split(arg," ");
-chem= 		array[0];
-projfolder = 	array[1];
+arg = getArgument();
+array = split(arg, " ");
+chem = array[0];
+projfolder = array[1];
 
-// --------------------- Chargement des metadata à partir du dossier RAW ---------
+// --------------------- Chargement des metadata ï¿½ partir du dossier RAW ---------
 
 
 

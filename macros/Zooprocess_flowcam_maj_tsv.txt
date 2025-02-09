@@ -3,217 +3,230 @@ version = "8.27";
 date = "2024/08/28";
 
 
-arg = 		getArgument(); 
-arg = replace(arg," ","_");
-array = 	split(arg,";");
+arg = getArgument();
+arg = replace(arg, " ", "_");
+array = split(arg, ";");
 
-projfolder = 		array[0];
-pid_folder= 		array[1];
-pid_file = 		array[2];
+projfolder = array[0];
+pid_folder = array[1];
+pid_file = array[2];
 
 ecotaxa_folder = pid_folder;
 
 // ------------ object ---------------
-object_lat =			array[5+3];
-object_lon =			array[6+3];
-object_datetime = 		array[14+3];
-aa = split(object_datetime,"-");
+object_lat = array[5 + 3];
+object_lon = array[6 + 3];
+object_datetime = array[14 + 3];
+aa = split(object_datetime, "-");
 object_date = aa[0];
 object_time = aa[1];
-object_depth_min =		array[8+3];
-object_depth_max =		array[9+3];
-object_lat_end = 		array[27+3];
-object_lon_end = 		array[28+3];
+object_depth_min = array[8 + 3];
+object_depth_max = array[9 + 3];
+object_lat_end = array[27 + 3];
+object_lon_end = array[28 + 3];
 
-line_objects = object_lat +"\t"+ object_lon+"\t"+object_date+"\t"+object_time+"\t"+object_depth_min+"\t"+object_depth_max+"\t"+object_lat_end+"\t"+object_lon_end;
+line_objects = object_lat + "\t" + object_lon + "\t" + object_date + "\t" + object_time + "\t" + object_depth_min + "\t" + object_depth_max + "\t" + object_lat_end + "\t" + object_lon_end;
 
 // ------------- acq -------------
-acq_celltype =			array[12+3];
+acq_celltype = array[12 + 3];
 
-acq_operator = 			array[43+3];
+acq_operator = array[43 + 3];
 
 // ----------- sample ------------------
-sample_id =			array[3+3];
-sample_project = 		array[0+3];
-sample_ship = 			array[1+3];
-sample_filename = 		array[2+3];
-sample_barcode = 		array[26+3];
-sample_samplinggear =		array[7+3];
+sample_id = array[3 + 3];
+sample_project = array[0 + 3];
+sample_ship = array[1 + 3];
+sample_filename = array[2 + 3];
+sample_barcode = array[26 + 3];
+sample_samplinggear = array[7 + 3];
 
 sample_volconc = "nan";
 sample_volpump = "nan";
-sample_comment_or_volume = 	array[13+3];
+sample_comment_or_volume = array[13 + 3];
 
-sample_stationId = 		array[15+3];
-sample_cruise = 		array[42+3];
+sample_stationId = array[15 + 3];
+sample_cruise = array[42 + 3];
 
-line_sample_01 = sample_id +"\t"+ sample_project +"\t"+ sample_ship +"\t"+ sample_filename +"\t"+ sample_barcode +"\t"+ sample_samplinggear +"\t"+sample_volconc+"\t"+sample_volpump+"\t"+sample_comment_or_volume +"\t"+ sample_stationId +"\t"+ sample_cruise;
+line_sample_01 = sample_id + "\t" + sample_project + "\t" + sample_ship + "\t" + sample_filename + "\t" + sample_barcode + "\t" + sample_samplinggear + "\t" + sample_volconc + "\t" + sample_volpump + "\t" + sample_comment_or_volume + "\t" + sample_stationId + "\t" + sample_cruise;
 
-sample_ship_speed_knots = 	array[30+3];
-sample_ctd_ref = 		array[17+3];
-sample_other_ref =		array[4+3];
-sample_conc_vol_ml =		array[10+3];
-sample_initial_col_vol_m3  =	array[11+3];
-sample_dilution_method = 	array[41+3];
-sample_fixative = 		array[37+3];
-sample_tow_nb = 		array[18+3];
+sample_ship_speed_knots = array[30 + 3];
+sample_ctd_ref = array[17 + 3];
+sample_other_ref = array[4 + 3];
+sample_conc_vol_ml = array[10 + 3];
+sample_initial_col_vol_m3 = array[11 + 3];
+sample_dilution_method = array[41 + 3];
+sample_fixative = array[37 + 3];
+sample_tow_nb = array[18 + 3];
 
-line_sample_02 = sample_ship_speed_knots +"\t"+ sample_ctd_ref +"\t"+ sample_other_ref +"\t"+ sample_conc_vol_ml +"\t"+ sample_initial_col_vol_m3 +"\t"+ sample_dilution_method +"\t"+ sample_fixative +"\t"+ sample_tow_nb;
+line_sample_02 = sample_ship_speed_knots + "\t" + sample_ctd_ref + "\t" + sample_other_ref + "\t" + sample_conc_vol_ml + "\t" + sample_initial_col_vol_m3 + "\t" + sample_dilution_method + "\t" + sample_fixative + "\t" + sample_tow_nb;
 
-sample_tow_type = 		array[19+3];
-sample_net_type = 		array[20+3];
-sample_net_mesh_um = 		array[21+3];
-sample_net_surf_m2 = 		array[22+3];
-sample_comment = 		array[13+3];
+sample_tow_type = array[19 + 3];
+sample_net_type = array[20 + 3];
+sample_net_mesh_um = array[21 + 3];
+sample_net_surf_m2 = array[22 + 3];
+sample_comment = array[13 + 3];
 
-sample_vol_qc_index = 		array[23+3];
+sample_vol_qc_index = array[23 + 3];
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_vol");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_vol_qc = aa[sample_vol_qc_index];
 
-sample_depth_qc_index = 		array[24+3];
+sample_depth_qc_index = array[24 + 3];
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_depth");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_depth_qc = aa[sample_depth_qc_index];
 
-sample_qc = 			array[25+3];
-sample_air_index = 		parseInt(substring(sample_qc,0,1));
+sample_qc = array[25 + 3];
+sample_air_index = parseInt(substring(sample_qc, 0, 1));
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_air");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_air = aa[sample_air_index];
 
-sample_richness_index = 	parseInt(substring(sample_qc,1,2));
+sample_richness_index = parseInt(substring(sample_qc, 1, 2));
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_richness");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_richness = aa[sample_richness_index];
 
-sample_cond_index = 		parseInt(substring(sample_qc,2,3));
+sample_cond_index = parseInt(substring(sample_qc, 2, 3));
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_condition");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_cond = aa[sample_cond_index];
 
-sample_disturb_index = 		parseInt(substring(sample_qc,3,4));
+sample_disturb_index = parseInt(substring(sample_qc, 3, 4));
 macro_flag = runMacro("Zooprocess_flowcam_qc_codes_disturb");
-aa = split(macro_flag," ");
+aa = split(macro_flag, " ");
 sample_disturb = aa[sample_disturb_index];
 
-line_sample_03 = sample_tow_type +"\t"+ sample_net_type +"\t"+ sample_net_mesh_um +"\t"+ sample_net_surf_m2 +"\t"+ sample_comment +"\t"+ sample_vol_qc +"\t"+ sample_depth_qc +"\t"+ sample_air +"\t"+ sample_richness +"\t"+ sample_cond +"\t"+ sample_disturb;
+line_sample_03 = sample_tow_type + "\t" + sample_net_type + "\t" + sample_net_mesh_um + "\t" + sample_net_surf_m2 + "\t" + sample_comment + "\t" + sample_vol_qc + "\t" + sample_depth_qc + "\t" + sample_air + "\t" + sample_richness + "\t" + sample_cond + "\t" + sample_disturb;
 
-sample_net_duration_min = 	array[29+3];
-sample_cable_length_m = 	array[31+3];
-sample_cable_angle_deg = 	array[32+3];
-sample_cable_speed_m_s = 	array[33+3];
-sample_jar_nb = 		array[34+3];
-sample_sieve_min_um = 		array[35+3];
-sample_sieve_max_um = 		array[36+3];
-sample_flow_start_count = 	array[38+3];
+sample_net_duration_min = array[29 + 3];
+sample_cable_length_m = array[31 + 3];
+sample_cable_angle_deg = array[32 + 3];
+sample_cable_speed_m_s = array[33 + 3];
+sample_jar_nb = array[34 + 3];
+sample_sieve_min_um = array[35 + 3];
+sample_sieve_max_um = array[36 + 3];
+sample_flow_start_count = array[38 + 3];
 
-line_sample_04 = sample_net_duration_min +"\t"+ sample_cable_length_m +"\t"+ sample_cable_angle_deg +"\t"+ sample_cable_speed_m_s +"\t"+ sample_jar_nb +"\t"+ sample_sieve_min_um +"\t"+ sample_sieve_max_um +"\t"+ sample_flow_start_count;
+line_sample_04 = sample_net_duration_min + "\t" + sample_cable_length_m + "\t" + sample_cable_angle_deg + "\t" + sample_cable_speed_m_s + "\t" + sample_jar_nb + "\t" + sample_sieve_min_um + "\t" + sample_sieve_max_um + "\t" + sample_flow_start_count;
 
-sample_flow_end_count = 	array[39+3];
-sample_flow_type = 		array[40+3];
-sample_operator = 		array[44+3]; 
-sample_bottom_depth = 		array[16+3];
+sample_flow_end_count = array[39 + 3];
+sample_flow_type = array[40 + 3];
+sample_operator = array[44 + 3];
+sample_bottom_depth = array[16 + 3];
 
-line_sample_05 = sample_flow_end_count +"\t"+ sample_flow_type +"\t"+ sample_operator +"\t"+ sample_bottom_depth;
+line_sample_05 = sample_flow_end_count + "\t" + sample_flow_type + "\t" + sample_operator + "\t" + sample_bottom_depth;
 
 
 // ========================== Ouverture du TSV ==========================
-for (tsv_file = 0; tsv_file < 3 ; tsv_file++) {
-	// --------------------- liste des 3 noms possibles de TSV ---------------
-	ecotaxa_file_list = newArray("ecotaxa_"+ pid_file +".tsv" , "ecotaxa_"+ pid_file +"_high.tsv" , "ecotaxa_"+ pid_file +"_low.tsv");
-	ecotaxa_file = ecotaxa_file_list[tsv_file];
-	if (File.exists(ecotaxa_folder + "\\" + ecotaxa_file)) { 
-		// ---------------------- Le fichier existe -------------------
-		open(ecotaxa_folder + "\\" + ecotaxa_file);
-	wait(200);
-		
-		
-//		aa = getBoolean(ecotaxa_folder + "\\" + ecotaxa_file);		
-		
-		data = getInfo();
-		
-		run("Close");
-		
-		// ========================== Recherche des index de colonnes pour les metadata ==========================
-		data = split(data,"\n");
-		header_line = data[0];
-				
-		// On considère que les colonnes sont dans l'ordre de la version 8.15 et suivantes de PID_to_ecotaxa et donc par blocs.
-		header_fields = split(header_line,"\t");
-		
-		// ------------------ boucle sur le header --------
-		index_object_lat = 0;
-		index_object_lon_end = 0;
-		index_acq_celltype = 0;
-		index_acq_operator = 0;
-		index_sample_id = 0;
-		index_sample_bottom_depth = 0;
-		for (i=0; i < header_fields.length ; i++) {
-			if (header_fields[i] == "object_lat") 		index_object_lat = i;
-			if (header_fields[i] == "object_lon_end") 	index_object_lon_end = i;
-			if (header_fields[i] == "acq_celltype") 	index_acq_celltype = i;
-			if (header_fields[i] == "acq_operator") 	index_acq_operator = i;
-			if (header_fields[i] == "sample_id") 		index_sample_id = i;
-			if (header_fields[i] == "sample_bottom_depth") 	index_sample_bottom_depth = i;
-		}
-		// ------------- Faire quelques vérifications de nombre de champs et de no de colonnes
-	
-//		aa  = getBoolean(index_object_lat+"  "+index_object_lon_end+"  "+index_acq_celltype+"  "+index_acq_operator+"  "+index_sample_id+"  "+index_sample_bottom_depth);
+for (tsv_file = 0; tsv_file < 3; tsv_file++) {
+    // --------------------- liste des 3 noms possibles de TSV ---------------
+    ecotaxa_file_list = newArray("ecotaxa_" + pid_file + ".tsv", "ecotaxa_" + pid_file + "_high.tsv", "ecotaxa_" + pid_file + "_low.tsv");
+    ecotaxa_file = ecotaxa_file_list[tsv_file];
+    if (File.exists(ecotaxa_folder + "\\" + ecotaxa_file)) {
+        // ---------------------- Le fichier existe -------------------
+        open(ecotaxa_folder + "\\" + ecotaxa_file);
+        wait(200);
 
-		
-		if (index_object_lat == 0 || index_object_lon_end == 0 || index_acq_celltype == 0 || index_acq_operator == 0 || index_sample_id == 0 ) {
-			aa = getBoolean("WARNING : \n \nAt least one of the important metadata field is not found in "+ecotaxa_file+"\n \nCheck the file before restarting the operation !");
-		}
-		else if (index_object_lon_end - index_object_lat > 8 ) {
-			aa = getBoolean("WARNING : \n \nThe "+ecotaxa_file+" file is not correct. \n \nPlease run the ''Update all metadata'' tool first !");
-		}		
-		else if (index_sample_bottom_depth - index_sample_id > 42 ) {
-			aa = getBoolean("WARNING : \n \nThe "+ecotaxa_file+" file is not correct. \n \nPlease run the ''Update all metadata'' tool first !");
-		}
-		
-		// ========================== Creation des donnes à imprimer ==========================
-		new_tsv = newArray(data.length);
-		new_tsv[0] = data[0];
-		new_tsv[1] = data[1];
-		if (index_sample_bottom_depth == 0) {
-			// --------------- On ajoute la colonne manquante du TSV -------------------
-			new_tsv[0] = data[0]+"\t"+"sample_bottom_depth";
-			new_tsv[1] = data[1]+"\t"+"[f]";
-			index_sample_bottom_depth = header_fields.length + 1;
-		}
-		for (i = 2 ; i < new_tsv.length ; i++) {
-			data_fields = split(data[i],"\t");
-			line = data_fields[0];
-			for (k = 1; k < index_object_lat ; k++) {	line = line + "\t" + data_fields[k];	}
-			
-			// ------------------ bloc object ------------------
-			line = line + "\t" + line_objects;
-			for (k = index_object_lon_end + 1; k < index_acq_celltype ; k++) {	line = line + "\t" + data_fields[k];	}
-			
-			// ------------------ bloc acq ----------------
-			line = line + "\t" + acq_celltype;
-			for (k = index_acq_celltype + 1; k < index_acq_operator ; k++) {	line = line + "\t" + data_fields[k];	}
-			line = line + "\t" + index_acq_operator;
-			for (k = index_acq_operator + 1 ; k < index_sample_id ; k++) {	line = line + "\t" + data_fields[k];	}	
-			
-			// ------------------ bloc sample -------------
-			line = line + "\t" + line_sample_01 + "\t" + line_sample_02 + "\t" + line_sample_03 + "\t" + line_sample_04 + "\t" + line_sample_05;
-			for (k = index_sample_bottom_depth + 1 ; k < data_fields.length ; k++) {	line = line + "\t" + data_fields[k];	}
-			
-			new_tsv[i] = line;
-		}
-		
-		// ========================== Ecriture du fichier ==========================
-		if (isOpen("Log")) {	selectWindow("Log"); run("Close");	}//
-		for (i = 0 ; i < new_tsv.length ; i++) {	print(new_tsv[i]);	}
-		
-		// ----------------- Enregistrement fichier TSV ------------------------
-		selectWindow("Log");
-		text =  "save=" + ecotaxa_folder + "\\" + ecotaxa_file;
-		run("Text...",text);
-		run("Close");
-	}
+
+        //		aa = getBoolean(ecotaxa_folder + "\\" + ecotaxa_file);		
+
+        data = getInfo();
+
+        run("Close");
+
+        // ========================== Recherche des index de colonnes pour les metadata ==========================
+        data = split(data, "\n");
+        header_line = data[0];
+
+        // On considï¿½re que les colonnes sont dans l'ordre de la version 8.15 et suivantes de PID_to_ecotaxa et donc par blocs.
+        header_fields = split(header_line, "\t");
+
+        // ------------------ boucle sur le header --------
+        index_object_lat = 0;
+        index_object_lon_end = 0;
+        index_acq_celltype = 0;
+        index_acq_operator = 0;
+        index_sample_id = 0;
+        index_sample_bottom_depth = 0;
+        for (i = 0; i < header_fields.length; i++) {
+            if (header_fields[i] == "object_lat") index_object_lat = i;
+            if (header_fields[i] == "object_lon_end") index_object_lon_end = i;
+            if (header_fields[i] == "acq_celltype") index_acq_celltype = i;
+            if (header_fields[i] == "acq_operator") index_acq_operator = i;
+            if (header_fields[i] == "sample_id") index_sample_id = i;
+            if (header_fields[i] == "sample_bottom_depth") index_sample_bottom_depth = i;
+        }
+        // ------------- Faire quelques vï¿½rifications de nombre de champs et de no de colonnes
+
+        //		aa  = getBoolean(index_object_lat+"  "+index_object_lon_end+"  "+index_acq_celltype+"  "+index_acq_operator+"  "+index_sample_id+"  "+index_sample_bottom_depth);
+
+
+        if (index_object_lat == 0 || index_object_lon_end == 0 || index_acq_celltype == 0 || index_acq_operator == 0 || index_sample_id == 0) {
+            aa = getBoolean("WARNING : \n \nAt least one of the important metadata field is not found in " + ecotaxa_file + "\n \nCheck the file before restarting the operation !");
+        } else if (index_object_lon_end - index_object_lat > 8) {
+            aa = getBoolean("WARNING : \n \nThe " + ecotaxa_file + " file is not correct. \n \nPlease run the ''Update all metadata'' tool first !");
+        } else if (index_sample_bottom_depth - index_sample_id > 42) {
+            aa = getBoolean("WARNING : \n \nThe " + ecotaxa_file + " file is not correct. \n \nPlease run the ''Update all metadata'' tool first !");
+        }
+
+        // ========================== Creation des donnes ï¿½ imprimer ==========================
+        new_tsv = newArray(data.length);
+        new_tsv[0] = data[0];
+        new_tsv[1] = data[1];
+        if (index_sample_bottom_depth == 0) {
+            // --------------- On ajoute la colonne manquante du TSV -------------------
+            new_tsv[0] = data[0] + "\t" + "sample_bottom_depth";
+            new_tsv[1] = data[1] + "\t" + "[f]";
+            index_sample_bottom_depth = header_fields.length + 1;
+        }
+        for (i = 2; i < new_tsv.length; i++) {
+            data_fields = split(data[i], "\t");
+            line = data_fields[0];
+            for (k = 1; k < index_object_lat; k++) {
+                line = line + "\t" + data_fields[k];
+            }
+
+            // ------------------ bloc object ------------------
+            line = line + "\t" + line_objects;
+            for (k = index_object_lon_end + 1; k < index_acq_celltype; k++) {
+                line = line + "\t" + data_fields[k];
+            }
+
+            // ------------------ bloc acq ----------------
+            line = line + "\t" + acq_celltype;
+            for (k = index_acq_celltype + 1; k < index_acq_operator; k++) {
+                line = line + "\t" + data_fields[k];
+            }
+            line = line + "\t" + index_acq_operator;
+            for (k = index_acq_operator + 1; k < index_sample_id; k++) {
+                line = line + "\t" + data_fields[k];
+            }
+
+            // ------------------ bloc sample -------------
+            line = line + "\t" + line_sample_01 + "\t" + line_sample_02 + "\t" + line_sample_03 + "\t" + line_sample_04 + "\t" + line_sample_05;
+            for (k = index_sample_bottom_depth + 1; k < data_fields.length; k++) {
+                line = line + "\t" + data_fields[k];
+            }
+
+            new_tsv[i] = line;
+        }
+
+        // ========================== Ecriture du fichier ==========================
+        if (isOpen("Log")) {
+            selectWindow("Log");
+            run("Close");
+        } //
+        for (i = 0; i < new_tsv.length; i++) {
+            print(new_tsv[i]);
+        }
+
+        // ----------------- Enregistrement fichier TSV ------------------------
+        selectWindow("Log");
+        text = "save=" + ecotaxa_folder + "\\" + ecotaxa_file;
+        run("Text...", text);
+        run("Close");
+    }
 }
 
 // ----------------------- END ----------------------

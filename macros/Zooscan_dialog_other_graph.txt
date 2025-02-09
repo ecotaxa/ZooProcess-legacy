@@ -3,7 +3,7 @@
 ret = "1";
 info = getBoolean("Do you want to plot another graphs for the same PID file ?              ");
 if (info == true) {
-	ret = "11111";
+    ret = "11111";
 }
 
 return ret;

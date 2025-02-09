@@ -8,124 +8,186 @@ date = "2022/06/29";
 
 vuescan = "9.7.67";
 scanner = "no_scanner";
-scanner= "no";
+scanner = "no";
 
 //arg = chemconfig +" "+chem+" "+configfile +" "+ param + " " + titre + " " + sep +" "+ tag +" "+ meta +" "+ par +" "+ maskop +" "+ masktag +" "+ maskpar +" "+chemscan+" "+chemwork1 +" "+savevig+" "+savezip+" "+maskod +" "+ident +" "+maskident +" "+vis+" "+maskvis+" "+xxx+" "+yyy+" "+savetag;
 
-arg = getArgument(); 
-array = split(arg," ");
-chemconfig= array[0]; 	chem= array[1]; 		configfile= array[2]; 	param= array[3]; 	titre= array[4]; 
-sep= array[5]; 		tag= array[6]; 		meta= array[7];  	par= array[8]; 	maskop= array[9]; 	masktag= array[10];  maskpar= array[11]; 
-chemscan= array[12]; 	chemwork1= array[13];	savevig= array[14];	savezip= array[15];	maskod= array[16];	ident= array[17];	maskident= array[18];
-vis=array[19];		maskvis= array[20];		scan= array[21];	yyy=array[22];	savetag= array[23];
+arg = getArgument();
+array = split(arg, " ");
+chemconfig = array[0];
+chem = array[1];
+configfile = array[2];
+param = array[3];
+titre = array[4];
+sep = array[5];
+tag = array[6];
+meta = array[7];
+par = array[8];
+maskop = array[9];
+masktag = array[10];
+maskpar = array[11];
+chemscan = array[12];
+chemwork1 = array[13];
+savevig = array[14];
+savezip = array[15];
+maskod = array[16];
+ident = array[17];
+maskident = array[18];
+vis = array[19];
+maskvis = array[20];
+scan = array[21];
+yyy = array[22];
+savetag = array[23];
 projfolder = array[26];
 
 // --------------------------- Suppression des info de type de fichier ---------------
-long = lengthOf(titre);	titrered = substring(titre, 0, long-4);
-chemwork = 	chemwork1+titrered+"\\";
-chemtemp = 	chem + "Zooscan_temp\\";
+long = lengthOf(titre);
+titrered = substring(titre, 0, long - 4);
+chemwork = chemwork1 + titrered + "\\";
+chemtemp = chem + "Zooscan_temp\\";
 
 //---------------------Lecture fichier "Zooscan" ---------------------------------
-if (File.exists(chem+"\\Zooscan.txt") == false ) {
-	args = chem+" "+chem+" Biotom";
-	ret = runMacro("Zooscan_select_system",args);
-	flag=toString(ret);
-	if (lengthOf(flag)==1)  { 	showMessage("Warning message : ''Zooscan_select_system'' process aborted                       "); 	} // if
+if (File.exists(chem + "\\Zooscan.txt") == false) {
+    args = chem + " " + chem + " Biotom";
+    ret = runMacro("Zooscan_select_system", args);
+    flag = toString(ret);
+    if (lengthOf(flag) == 1) {
+        showMessage("Warning message : ''Zooscan_select_system'' process aborted                       ");
+    } // if
 } // else 
-open(chem+"\\Zooscan.txt");
+open(chem + "\\Zooscan.txt");
 wait(100);
 data = getInfo();
 wait(100);
 run('Close');
-ligne = split(data,"\n");
+ligne = split(data, "\n");
 scanner = ligne[0];
 vuescan = ligne[1];
 
 //---------------------------- Si le LOG existe, on reprend les informations concernant ---------------------------
-Resolution= 2400;
-ImageType= "Zooscan";
+Resolution = 2400;
+ImageType = "Zooscan";
 reduction = 1;
-code="0";
+code = "0";
 debut = 2;
 vuescan_from_logfile = "nok";
 liginfo = 0;
 
 // ------------- STARTS WRITE PID file ----------------------------------
-if (isOpen("Log")) {		selectWindow("Log");	run("Close");	} // if
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 wait(100);
 print("PID");
 print("[Image]");
 
 // -------------- Hardware type -----------------------------------------------------------------------
-ret = runMacro("Zooscan_define_zooscan_version.txt",scanner);
-zooscan=toString(ret);
-if (lengthOf(zooscan) == 1)  { 	getBoolean("Warning message : ''Zooscan_define_zooscan_version'' process aborted.   \n \nPress Cancel to abort !                   "); 	} // if
+ret = runMacro("Zooscan_define_zooscan_version.txt", scanner);
+zooscan = toString(ret);
+if (lengthOf(zooscan) == 1) {
+    getBoolean("Warning message : ''Zooscan_define_zooscan_version'' process aborted.   \n \nPress Cancel to abort !                   ");
+} // if
 
 // ------------------------ Fichier log -----------------------------------
-if ( File.exists(chemwork+titrered+"_log.txt") == false) {
-	aa = getBoolean("The ''"+chemwork+titrered+"_log.txt does not exists. \n \n Press Cancel to abort and check your files !");
+if (File.exists(chemwork + titrered + "_log.txt") == false) {
+    aa = getBoolean("The ''" + chemwork + titrered + "_log.txt does not exists. \n \n Press Cancel to abort and check your files !");
 } // if
-else {	// ------------------ Lecture du fichier log ------------------------
-	open(chemwork+titrered+"_log.txt");
-	wait(100);
-	data = getInfo();
-	wait(100);
-	ligne = split(data,"\n");
-	end = ligne.length;
-	run('Close');
-	for (p=0;p<end;p++) { 
-		champ = ligne[p];
-		//-------------------------------Type scanner----------------
-		pos = indexOf(champ,"[Crop-");
-		if (pos==0) { 	aa = replace(champ,"-"," ");	info = split(aa,"\ ");	scanner= info[1];				} // if
-	} // for
-	if (scanner== "no") { aa = getBoolean("The LOG file ''"+chemwork+titrered+"_log.txt'' does not contain the correct information. \n \nCheck and correct file and restart the PROCESS. \n \nPress CANCEL !");	} // if
-	for (p=0;p<end;p++) { 
-		champ = ligne[p];
-		// ---------------------- Determiner la ligne [Info] -------------------------------
-		if (indexOf(champ,"[Info]") == 0) { 	liginfo = p;		} // if
-		// ---------------------- reduction et code ---------------------------------------------------------
-		if (indexOf(champ,"TIFFSizeReduction") >= 0 ) { deb= indexOf(champ,"=");		reduction= substring(champ,deb+1,deb+2);						} // if
-		if (indexOf(champ,"ScanResolution") >= 0 ) { 	deb= indexOf(champ,"=");		code= substring(champ,deb+1,deb+2);			
-		} // if
-		// ---------------------- Determiner la version de Vuescan lors du scan ------------------------------
-		if (startsWith(champ,"Vuescan_version= ") == true) { champ = replace(champ,"  "," "); data = split(champ,"\ ");	vuescan_from_logfile = data[1];	} // if
-		// ---------------------- Determiner la version de Vuescan lors du scan ------------------------------
-		if (startsWith(champ,"Software= ") == true) { champ = replace(champ,"_"," "); champ = replace(champ,"  "," ");	data = split(champ,"\ ");	vuescan_from_logfile = data[1];	} // if
-	} // for
-	
-	// ---------------------------- Lecture de la resolution -------------------------------------------	
-	ret = runMacro("Zooscan_get_resolution.txt",scanner+" "+vuescan_from_logfile+" "+code+" "+reduction);
-	flag=toString(ret);
-	if (lengthOf(flag) == 1)  { aa = getBoolean("Warning message : ''Zooscan_get_resolution'' process aborted.   \n \n - scanner = "+scanner+" \n - vuescan = "+vuescan_from_logfile+" \n - code = "+code+" \n reduction = "+reduction+" \n \nPress Cancel to abort !                   "); 	} // if
-	else {		Resolution = parseInt(ret);	} // else
-	
-	// -------------- Hardware type -----------------------------------------------------------------------
-	ret = runMacro("Zooscan_define_zooscan_version.txt",scanner);
-	zooscan=toString(ret);
-	if (lengthOf(zooscan) == 1)  { 	getBoolean("Warning message : ''Zooscan_define_zooscan_version'' process aborted.   \n \nPress Cancel to abort !                   "); 	} // if
-	
-	// -------------- Impression dans log jusque [Info] ---------------------------	
-	p = debut;
-	while (indexOf(champ,"[Info]") < 0 && p < end) { 
-		champ = ligne[p];
-		if (champ != "1") {		print(champ); 		} // if
-		p++;
-	}
-	if (liginfo == 0) { print(" "); print("[Info]");	}
-	
-	// ----------- Ajout suite -------------------------------------------------
-	print("Hardware= ",zooscan);
-	print("Software= ",vuescan_from_logfile);
-	print("ImageType= ",ImageType);
-	print("Resolution= ",Resolution);
-	wait(200);
-	
-	//-------------------------Sauvegarde temporaire du LOG-----------------------------
-	selectWindow("Log");	sauve = "save=" + chemtemp + "temp_log.txt"; 		run("Text...",sauve);	
-} 
+else { // ------------------ Lecture du fichier log ------------------------
+    open(chemwork + titrered + "_log.txt");
+    wait(100);
+    data = getInfo();
+    wait(100);
+    ligne = split(data, "\n");
+    end = ligne.length;
+    run('Close');
+    for (p = 0; p < end; p++) {
+        champ = ligne[p];
+        //-------------------------------Type scanner----------------
+        pos = indexOf(champ, "[Crop-");
+        if (pos == 0) {
+            aa = replace(champ, "-", " ");
+            info = split(aa, "\ ");
+            scanner = info[1];
+        } // if
+    } // for
+    if (scanner == "no") {
+        aa = getBoolean("The LOG file ''" + chemwork + titrered + "_log.txt'' does not contain the correct information. \n \nCheck and correct file and restart the PROCESS. \n \nPress CANCEL !");
+    } // if
+    for (p = 0; p < end; p++) {
+        champ = ligne[p];
+        // ---------------------- Determiner la ligne [Info] -------------------------------
+        if (indexOf(champ, "[Info]") == 0) {
+            liginfo = p;
+        } // if
+        // ---------------------- reduction et code ---------------------------------------------------------
+        if (indexOf(champ, "TIFFSizeReduction") >= 0) {
+            deb = indexOf(champ, "=");
+            reduction = substring(champ, deb + 1, deb + 2);
+        } // if
+        if (indexOf(champ, "ScanResolution") >= 0) {
+            deb = indexOf(champ, "=");
+            code = substring(champ, deb + 1, deb + 2);
+        } // if
+        // ---------------------- Determiner la version de Vuescan lors du scan ------------------------------
+        if (startsWith(champ, "Vuescan_version= ") == true) {
+            champ = replace(champ, "  ", " ");
+            data = split(champ, "\ ");
+            vuescan_from_logfile = data[1];
+        } // if
+        // ---------------------- Determiner la version de Vuescan lors du scan ------------------------------
+        if (startsWith(champ, "Software= ") == true) {
+            champ = replace(champ, "_", " ");
+            champ = replace(champ, "  ", " ");
+            data = split(champ, "\ ");
+            vuescan_from_logfile = data[1];
+        } // if
+    } // for
+
+    // ---------------------------- Lecture de la resolution -------------------------------------------	
+    ret = runMacro("Zooscan_get_resolution.txt", scanner + " " + vuescan_from_logfile + " " + code + " " + reduction);
+    flag = toString(ret);
+    if (lengthOf(flag) == 1) {
+        aa = getBoolean("Warning message : ''Zooscan_get_resolution'' process aborted.   \n \n - scanner = " + scanner + " \n - vuescan = " + vuescan_from_logfile + " \n - code = " + code + " \n reduction = " + reduction + " \n \nPress Cancel to abort !                   ");
+    } // if
+    else {
+        Resolution = parseInt(ret);
+    } // else
+
+    // -------------- Hardware type -----------------------------------------------------------------------
+    ret = runMacro("Zooscan_define_zooscan_version.txt", scanner);
+    zooscan = toString(ret);
+    if (lengthOf(zooscan) == 1) {
+        getBoolean("Warning message : ''Zooscan_define_zooscan_version'' process aborted.   \n \nPress Cancel to abort !                   ");
+    } // if
+
+    // -------------- Impression dans log jusque [Info] ---------------------------	
+    p = debut;
+    while (indexOf(champ, "[Info]") < 0 && p < end) {
+        champ = ligne[p];
+        if (champ != "1") {
+            print(champ);
+        } // if
+        p++;
+    }
+    if (liginfo == 0) {
+        print(" ");
+        print("[Info]");
+    }
+
+    // ----------- Ajout suite -------------------------------------------------
+    print("Hardware= ", zooscan);
+    print("Software= ", vuescan_from_logfile);
+    print("ImageType= ", ImageType);
+    print("Resolution= ", Resolution);
+    wait(200);
+
+    //-------------------------Sauvegarde temporaire du LOG-----------------------------
+    selectWindow("Log");
+    sauve = "save=" + chemtemp + "temp_log.txt";
+    run("Text...", sauve);
+}
 
 // ---------------------------- FIN ---------------------------------------------------------
 ret = toString(Resolution);
 return ret;
-

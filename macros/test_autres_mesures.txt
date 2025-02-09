@@ -2,17 +2,20 @@
 version = "8.20";
 date = "2023/07/06";
 
-args = 	getArgument();
+args = getArgument();
 
 //args = "green_cor_vignette_msk green_cor_vignette_grey 154 144";
-arg = 	split(args," ");
+arg = split(args, " ");
 
-msk_vignette_name = 	arg[0];
-grey_vignette_name = 	arg[1];
-width_vignette = 	arg[2];
-heigth_vignette = 	arg[3];
+msk_vignette_name = arg[0];
+grey_vignette_name = arg[1];
+width_vignette = arg[2];
+heigth_vignette = arg[3];
 
-if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run("Close");
+} // if
 
 /*
 if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
@@ -32,36 +35,38 @@ width_vignette = 146;
 heigth_vignette = 136;
 */
 
-// ================= Creation vignette mask nettoyée (un objet) =================
+// ================= Creation vignette mask nettoyï¿½e (un objet) =================
 // ----------------------- resize >> marge blanche ---------------------------
-width_plus = 8+width_vignette;
-heigth_plus = 8+heigth_vignette;
-textesize = "width="+width_plus+" height="+heigth_plus+" position=Center";
+width_plus = 8 + width_vignette;
+heigth_plus = 8 + heigth_vignette;
+textesize = "width=" + width_plus + " height=" + heigth_plus + " position=Center";
 selectImage("green_cor_vignette_msk");
 run("Canvas Size...", textesize);
 
 // ----------------------- nettoyage autour de l'objet -----------------------
 run("Set Measurements...", "area centroid bounding fit redirect=[green_cor_vignette_msk] decimal=2");
 run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing include record");
-updateResults();			
+updateResults();
 nbobj = nResults;
-ligne = 0;		g = 0;		Ratio = 0;
+ligne = 0;
+g = 0;
+Ratio = 0;
 // ---------------------- Au moins un objet --------------------------------
-areainit = 	getResult("Area", 0);
-while (g < nbobj) {		
-	area = 		getResult("Area", g);	
-	if (area > areainit ) ligne = g;
-	areainit = 	maxOf(area,areainit);
-	g++;
+areainit = getResult("Area", 0);
+while (g < nbobj) {
+    area = getResult("Area", g);
+    if (area > areainit) ligne = g;
+    areainit = maxOf(area, areainit);
+    g++;
 } // for
-xstart = 	getResult("XStart", ligne);
-ystart =	getResult("YStart", ligne);			
+xstart = getResult("XStart", ligne);
+ystart = getResult("YStart", ligne);
 
 // --------------- nettoyage autour du plus gros objet ----------------------
 selectImage("green_cor_vignette_msk");
 DEBX = xstart;
-DEBY= ystart;
-doWand(DEBX,DEBY);
+DEBY = ystart;
+doWand(DEBX, DEBY);
 
 // ---------------- Fond blanc ----------------------------------------------
 run("Clear Outside");
@@ -77,19 +82,21 @@ run("Duplicate...", "title=green_cor_vignette_msk_inverted");
 run("Invert");
 run("Image Calculator...", "image1=green_cor_vignette_grey operation=Add image2=green_cor_vignette_msk_inverted create");
 rename("green_cor_vignette_grey_cleaned");
-selectImage("green_cor_vignette_grey"); close();
-selectImage("green_cor_vignette_msk_inverted"); close();
+selectImage("green_cor_vignette_grey");
+close();
+selectImage("green_cor_vignette_msk_inverted");
+close();
 
 // ================= Fractal analyse =================
-selectImage("green_cor_vignette_msk");			
-run("Duplicate...", "title=vignette_msk_fractal_edm1");						
+selectImage("green_cor_vignette_msk");
+run("Duplicate...", "title=vignette_msk_fractal_edm1");
 run("Make Binary");
 width_plus = 4 * width_vignette;
-heigth_plus = 4 * heigth_vignette;			
-textesize_fractal = "width="+width_plus+" height="+heigth_plus+" position=Center";
+heigth_plus = 4 * heigth_vignette;
+textesize_fractal = "width=" + width_plus + " height=" + heigth_plus + " position=Center";
 selectImage("vignette_msk_fractal_edm1");
 run("Canvas Size...", textesize_fractal);
-selectImage("vignette_msk_fractal_edm1");			
+selectImage("vignette_msk_fractal_edm1");
 run("Duplicate...", "title=vignette_msk_fractal_edm2");
 run("Make Binary");
 run("Distance Map");
@@ -104,108 +111,134 @@ run("Image Calculator...", "image1=vignette_msk_fractal_edm1 operation=Add image
 selectImage("vignette_msk_fractal_edm1");
 run("Set Measurements...", "area limit decimal=3");
 run("Set Measurements...", "area centroid bounding fit redirect=None decimal=2");
-lg = 0;  	counter=0;	iterations = 40;	sumg = 0;	suma = 0;	index = 0;
+lg = 0;
+counter = 0;
+iterations = 40;
+sumg = 0;
+suma = 0;
+index = 0;
 Lg = newArray(iterations);
 Aire = newArray(iterations);
-for (k=1; k<=iterations; k++) {	 y = round(pow(1.1, k));
-	if (lg!=y) {	lg = y;
-		selectImage("vignette_msk_fractal_edm1");
-		setThreshold(0, lg);
-		run("Measure");
-		Lg[index] = log(2*lg);
-		arr = getResult("Area", index);
-		Aire[index] = log(arr);
-		sumg = sumg+Lg[index];
-		suma = suma+Aire[index];
-		index++;
-	} // if
+for (k = 1; k <= iterations; k++) {
+    y = round(pow(1.1, k));
+    if (lg != y) {
+        lg = y;
+        selectImage("vignette_msk_fractal_edm1");
+        setThreshold(0, lg);
+        run("Measure");
+        Lg[index] = log(2 * lg);
+        arr = getResult("Area", index);
+        Aire[index] = log(arr);
+        sumg = sumg + Lg[index];
+        suma = suma + Aire[index];
+        index++;
+    } // if
 } // for
-moyenneg = sumg/index;
-moyennea = suma/index;
+moyenneg = sumg / index;
+moyennea = suma / index;
 //---------Calcul de la pente de la regression  : stda/stdg -------------------
-secartg = 0;	secarta = 0;
-for (t =0;t<index;t++) { 
-	ecartgcar = pow(Lg[t]-moyenneg,2);
-	secartg = secartg+ecartgcar;
-	ecartacar = pow(Aire[t]-moyennea,2);
-	secarta = secarta+ecartacar;
+secartg = 0;
+secarta = 0;
+for (t = 0; t < index; t++) {
+    ecartgcar = pow(Lg[t] - moyenneg, 2);
+    secartg = secartg + ecartgcar;
+    ecartacar = pow(Aire[t] - moyennea, 2);
+    secarta = secarta + ecartacar;
 } // for
-stdg = secartg*1/(index-1) ;
-stdg = pow(stdg,0.5);
-stda = secarta*1/(index-1) ;
-stda = pow(stda,0.5);
+stdg = secartg * 1 / (index - 1);
+stdg = pow(stdg, 0.5);
+stda = secarta * 1 / (index - 1);
+stda = pow(stda, 0.5);
 // ++++++++++++++++++++++++++
-Fractal = 2 - stda/stdg;
+Fractal = 2 - stda / stdg;
 // ++++++++++++++++++++++++++
 
 // ================= Pente histo grey  =================
 selectImage("green_cor_vignette_grey_cleaned");
 getHistogram(0, hist, 256);
-sumg = 0;	suma = 0;	hh = 0;		secartg = 0;	secarta = 0;
-// ----------------------- On ne prend pas les pixels à 255 ! -----------------------------------------
-Histcum = 	newArray(255);
-for (k=0; k<255; k++) {	sumg = sumg+hist[k];	Histcum[k] = sumg;		suma = suma+k;		} // for
-while (hh < 255) {	dat = Histcum[hh]/sumg;
-	// ++++++++++++++++++++++++++
-	if (dat < 0.25 ) Histcum1 = hh;
-	if (dat < 0.50 ) Histcum2 = hh;
-	if (dat < 0.75 ) Histcum3 = hh;
-	// ++++++++++++++++++++++++++	
-	if (dat > 0.75) 	hh = 256;
-	hh++;
+sumg = 0;
+suma = 0;
+hh = 0;
+secartg = 0;
+secarta = 0;
+// ----------------------- On ne prend pas les pixels ï¿½ 255 ! -----------------------------------------
+Histcum = newArray(255);
+for (k = 0; k < 255; k++) {
+    sumg = sumg + hist[k];
+    Histcum[k] = sumg;
+    suma = suma + k;
 } // for
-moyenneg = sumg/255;	moyennea = suma/255;
+while (hh < 255) {
+    dat = Histcum[hh] / sumg;
+    // ++++++++++++++++++++++++++
+    if (dat < 0.25) Histcum1 = hh;
+    if (dat < 0.50) Histcum2 = hh;
+    if (dat < 0.75) Histcum3 = hh;
+    // ++++++++++++++++++++++++++	
+    if (dat > 0.75) hh = 256;
+    hh++;
+} // for
+moyenneg = sumg / 255;
+moyennea = suma / 255;
 //---------Calcul de la pente de la regression  : stda/stdg -------------------
-for (t =0;t<255;t++) { 
-	ecartgcar = pow(hist[t]-moyenneg,2);
-	secartg = secartg+ecartgcar;
-	ecartacar = pow(t-moyennea,2);
-	secarta = secarta+ecartacar;
+for (t = 0; t < 255; t++) {
+    ecartgcar = pow(hist[t] - moyenneg, 2);
+    secartg = secartg + ecartgcar;
+    ecartacar = pow(t - moyennea, 2);
+    secarta = secarta + ecartacar;
 } // for
-stdg = secartg*1/(255-1) ;
-stdg = pow(stdg,0.5);
-stda = secarta*1/(255-1) ;
-stda = pow(stda,0.5);
+stdg = secartg * 1 / (255 - 1);
+stdg = pow(stdg, 0.5);
+stda = secarta * 1 / (255 - 1);
+stda = pow(stda, 0.5);
 // ++++++++++++++++++++++++++
-Slope = stdg/stda;
+Slope = stdg / stda;
 // ++++++++++++++++++++++++++
 
 // ================= Contrast =================
 S = newArray(256);
-F = 0;                  	count = 1;
+F = 0;
+count = 1;
 // ------------- Correction seuils ----------------------------------
-AAA = 0;	BBB = 0;	CCC = 0;
-for (k=0; k<255; k++) {	data = hist[k];
-	if (hist[k] !=0 && hist[k] <= Histcum1) AAA = k;
-	if (hist[k] !=0 && hist[k] <= Histcum2) BBB = k;
-	if (hist[k] !=0 && hist[k] <= Histcum3) CCC = k;
+AAA = 0;
+BBB = 0;
+CCC = 0;
+for (k = 0; k < 255; k++) {
+    data = hist[k];
+    if (hist[k] != 0 && hist[k] <= Histcum1) AAA = k;
+    if (hist[k] != 0 && hist[k] <= Histcum2) BBB = k;
+    if (hist[k] != 0 && hist[k] <= Histcum3) CCC = k;
 } // for
 selectImage("green_cor_vignette_grey_cleaned");
-for(x=1 ; x<width_plus-1 ; x++)	{
-	for(y=1 ; y<heigth_plus-1 ; y++)	{        		
-		p = getPixel(x,y);
-		if(p==AAA || p==BBB || p==CCC )	{	p1 = getPixel(x-1,y-1);
-			p2 = getPixel(x-1,y);
-			p3 = getPixel(x-1,y+1);
-			p4 = getPixel(x,y-1);
-			p5 = getPixel(x,y+1);
-			p6 = getPixel(x+1,y-1);
-			p7 = getPixel(x+1,y);
-			p8 = getPixel(x+1,y+1);
-			A= (p1+p2+p3+p4+p5+p6+p7+p8)/8;
-			S[p]=S[p]+ abs(p-A);
-			count = count + 1;
-			F = F + S[p]*hist[p]/256;
-		} // if
-	} // for
+for (x = 1; x < width_plus - 1; x++) {
+    for (y = 1; y < heigth_plus - 1; y++) {
+        p = getPixel(x, y);
+        if (p == AAA || p == BBB || p == CCC) {
+            p1 = getPixel(x - 1, y - 1);
+            p2 = getPixel(x - 1, y);
+            p3 = getPixel(x - 1, y + 1);
+            p4 = getPixel(x, y - 1);
+            p5 = getPixel(x, y + 1);
+            p6 = getPixel(x + 1, y - 1);
+            p7 = getPixel(x + 1, y);
+            p8 = getPixel(x + 1, y + 1);
+            A = (p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8) / 8;
+            S[p] = S[p] + abs(p - A);
+            count = count + 1;
+            F = F + S[p] * hist[p] / 256;
+        } // if
+    } // for
 } // for
 // ++++++++++++++++++++++++++
-Fcons = F/count;;	
+Fcons = F / count;;
 // ++++++++++++++++++++++++++	
 
 run("Set Measurements...", "area area_fraction redirect=None decimal=2");
 // ================= Skeleton Area =================
-if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run("Close");
+} // if
 selectImage("green_cor_vignette_msk");
 run("Duplicate...", "title=vignette_msk_skeleton");
 run("Skeletonize");
@@ -217,9 +250,12 @@ Skelarea = area * pourcentarea / 100;
 // ++++++++++++++++++++++++++
 
 // ================= convex perimeter calculation =================
-if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run("Close");
+} // if
 selectImage("green_cor_vignette_msk");
-run("Duplicate...","title=vignette_msk_convex");
+run("Duplicate...", "title=vignette_msk_convex");
 run("Convex Hull esmer", "mode=[Draw Convex Hull]");
 run("my Bin");
 run("Fill Holes");
@@ -228,20 +264,28 @@ run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing 
 // ++++++++++++++++++++++++++
 Convarea = getResult("Area", 0);
 pourcentarea = getResult("%Area", 0);
-Convperim = Convarea *  pourcentarea / 100;
+Convperim = Convarea * pourcentarea / 100;
 // ++++++++++++++++++++++++++
 
 // ================= Fermeture images inutiles =================
-selectImage("vignette_msk_convex"); 		close();
-selectImage("vignette_msk_fractal_edm1");	close();
-selectImage("vignette_msk_fractal_edm2");	close();
-selectImage("vignette_msk_skeleton");		close();
-if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
+selectImage("vignette_msk_convex");
+close();
+selectImage("vignette_msk_fractal_edm1");
+close();
+selectImage("vignette_msk_fractal_edm2");
+close();
+selectImage("vignette_msk_skeleton");
+close();
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run("Close");
+} // if
 
-selectImage("green_cor_vignette_grey_cleaned");		rename("green_cor_vignette_grey");
+selectImage("green_cor_vignette_grey_cleaned");
+rename("green_cor_vignette_grey");
 
 // ================= FIN =================
-ret = toString(Fractal)+" "+Histcum1+" "+Histcum2+" "+Histcum3+" "+Fcons+" "+Skelarea+" "+Convarea+" "+Convperim;
+ret = toString(Fractal) + " " + Histcum1 + " " + Histcum2 + " " + Histcum3 + " " + Fcons + " " + Skelarea + " " + Convarea + " " + Convperim;
 
 print(ret);
 

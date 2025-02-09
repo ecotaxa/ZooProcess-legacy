@@ -1,11 +1,11 @@
 // -------------------- Zooprocess_uvp5_edit_cruise_info ------------------
-version =	 "8.09";
-date =	 "2022/02/18";
+version = "8.09";
+date = "2022/02/18";
 
-cruise_info_path = 	getArgument();
+cruise_info_path = getArgument();
 
 // =========== Default ===========
-data_hdr = newArray("op_name","op_email","cs_name","cs_email","do_name","do_email","acron","gen_info");
+data_hdr = newArray("op_name", "op_email", "cs_name", "cs_email", "do_name", "do_email", "acron", "gen_info");
 op_name = "nan";
 op_email = "nan";
 cs_name = "nan";
@@ -16,81 +16,95 @@ acron = "nan";
 gen_info = "nan";
 
 // =========== Lecture fichier si existe ===========
-if (isOpen("Log")) {	selectWindow("Log");	run("Close");	} // if
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 
 if (File.exists(cruise_info_path)) {
-	open(cruise_info_path);
-	wait(100);
-	cruise_info = getInfo();
-	run("Close");
-	cruise_info_data  = split(cruise_info,"\n");
-	for (i = 0; i < cruise_info_data.length ; i++) {
-		data = split(cruise_info_data[i],"=");
-		if ( i==0 ) 	op_name = 	data[1];
-		if ( i==1 ) 	op_email = 	data[1];
-		if ( i==2 ) 	cs_name = 	data[1];
-		if ( i==3 ) 	cs_email = 	data[1];
-		if ( i==4 ) 	do_name = 	data[1];
-		if ( i==5 ) 	do_email = 	data[1];
-		if ( i==6 ) 	acron = 	data[1];
-		if ( i==7 ) 	gen_info = 	data[1];
-	}
+    open(cruise_info_path);
+    wait(100);
+    cruise_info = getInfo();
+    run("Close");
+    cruise_info_data = split(cruise_info, "\n");
+    for (i = 0; i < cruise_info_data.length; i++) {
+        data = split(cruise_info_data[i], "=");
+        if (i == 0) op_name = data[1];
+        if (i == 1) op_email = data[1];
+        if (i == 2) cs_name = data[1];
+        if (i == 3) cs_email = data[1];
+        if (i == 4) do_name = data[1];
+        if (i == 5) do_email = data[1];
+        if (i == 6) acron = data[1];
+        if (i == 7) gen_info = data[1];
+    }
 }
 
 end = true;
-while (end == true) {	
-	message = "WARNING \n";
-	end = false;
-	// =========== ENTETE ===========
-	Dialog.create("CRUISE METADATA                version "+version);
-	Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");
-	Dialog.addMessage("Instrument:  UVP5");
-	Dialog.addMessage("File:       "+cruise_info_path);
-	Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");
-	Dialog.addString("Enter UVP5 main operator name for the cruise",op_name); 
-	Dialog.addString("Enter UVP5 main operator email",op_email); 
-	Dialog.addString("Enter cruise chief scientist ",cs_name); 
-	Dialog.addString("Enter cruise chief scientist email",cs_email); 
-	Dialog.addString("Enter UVP5 data owner name ",do_name); 
-	Dialog.addString("Enter UVP5 data owner email",do_email); 
-	Dialog.addString("Enter cruise scientific project acronym ",acron); 
-	Dialog.addString("       Enter cruise scientific project additional info (other operators, funding...)",gen_info);
-	Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");		 
-	Dialog.show();
-	data_proj = newArray(8);
-	data_proj[0] = Dialog.getString();
-	data_proj[1] = Dialog.getString();
-	if (indexOf(data_proj[1],"@") < 0) {	message = message + "\n ''main operator email'' is not a valid data "; end = true;	}
-	data_proj[2] = Dialog.getString();
-	data_proj[3] = Dialog.getString();
-	if (indexOf(data_proj[3],"@") < 0) {	message = message + "\n ''chief scientist email'' is not a valid data "; end = true;	}
-	data_proj[4] = Dialog.getString();
-	data_proj[5] = Dialog.getString();
-	if (indexOf(data_proj[5],"@") < 0) {	message = message + "\n ''data owner email'' is not a valid data "; end = true;	}
-	data_proj[6] = Dialog.getString();
-	data_proj[7] = Dialog.getString();
-	
-	message = message + "\nPlease correct the metadata !";
-	if (end == true ) {	showMessage(message);		}
-	else {	// -------------------- Data cleaning -------------------- 
-		for (b = 0; b < data_proj.length ; b++) { dat = data_proj[b];
-			//dat = toLowerCase(dat);
-			//dat = replace(dat," ","_");
-			dat = replace(dat,"/","_");
-			dat = replace(dat,";","_");
-			dat = replace(dat,"!","_");
-			dat = replace(dat,"+","_");
-			dat = replace(dat,"$","_");
-			print(data_hdr[b]+"="+dat);
-		} // for
-	}
+while (end == true) {
+    message = "WARNING \n";
+    end = false;
+    // =========== ENTETE ===========
+    Dialog.create("CRUISE METADATA                version " + version);
+    Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");
+    Dialog.addMessage("Instrument:  UVP5");
+    Dialog.addMessage("File:       " + cruise_info_path);
+    Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");
+    Dialog.addString("Enter UVP5 main operator name for the cruise", op_name);
+    Dialog.addString("Enter UVP5 main operator email", op_email);
+    Dialog.addString("Enter cruise chief scientist ", cs_name);
+    Dialog.addString("Enter cruise chief scientist email", cs_email);
+    Dialog.addString("Enter UVP5 data owner name ", do_name);
+    Dialog.addString("Enter UVP5 data owner email", do_email);
+    Dialog.addString("Enter cruise scientific project acronym ", acron);
+    Dialog.addString("       Enter cruise scientific project additional info (other operators, funding...)", gen_info);
+    Dialog.addMessage("------------------------------------------------------------------------------------------------------------------------------------ ");
+    Dialog.show();
+    data_proj = newArray(8);
+    data_proj[0] = Dialog.getString();
+    data_proj[1] = Dialog.getString();
+    if (indexOf(data_proj[1], "@") < 0) {
+        message = message + "\n ''main operator email'' is not a valid data ";
+        end = true;
+    }
+    data_proj[2] = Dialog.getString();
+    data_proj[3] = Dialog.getString();
+    if (indexOf(data_proj[3], "@") < 0) {
+        message = message + "\n ''chief scientist email'' is not a valid data ";
+        end = true;
+    }
+    data_proj[4] = Dialog.getString();
+    data_proj[5] = Dialog.getString();
+    if (indexOf(data_proj[5], "@") < 0) {
+        message = message + "\n ''data owner email'' is not a valid data ";
+        end = true;
+    }
+    data_proj[6] = Dialog.getString();
+    data_proj[7] = Dialog.getString();
+
+    message = message + "\nPlease correct the metadata !";
+    if (end == true) {
+        showMessage(message);
+    } else { // -------------------- Data cleaning -------------------- 
+        for (b = 0; b < data_proj.length; b++) {
+            dat = data_proj[b];
+            //dat = toLowerCase(dat);
+            //dat = replace(dat," ","_");
+            dat = replace(dat, "/", "_");
+            dat = replace(dat, ";", "_");
+            dat = replace(dat, "!", "_");
+            dat = replace(dat, "+", "_");
+            dat = replace(dat, "$", "_");
+            print(data_hdr[b] + "=" + dat);
+        } // for
+    }
 }
 // =========== Data save ===========
-text =  "save=" + cruise_info_path;
+text = "save=" + cruise_info_path;
 selectWindow("Log");
-run("Text...",text);	
+run("Text...", text);
 wait(100);
 run("Close");
 
 // =========== FIN ===========
-return cruise_info_path;	
+return cruise_info_path;

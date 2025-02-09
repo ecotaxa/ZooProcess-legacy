@@ -12,7 +12,7 @@ depth_qc_liste = newArray("not_documented","measured","calculated_from_cable_len
 vol_qc_liste = newArray("not_documented","recorded_from_flowmeter","calculated_from_mean_other_nets","estimated_from_area_distance"); //,"0 : to be LATER documented");
 */
 
-jar_condition_liste = "not_documented"+" "+"good"+" "+"dried"+" "+"rotten"+" "+"not_preserved"+" "+"fresh_sample"; 
+jar_condition_liste = "not_documented" + " " + "good" + " " + "dried" + " " + "rotten" + " " + "not_preserved" + " " + "fresh_sample";
 
 // ---------------- FIN ------------------
 ret = jar_condition_liste;

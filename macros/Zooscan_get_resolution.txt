@@ -2,105 +2,216 @@
 version = "8.03";
 date = "2021/11/03";
 
-arg = 	getArgument(); 
-array = 		split(arg," ");
-scanner= 		array[0]; 	
-vuescan_from_logfile= 	array[1]; 
-code = 			array[2];	
-reduction = 		array[3];
-resolution_from_logfile = 	0;
-reduction = 	parseInt(reduction);
+arg = getArgument();
+array = split(arg, " ");
+scanner = array[0];
+vuescan_from_logfile = array[1];
+code = array[2];
+reduction = array[3];
+resolution_from_logfile = 0;
+reduction = parseInt(reduction);
 
-if (scanner=="GT-9700" && code=="1") { 				resolution_from_logfile=2400; 	} // if
-else if (scanner=="Perfection2450" && code=="2") { 		resolution_from_logfile=2400; 	} // if
-else if (scanner=="Perfection4990") {
-	// ------------------- Zooscan V1 ---------------------------
-	if (indexOf(vuescan_from_logfile,"8.4.57") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; 		} // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; 		} // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; 		} // if			
-		if (code=="6") { resolution_from_logfile=600/reduction; 		} // if				
-		if (code=="8") { resolution_from_logfile=300/reduction; 		} // if		
-	} // if	
-	else if (indexOf(vuescan_from_logfile,"8.3.23") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if			
-		if (code=="5") { resolution_from_logfile=600/reduction; } // if				
-		if (code=="6") { resolution_from_logfile=300/reduction; } // if	
-	}
-	else if (indexOf(vuescan_from_logfile,"9.7.67") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if			
-		if (code=="5") { resolution_from_logfile=600/reduction; } // if				
-		if (code=="6") { resolution_from_logfile=300/reduction; } // if	
-	}
+if (scanner == "GT-9700" && code == "1") {
+    resolution_from_logfile = 2400;
 } // if
-else if (scanner=="Perfection4490") {
-	// ------------------- Zooscan V2 ---------------------------
-	if (indexOf(vuescan_from_logfile,"8.4.57") >= 0) { 	// Validé le 2010/11/09
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=600/reduction; } // if
-		if (code=="6") { resolution_from_logfile=300/reduction; } // if
-		if (code=="8") { resolution_from_logfile=150/reduction; } // if
-	} // if
-	else if (indexOf(vuescan_from_logfile,"9.7.67") >= 0) {		
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=600/reduction; } // if
-		if (code=="6") { resolution_from_logfile=300/reduction; } // if
-		if (code=="8") { resolution_from_logfile=150/reduction; } // if
-	}
+else if (scanner == "Perfection2450" && code == "2") {
+    resolution_from_logfile = 2400;
+} // if
+else if (scanner == "Perfection4990") {
+    // ------------------- Zooscan V1 ---------------------------
+    if (indexOf(vuescan_from_logfile, "8.4.57") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if			
+        if (code == "6") {
+            resolution_from_logfile = 600 / reduction;
+        } // if				
+        if (code == "8") {
+            resolution_from_logfile = 300 / reduction;
+        } // if		
+    } // if	
+    else if (indexOf(vuescan_from_logfile, "8.3.23") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if			
+        if (code == "5") {
+            resolution_from_logfile = 600 / reduction;
+        } // if				
+        if (code == "6") {
+            resolution_from_logfile = 300 / reduction;
+        } // if	
+    } else if (indexOf(vuescan_from_logfile, "9.7.67") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if			
+        if (code == "5") {
+            resolution_from_logfile = 600 / reduction;
+        } // if				
+        if (code == "6") {
+            resolution_from_logfile = 300 / reduction;
+        } // if	
+    }
+} // if
+else if (scanner == "Perfection4490") {
+    // ------------------- Zooscan V2 ---------------------------
+    if (indexOf(vuescan_from_logfile, "8.4.57") >= 0) { // Validï¿½ le 2010/11/09
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 150 / reduction;
+        } // if
+    } // if
+    else if (indexOf(vuescan_from_logfile, "9.7.67") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 150 / reduction;
+        } // if
+    }
+} else if (scanner == "Perfectionv700" || scanner == "PerfectionV750" || scanner == "GT-X900" || scanner == "GT-X970") {
+    // ------------------- Zooscan V3 ---------------------------	
+    if (indexOf(vuescan_from_logfile, "9.0.51") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 800 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "7") {
+            resolution_from_logfile = 400 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+    } // if
+    else if (indexOf(vuescan_from_logfile, "9.7.67") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 800 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "7") {
+            resolution_from_logfile = 400 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+    }
+} else if (scanner == "Perfectionv800" || scanner == "PerfectionV850" || scanner == "GT-X980") {
+    // ------------------- Zooscan V4 ---------------------------
+    if (indexOf(vuescan_from_logfile, "9.5.24") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 800 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "7") {
+            resolution_from_logfile = 400 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+    } // if
+    else if (indexOf(vuescan_from_logfile, "9.7.67") >= 0) {
+        if (code == "2") {
+            resolution_from_logfile = 4800 / reduction;
+        } // if
+        if (code == "3") {
+            resolution_from_logfile = 2400 / reduction;
+        } // if
+        if (code == "4") {
+            resolution_from_logfile = 1200 / reduction;
+        } // if
+        if (code == "5") {
+            resolution_from_logfile = 800 / reduction;
+        } // if
+        if (code == "6") {
+            resolution_from_logfile = 600 / reduction;
+        } // if
+        if (code == "7") {
+            resolution_from_logfile = 400 / reduction;
+        } // if
+        if (code == "8") {
+            resolution_from_logfile = 300 / reduction;
+        } // if
+    }
+} else {
+    aa = getBoolean("Zooprocess could not find the resolution from the Zooscan version and the vusecan version. ! \n \nPress Cancel to abort and check configuration !     ");
 }
-else if (scanner=="Perfectionv700" || scanner== "PerfectionV750" || scanner== "GT-X900" || scanner== "GT-X970") {
-	// ------------------- Zooscan V3 ---------------------------	
-	if (indexOf(vuescan_from_logfile,"9.0.51") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=800/reduction; } // if
-		if (code=="6") { resolution_from_logfile=600/reduction; } // if
-		if (code=="7") { resolution_from_logfile=400/reduction; } // if
-		if (code=="8") { resolution_from_logfile=300/reduction; } // if
-	} // if
-	else if (indexOf(vuescan_from_logfile,"9.7.67") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=800/reduction; } // if
-		if (code=="6") { resolution_from_logfile=600/reduction; } // if
-		if (code=="7") { resolution_from_logfile=400/reduction; } // if
-		if (code=="8") { resolution_from_logfile=300/reduction; } // if
-	}
-}
-else if (scanner=="Perfectionv800" || scanner== "PerfectionV850" || scanner== "GT-X980") { 
-	// ------------------- Zooscan V4 ---------------------------
-	if (indexOf(vuescan_from_logfile,"9.5.24") >= 0) {	
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=800/reduction; } // if
-		if (code=="6") { resolution_from_logfile=600/reduction; } // if
-		if (code=="7") { resolution_from_logfile=400/reduction; } // if
-		if (code=="8") { resolution_from_logfile=300/reduction; } // if
-	} // if
-	else if (indexOf(vuescan_from_logfile,"9.7.67") >= 0) {
-		if (code=="2") { resolution_from_logfile=4800/reduction; } // if
-		if (code=="3") { resolution_from_logfile=2400/reduction; } // if
-		if (code=="4") { resolution_from_logfile=1200/reduction; } // if
-		if (code=="5") { resolution_from_logfile=800/reduction; } // if
-		if (code=="6") { resolution_from_logfile=600/reduction; } // if
-		if (code=="7") { resolution_from_logfile=400/reduction; } // if
-		if (code=="8") { resolution_from_logfile=300/reduction; } // if
-	}
-}
-else { aa = getBoolean("Zooprocess could not find the resolution from the Zooscan version and the vusecan version. ! \n \nPress Cancel to abort and check configuration !     ");	}
 
 // ----------------- FIN -------------------------------
 ret = toString(resolution_from_logfile);
 return ret;
-

@@ -3,68 +3,68 @@ version = "8.20";
 date = "2023/05/08";
 requires("1.41o");
 
-arg = 		getArgument(); 
-sample_names = 	split(arg,"\;");
-Filename  = sample_names[0];
+arg = getArgument();
+sample_names = split(arg, "\;");
+Filename = sample_names[0];
 Project = sample_names[1];
 
 // ----------------------- BOUCLE de SAISIE --------------------------------------------
-// ----------------------- Saisie du nom de l'échantillon ----------------------------------------
+// ----------------------- Saisie du nom de l'ï¿½chantillon ----------------------------------------
 flag = false;
 prevtitre = "  ";
 while (flag == false) {
-	Dialog.create("METADATA                        version = "+version);
-	Dialog.addMessage("-------------------------------------------------------------------------------------------         ");
-	Dialog.addMessage("Project  :  "+Project);
-	Dialog.addMessage("-------------------------------------------------------------------------------------------         ");
-	Dialog.addMessage("ENTER SampleID, (no extension or space character allowed)");
-	Dialog.addMessage("RAW filename : "+Filename);
-	Dialog.addString("   ",Filename);
-	Dialog.addMessage("-------------------------------------------------------------------------------------------         ");	
-	Dialog.show();
-	sample = Dialog.getString();
-	//----------Tester la presence d'espace ---------------------
-	sample_initial = sample;
-	sample = 	toLowerCase(sample);
-	sample = 	replace(sample,".","_");
-	sample = 	replace(sample," ","_");
-	sample = 	replace(sample,";","_");
-	sample = 	replace(sample,":","_");
-	sample = 	replace(sample,"+","_");
-	sample = 	replace(sample,"é","e");
-	sample = 	replace(sample,"è","e");
-	sample = 	replace(sample,"ê","e");
-	sample = 	replace(sample,"ô","o");
-	sample = 	replace(sample,"ü","u");
-	sample = 	replace(sample,"µ","mu");
-	sample = 	replace(sample,"#","_");
-	sample = 	replace(sample,"&","_");
-	sample = 	replace(sample,"@","a");
-	sample = 	replace(sample,"ç","c");
-	sample = 	replace(sample,"%","_");
-	sample = 	replace(sample,"?","_");
-	sample = 	replace(sample,"!","_");
-	sample = 	replace(sample,":","_");
-	sample = 	replace(sample,"§","_");
-	sample = 	replace(sample,"ù","u");
-	sample = 	replace(sample,"*","x");
-	sample = 	replace(sample,"-","_");
-	sample = 	replace(sample,"/","_");
-	prevtitre = sample + "   (NOK)  ";
-	// ------------------ Vérification dans la liste des sample --------------
-	flag = true;
-	for (i= 2; i < sample_names.length ; i++) {		
-		if (sample == sample_names[i]) {	
-			showMessage("WARNING \nThe sampleId "+sample +" already exist in the data base. \n \nEnter another sampleId !");	
-			flag = false;	
-		}
-	}
-	if (flag == true) {	
-		SampleId = sample;
-		if (sample_initial != sample) {
-			flag = getBoolean("The sample name has been corrected. \n \n Initial : "+sample_initial+" \n Corrected : "+sample+" \n \nPress YES if OK\nPress NO to enter the sampleId again.");
-		}
-	}
+    Dialog.create("METADATA                        version = " + version);
+    Dialog.addMessage("-------------------------------------------------------------------------------------------         ");
+    Dialog.addMessage("Project  :  " + Project);
+    Dialog.addMessage("-------------------------------------------------------------------------------------------         ");
+    Dialog.addMessage("ENTER SampleID, (no extension or space character allowed)");
+    Dialog.addMessage("RAW filename : " + Filename);
+    Dialog.addString("   ", Filename);
+    Dialog.addMessage("-------------------------------------------------------------------------------------------         ");
+    Dialog.show();
+    sample = Dialog.getString();
+    //----------Tester la presence d'espace ---------------------
+    sample_initial = sample;
+    sample = toLowerCase(sample);
+    sample = replace(sample, ".", "_");
+    sample = replace(sample, " ", "_");
+    sample = replace(sample, ";", "_");
+    sample = replace(sample, ":", "_");
+    sample = replace(sample, "+", "_");
+    sample = replace(sample, "ï¿½", "e");
+    sample = replace(sample, "ï¿½", "e");
+    sample = replace(sample, "ï¿½", "e");
+    sample = replace(sample, "ï¿½", "o");
+    sample = replace(sample, "ï¿½", "u");
+    sample = replace(sample, "ï¿½", "mu");
+    sample = replace(sample, "#", "_");
+    sample = replace(sample, "&", "_");
+    sample = replace(sample, "@", "a");
+    sample = replace(sample, "ï¿½", "c");
+    sample = replace(sample, "%", "_");
+    sample = replace(sample, "?", "_");
+    sample = replace(sample, "!", "_");
+    sample = replace(sample, ":", "_");
+    sample = replace(sample, "ï¿½", "_");
+    sample = replace(sample, "ï¿½", "u");
+    sample = replace(sample, "*", "x");
+    sample = replace(sample, "-", "_");
+    sample = replace(sample, "/", "_");
+    prevtitre = sample + "   (NOK)  ";
+    // ------------------ Vï¿½rification dans la liste des sample --------------
+    flag = true;
+    for (i = 2; i < sample_names.length; i++) {
+        if (sample == sample_names[i]) {
+            showMessage("WARNING \nThe sampleId " + sample + " already exist in the data base. \n \nEnter another sampleId !");
+            flag = false;
+        }
+    }
+    if (flag == true) {
+        SampleId = sample;
+        if (sample_initial != sample) {
+            flag = getBoolean("The sample name has been corrected. \n \n Initial : " + sample_initial + " \n Corrected : " + sample + " \n \nPress YES if OK\nPress NO to enter the sampleId again.");
+        }
+    }
 }
 
 //----------------------- FIN --------------------------------------

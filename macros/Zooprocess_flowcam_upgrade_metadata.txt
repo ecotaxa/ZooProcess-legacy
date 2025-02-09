@@ -5,11 +5,11 @@ date = "2024/06/28";
 // cell type = nan
 // conversion lat/lo au format DD.MMM comme UVP5
 
-arg = 		getArgument(); 
-array = 	split(arg," ");
-instrum = 	array[0];
-path= 		array[2]; 
-optionB= 	array[3]; 
+arg = getArgument();
+array = split(arg, " ");
+instrum = array[0];
+path = array[2];
+optionB = array[3];
 
 param_vector = newArray(45);
 param_vector[0] = "project";
@@ -60,166 +60,192 @@ param_vector[44] = "operator_sample";
 
 // ------------- param liste ------------------------
 paramlist = "project";
-for (i=1; i<param_vector.length ; i++) {	paramlist = paramlist+";"+param_vector[i];	}
+for (i = 1; i < param_vector.length; i++) {
+    paramlist = paramlist + ";" + param_vector[i];
+}
 
 // ---------------- Valeurs initiales -----------------------------
 long = lengthOf(path);
-a = indexOf(path,"_");
+a = indexOf(path, "_");
 
-Project  = substring(path,a+1,long);	
-Cruise = 		"xx";
-Ship = 			"xx";
-Filename = 		"xx";
-SampleId =		"xx";
-if (optionB != "init") {	SampleId = optionB;	}
-Other_ref =		"nan";
-Latitude =		0;
-Longitude =		0;
-Samplinggear =		"Other";
-Zmin =			99999;
-Zmax =			99999;
-Conc_vol_ml = 		99999;
-Volpump = 		99999;
-Celltype =		"nan";
-Comment =		"xx";
-Datetime = 		"20000101-1200";
-StationId = 		"xx";
-Depth = 		99999;
-Ctdref = 		"nan";
-Townb = 		1;
-Towtype = 		"nan";
-Nettype = 		"nan";
-Netmesh = 		99999;
-Netsurf = 		99999;
-Vol_qc = 		0;
-Depth_qc = 		0;
-Sample_qc = 		"0000";
-Barcode = 		"nan";
-Latitude_end = 		0;
-Longitude_end = 	0;
-Net_duration = 		99999;
-Ship_speed_knots = 	99999;
-Cable_length = 		99999;
-Cable_angle = 		99999;
-Cable_speed = 		99999;
-Nb_jar = 		99999;
-Sieve_min = 		99999;
-Sieve_max = 		99999;
-Fixative = 		"nan";
-Flow_start = 		99999;
-Flow_end = 		99999;
-Flow_type = 		"nan";
-Dilution_method = 	"nan";
-Initial_col_vol_m3 = 	99999;
-Operator_acq = 		"nan";
-Operator_sample =	"nan";
+Project = substring(path, a + 1, long);
+Cruise = "xx";
+Ship = "xx";
+Filename = "xx";
+SampleId = "xx";
+if (optionB != "init") {
+    SampleId = optionB;
+}
+Other_ref = "nan";
+Latitude = 0;
+Longitude = 0;
+Samplinggear = "Other";
+Zmin = 99999;
+Zmax = 99999;
+Conc_vol_ml = 99999;
+Volpump = 99999;
+Celltype = "nan";
+Comment = "xx";
+Datetime = "20000101-1200";
+StationId = "xx";
+Depth = 99999;
+Ctdref = "nan";
+Townb = 1;
+Towtype = "nan";
+Nettype = "nan";
+Netmesh = 99999;
+Netsurf = 99999;
+Vol_qc = 0;
+Depth_qc = 0;
+Sample_qc = "0000";
+Barcode = "nan";
+Latitude_end = 0;
+Longitude_end = 0;
+Net_duration = 99999;
+Ship_speed_knots = 99999;
+Cable_length = 99999;
+Cable_angle = 99999;
+Cable_speed = 99999;
+Nb_jar = 99999;
+Sieve_min = 99999;
+Sieve_max = 99999;
+Fixative = "nan";
+Flow_start = 99999;
+Flow_end = 99999;
+Flow_type = "nan";
+Dilution_method = "nan";
+Initial_col_vol_m3 = 99999;
+Operator_acq = "nan";
+Operator_sample = "nan";
 
-datatext1 = Project+";"+Ship+";"+Filename+";"+SampleId+";"+Other_ref+";"+Latitude+";"+Longitude+";"+Samplinggear+";"+Zmin+";"+Zmax+";"+Conc_vol_ml+";"+Initial_col_vol_m3+";"+Celltype+";"+Comment+";"+Datetime;
-datatext2 = StationId+";"+Depth+";"+Ctdref+";"+Townb+";"+Towtype+";"+Nettype+";"+Netmesh+";"+Netsurf+";"+Vol_qc+";"+Depth_qc+";"+Sample_qc+";"+Barcode+";"+Latitude_end+";"+Longitude_end;
-datatext3 = toString(Net_duration)+";"+Ship_speed_knots+";"+Cable_length+";"+Cable_angle+";"+Cable_speed+";"+Nb_jar+";"+Sieve_min+";"+Sieve_max+";"+Fixative+";"+Flow_start+";"+Flow_end+";"+Flow_type+";"+Dilution_method+";"+Cruise+";"+Operator_acq+";"+Operator_sample;
-datatext = datatext1+";"+datatext2+";"+datatext3;
+datatext1 = Project + ";" + Ship + ";" + Filename + ";" + SampleId + ";" + Other_ref + ";" + Latitude + ";" + Longitude + ";" + Samplinggear + ";" + Zmin + ";" + Zmax + ";" + Conc_vol_ml + ";" + Initial_col_vol_m3 + ";" + Celltype + ";" + Comment + ";" + Datetime;
+datatext2 = StationId + ";" + Depth + ";" + Ctdref + ";" + Townb + ";" + Towtype + ";" + Nettype + ";" + Netmesh + ";" + Netsurf + ";" + Vol_qc + ";" + Depth_qc + ";" + Sample_qc + ";" + Barcode + ";" + Latitude_end + ";" + Longitude_end;
+datatext3 = toString(Net_duration) + ";" + Ship_speed_knots + ";" + Cable_length + ";" + Cable_angle + ";" + Cable_speed + ";" + Nb_jar + ";" + Sieve_min + ";" + Sieve_max + ";" + Fixative + ";" + Flow_start + ";" + Flow_end + ";" + Flow_type + ";" + Dilution_method + ";" + Cruise + ";" + Operator_acq + ";" + Operator_sample;
+datatext = datatext1 + ";" + datatext2 + ";" + datatext3;
 ret = datatext;
 //	aa = getBoolean("--"+option+"--");
 if (optionB == "init") {
-	// ----------------- Metafile pour Flowcam --------------------------------	
-	chemmeta = path+"\\meta\\";
-	filelist  = 	getFileList(chemmeta);
-	//--------------- Selection des fichiers  -------------------
-	j = 0;
-	list = newArray(filelist.length);
-	for (i=0; i<filelist.length ; i++) {	
-		ctrl = endsWith(filelist[i],".txt");
-		ctrl1 = startsWith(filelist[i],"Flowcam_header_");
-		if (ctrl == 1 && ctrl1 == 1)	{rr = filelist[i]; 	list[j] = rr;	j = j + 1;		} // if
-	} // for
-	//---------------------Test de la presence de fichiers dans le repertoire -----------------------------------------------------------------------	
-	if (j==0) {	
-		// ---------------- Creation empty (ligne entete) ------------- 	
-		print(paramlist);
-		metafile = "Flowcam_header_"+Project+".txt";
-		sauve = "save=" + path+"\\meta\\"+metafile;
-		selectWindow("Log");
-		run("Text...",sauve);
-		run('Close');		
-	} //
-	else if (j == 1) {		metafile = list[0];		} // else if
-	else { 	aa = getBoolean("More than ONE header file in "+chemmeta+"\n \nPress CANCEL to end and then delete the wrong ones before restarting !");	} // else
-	
-	// ----------------------------- OUVERTURE META ----------------------------------
-	open(path+"\\meta\\"+metafile);
-	wait(100);
-	metadata = getInfo();
-	run('Close');
-	array = split(metadata,"\n");
-	liste = newArray(array.length-1);
-	
-	// ----------------------------- MAJ du format si necessaire ----------------
-	ligne_txt = replace(array[0],";"," ");
-	ligne = split(ligne_txt,"\ ");
-	if (ligne.length == 14 || ligne.length == 15)  	{	
-		// ------------------ WARNING -------------------------------------
-		texte = "This version of Zooprocess is about upgrading the metadata file of the project "+path+" \n \n This new format provides much more detailed metadata including a better documentation of the ''initial collected volume (m3)''. \n \n You must accept the upgrade of these metadata to continue using Zooprocess for the flowcam in all projects \n but you must ABSOLUTELY later edit all the metadata and fill in the ''Initial collected volume (m3)''. \n \n The computing of the abundances from the data imported in EcoTAXA would otherwise be wrong. \n \n Press Cancel if you do not want to continue.";
-		aa = getBoolean(texte);	
-		
-		texte = "Please note that the lat/lon values in the resulting header files are no longer decimal degree (DD.DDDD) \nbut a custom (DD.MMM) format.";
-		aa = getBoolean(texte);	
-		
-		// ----------------- archivage fichier header d'origine -----------
-		chemarchives = 	chemmeta+"\\archives\\";
-		File.makeDirectory(chemarchives);
-		// ------------- Lecture de l'heure -----------------
-		dateheuremmss =	runMacro("uvp5_get_time");
-		// ------------ metaname --------------------------
-		metaname =  substring(metafile,0,lengthOf(metafile) - 4);
-		print("A purger");	selectWindow("Log");		run("Close");
-		for (dl=0; dl< array.length ; dl++) {		texte = array[dl];		print(texte);	}	
-		selectWindow("Log");
-		text = "save="+chemarchives+metaname+"_"+dateheuremmss+".txt";
-		run("Text...",text);
-		
-		// ------------------------ Creation new metadata aux nouvelles dimensions ------------	
-		print("A purger");	selectWindow("Log");		run("Close");
-		print(paramlist);
-		if (array.length > 1) {
-			for (i=1; i<array.length ; i++) { 
-				// ------------------------ Correction de lat/lon pour passer au format DD.MM au lieu de DD.DD ---------------
-				data = split(array[i],";");
-				lat = parseFloat(data[5]);
-				sign = 1;
-				if (lat < 0) sign = -1;
-				lat = abs(lat);
-				lat_int = floor(lat);
-				lat_dec = lat - lat_int;				
-				lat_zoo = toString(sign*(lat_int+lat_dec*0.6));
-				
-				lon = parseFloat(data[6]);
-				if (lon < 0) sign = -1;
-				lon = abs(lon);
-				lon_int = floor(lon);
-				lon_dec = lon - lon_int;				
-				lon_zoo = toString(sign*(lon_int+lon_dec*0.6));
-				
-				// ----------------- Recomposition de la ligne -----------------------
-				line_to_print = data[0];
-				for (k=1;k<5;k++) {line_to_print = line_to_print +";"+data[k];	}
-				line_to_print = line_to_print +";"+lat_zoo+";"+lon_zoo;
-				for (k=7;k<data.length;k++) {line_to_print = line_to_print +";"+data[k];	}
-				
-				if (ligne.length == 14 ) {	line_to_print = line_to_print+";"+Datetime+";"+datatext2+";"+datatext3;		}
-				else {				line_to_print = line_to_print+";"+datatext2+";"+datatext3;	}
-				print(line_to_print);
-			}
-			
-			// ------------------------ enregistrement ---------------------
-			metafile = "Flowcam_header_"+Project+".txt";
-			sauve = "save=" + path+"\\meta\\"+metafile;
-			selectWindow("Log");
-			run("Text...",sauve);
-			run('Close');
-			showMessage("The metadata file has been updated with many new fields. \n \nIt is recommended to edit the metadata to take benefit of these fields.");	
-		}
-	}
-	ret = paramlist;	
+    // ----------------- Metafile pour Flowcam --------------------------------	
+    chemmeta = path + "\\meta\\";
+    filelist = getFileList(chemmeta);
+    //--------------- Selection des fichiers  -------------------
+    j = 0;
+    list = newArray(filelist.length);
+    for (i = 0; i < filelist.length; i++) {
+        ctrl = endsWith(filelist[i], ".txt");
+        ctrl1 = startsWith(filelist[i], "Flowcam_header_");
+        if (ctrl == 1 && ctrl1 == 1) {
+            rr = filelist[i];
+            list[j] = rr;
+            j = j + 1;
+        } // if
+    } // for
+    //---------------------Test de la presence de fichiers dans le repertoire -----------------------------------------------------------------------	
+    if (j == 0) {
+        // ---------------- Creation empty (ligne entete) ------------- 	
+        print(paramlist);
+        metafile = "Flowcam_header_" + Project + ".txt";
+        sauve = "save=" + path + "\\meta\\" + metafile;
+        selectWindow("Log");
+        run("Text...", sauve);
+        run('Close');
+    } //
+    else if (j == 1) {
+        metafile = list[0];
+    } // else if
+    else {
+        aa = getBoolean("More than ONE header file in " + chemmeta + "\n \nPress CANCEL to end and then delete the wrong ones before restarting !");
+    } // else
+
+    // ----------------------------- OUVERTURE META ----------------------------------
+    open(path + "\\meta\\" + metafile);
+    wait(100);
+    metadata = getInfo();
+    run('Close');
+    array = split(metadata, "\n");
+    liste = newArray(array.length - 1);
+
+    // ----------------------------- MAJ du format si necessaire ----------------
+    ligne_txt = replace(array[0], ";", " ");
+    ligne = split(ligne_txt, "\ ");
+    if (ligne.length == 14 || ligne.length == 15) {
+        // ------------------ WARNING -------------------------------------
+        texte = "This version of Zooprocess is about upgrading the metadata file of the project " + path + " \n \n This new format provides much more detailed metadata including a better documentation of the ''initial collected volume (m3)''. \n \n You must accept the upgrade of these metadata to continue using Zooprocess for the flowcam in all projects \n but you must ABSOLUTELY later edit all the metadata and fill in the ''Initial collected volume (m3)''. \n \n The computing of the abundances from the data imported in EcoTAXA would otherwise be wrong. \n \n Press Cancel if you do not want to continue.";
+        aa = getBoolean(texte);
+
+        texte = "Please note that the lat/lon values in the resulting header files are no longer decimal degree (DD.DDDD) \nbut a custom (DD.MMM) format.";
+        aa = getBoolean(texte);
+
+        // ----------------- archivage fichier header d'origine -----------
+        chemarchives = chemmeta + "\\archives\\";
+        File.makeDirectory(chemarchives);
+        // ------------- Lecture de l'heure -----------------
+        dateheuremmss = runMacro("uvp5_get_time");
+        // ------------ metaname --------------------------
+        metaname = substring(metafile, 0, lengthOf(metafile) - 4);
+        print("A purger");
+        selectWindow("Log");
+        run("Close");
+        for (dl = 0; dl < array.length; dl++) {
+            texte = array[dl];
+            print(texte);
+        }
+        selectWindow("Log");
+        text = "save=" + chemarchives + metaname + "_" + dateheuremmss + ".txt";
+        run("Text...", text);
+
+        // ------------------------ Creation new metadata aux nouvelles dimensions ------------	
+        print("A purger");
+        selectWindow("Log");
+        run("Close");
+        print(paramlist);
+        if (array.length > 1) {
+            for (i = 1; i < array.length; i++) {
+                // ------------------------ Correction de lat/lon pour passer au format DD.MM au lieu de DD.DD ---------------
+                data = split(array[i], ";");
+                lat = parseFloat(data[5]);
+                sign = 1;
+                if (lat < 0) sign = -1;
+                lat = abs(lat);
+                lat_int = floor(lat);
+                lat_dec = lat - lat_int;
+                lat_zoo = toString(sign * (lat_int + lat_dec * 0.6));
+
+                lon = parseFloat(data[6]);
+                if (lon < 0) sign = -1;
+                lon = abs(lon);
+                lon_int = floor(lon);
+                lon_dec = lon - lon_int;
+                lon_zoo = toString(sign * (lon_int + lon_dec * 0.6));
+
+                // ----------------- Recomposition de la ligne -----------------------
+                line_to_print = data[0];
+                for (k = 1; k < 5; k++) {
+                    line_to_print = line_to_print + ";" + data[k];
+                }
+                line_to_print = line_to_print + ";" + lat_zoo + ";" + lon_zoo;
+                for (k = 7; k < data.length; k++) {
+                    line_to_print = line_to_print + ";" + data[k];
+                }
+
+                if (ligne.length == 14) {
+                    line_to_print = line_to_print + ";" + Datetime + ";" + datatext2 + ";" + datatext3;
+                } else {
+                    line_to_print = line_to_print + ";" + datatext2 + ";" + datatext3;
+                }
+                print(line_to_print);
+            }
+
+            // ------------------------ enregistrement ---------------------
+            metafile = "Flowcam_header_" + Project + ".txt";
+            sauve = "save=" + path + "\\meta\\" + metafile;
+            selectWindow("Log");
+            run("Text...", sauve);
+            run('Close');
+            showMessage("The metadata file has been updated with many new fields. \n \nIt is recommended to edit the metadata to take benefit of these fields.");
+        }
+    }
+    ret = paramlist;
 }
 
 // ---------------- FIN --------------------------------------------

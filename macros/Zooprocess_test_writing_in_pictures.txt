@@ -3,29 +3,31 @@ version = "8.27";
 date = "2024/09/25";
 
 path_onedrive = "C:\\Users\\user\\OneDrive\\Documents\\Images\\VueScan\\";
-if (File.exists(path_onedrive)) {	chemvue = path_onedrive;	}
-else {	path_plugin = call("ij.Menus.getPlugInsPath");
-	print(path_plugin);
-	index_desktop = indexOf(path_plugin,"Desktop");
-	chemvue = substring(path_plugin,0,index_desktop) + "Pictures\\Vuescan\\";
+if (File.exists(path_onedrive)) {
+    chemvue = path_onedrive;
+} else {
+    path_plugin = call("ij.Menus.getPlugInsPath");
+    print(path_plugin);
+    index_desktop = indexOf(path_plugin, "Desktop");
+    chemvue = substring(path_plugin, 0, index_desktop) + "Pictures\\Vuescan\\";
 }
 print(chemvue);
 
 //chemvue = "C:\\Users\\marcp\\Pictures\\Vuescan\\";
-filename = chemvue +"\\write_test.ini";
-// ------------------- Test ImageJ en écriture sur chemvue -------------------------------
+filename = chemvue + "\\write_test.ini";
+// ------------------- Test ImageJ en ï¿½criture sur chemvue -------------------------------
 contenu = "Writing test";
-if (File.exists(chemvue +"\\write_test_ok.txt") == true) {
-	File.delete(chemvue +"\\write_test_ok.txt");
-	showMessage("The ''write_test_ok.txt'' file is deleted");
+if (File.exists(chemvue + "\\write_test_ok.txt") == true) {
+    File.delete(chemvue + "\\write_test_ok.txt");
+    showMessage("The ''write_test_ok.txt'' file is deleted");
 }
 File.saveString(contenu, filename);
-if (File.exists(chemvue +"\\write_test.ini") == false) {
-	showMessage("WARNING : Imagej must now be set to run in administrator mode. \n \n- Exit ImageJ \n- Edit the shortcut to Imagej to modify the ''Compatibility'' \n- enable ''Run this program as an administrator'' \n \nPress Cancel to abort ");
-}
-else {	showMessage("The ''write_test.ini'' file is correctly saved");
-	File.rename(chemvue +"\\write_test.ini",chemvue +"\\write_test_ok.txt");
-	showMessage("The ''write_test.ini'' file is correctly renamed to ''write_test_ok.txt''");	
+if (File.exists(chemvue + "\\write_test.ini") == false) {
+    showMessage("WARNING : Imagej must now be set to run in administrator mode. \n \n- Exit ImageJ \n- Edit the shortcut to Imagej to modify the ''Compatibility'' \n- enable ''Run this program as an administrator'' \n \nPress Cancel to abort ");
+} else {
+    showMessage("The ''write_test.ini'' file is correctly saved");
+    File.rename(chemvue + "\\write_test.ini", chemvue + "\\write_test_ok.txt");
+    showMessage("The ''write_test.ini'' file is correctly renamed to ''write_test_ok.txt''");
 }
 
 // ----------------------------- FIN ----------------------------------------------

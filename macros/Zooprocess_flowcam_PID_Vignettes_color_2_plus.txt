@@ -3,84 +3,101 @@ version = "8.20";
 date = "2023/07/06";
 
 // ---------------- Gestion des images RGB ----------------------
-// fermeture forcée des images
+// fermeture forcï¿½e des images
 // flowcam VS5 compatible
 // message capture zone
 
 //args = 	getArgument();
 
 args = "C:\\flowcam_test_vs5 test_ptb_02 process_install_config.txt flowcam test_ptb_02";
-arg = 	split(args," ");
+arg = split(args, " ");
 
-path = 			arg[0];
-profileprocessed = 	arg[1];
-configfile = 		arg[2];
-instrum = 		arg[3];
-Stationname = 		arg[4];
-profileraw =		"FlowCam_"+profileprocessed;
-pathraw = 		path+"\\raw\\";
-pathprocessed = 	path+"\\work\\"+profileprocessed+"\\";
-pathconfig = 		path+"\\config\\";
-profile = 		profileprocessed;						// a remplacer dans le soft si OK
-pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
-pathback =		path+"\\back\\FlowCam_"+profileprocessed+"_auto\\";
-for (b=0;b<4;b++)	{	run("free memory");		wait(1000);	progress = (b+1)/4;	showProgress(progress);   } // for
+path = arg[0];
+profileprocessed = arg[1];
+configfile = arg[2];
+instrum = arg[3];
+Stationname = arg[4];
+profileraw = "FlowCam_" + profileprocessed;
+pathraw = path + "\\raw\\";
+pathprocessed = path + "\\work\\" + profileprocessed + "\\";
+pathconfig = path + "\\config\\";
+profile = profileprocessed; // a remplacer dans le soft si OK
+pathpidresults = path + "\\" + "\\PID_process\\" + "\\Pid_results\\";
+pathback = path + "\\back\\FlowCam_" + profileprocessed + "_auto\\";
+for (b = 0; b < 4; b++) {
+    run("free memory");
+    wait(1000);
+    progress = (b + 1) / 4;
+    showProgress(progress);
+} // for
 except = 0;
 
-sauvelog = "save=" + pathprocessed+profileprocessed +"_log.txt";
+sauvelog = "save=" + pathprocessed + profileprocessed + "_log.txt";
 
 // ---------------------- Fermeture eventuelles images -----------------------------------
-while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while	
+while (nImages() > 0) {
+    selectImage(nImages());
+    run("Close");
+} // while	
 
 // --------------------------------------------------------- TEST Y/N ----------------------------------------------------------------
-batch =		true;
-test = 		"0";
-printlog = 	0;
-if (test == "1")  { batch =		"false";	getBoolean("MODE TEST ! Continue ?");	} // if
-print("A purger");	selectWindow("Log");		run("Close");
+batch = true;
+test = "0";
+printlog = 0;
+if (test == "1") {
+    batch = "false";
+    getBoolean("MODE TEST ! Continue ?");
+} // if
+print("A purger");
+selectWindow("Log");
+run("Close");
 run("Colors...", "foreground=black background=white selection=red");
 
 // ----------------------------------------------- Parametres CONFIG ------------------------------------------------------------------
-openconfig = pathconfig +"\\"+configfile;
+openconfig = pathconfig + "\\" + configfile;
 open(openconfig);
 wait(100);
 config = getInfo();
 run("Close");
-conf  = split(config,"\n");
+conf = split(config, "\n");
 size = conf.length;
 array = newArray(size);
-for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
-calibration = 			array[0];
-background_method= 		array[1];
-nb_image= 			array[2];
-rolling= 			array[3];
-pixel4x= 			array[4];
-pixel10x= 			array[5];
-upper= 				array[6];
-gamma= 				array[7];
-echelle_micro=			array[8];
-process_option=			array[9];
-esdmin= 			array[10];
-esdmax= 			array[11];
-lut_offset= 			array[12];
-lut_slope= 			array[13];
-stop_after_n_images= 		parseInt(array[14]);
-stop_after_m_objects= 		parseInt(array[15]);
-scale= 				array[16];
-remove_objects_on_sides= 	array[17];
-removeduplicates= 		array[18];
-grey_auto_adjust = 		array[19];
+for (i = 0; i < conf.length; i++) {
+    texte = conf[i];
+    ssarray = split(texte, " ");
+    array[i] = ssarray[1];
+} // for
+calibration = array[0];
+background_method = array[1];
+nb_image = array[2];
+rolling = array[3];
+pixel4x = array[4];
+pixel10x = array[5];
+upper = array[6];
+gamma = array[7];
+echelle_micro = array[8];
+process_option = array[9];
+esdmin = array[10];
+esdmax = array[11];
+lut_offset = array[12];
+lut_slope = array[13];
+stop_after_n_images = parseInt(array[14]);
+stop_after_m_objects = parseInt(array[15]);
+scale = array[16];
+remove_objects_on_sides = array[17];
+removeduplicates = array[18];
+grey_auto_adjust = array[19];
 
 // ======================== Settings ===============================
-echelletext = 	echelle_micro+ " µm ";
+echelletext = echelle_micro + " ï¿½m ";
 gammatext = gamma;
-gamma = "value="+gamma;
+gamma = "value=" + gamma;
 x1 = 10;
 scale = 1;
 nbvigar = 250;
 nb_removed_duplicates = 0;
 duplicaterange = 0.05;
-nb_max_test_duplicate = 50;	// recherche des duplicates dans 50 objets précédents
+nb_max_test_duplicate = 50; // recherche des duplicates dans 50 objets prï¿½cï¿½dents
 no_image_initial = 1000000;
 previous_ratio = 0;
 setBatchMode(batch);
@@ -89,183 +106,198 @@ setBatchMode(batch);
 threshold_red = upper;
 threshold_green = upper;
 threshold_blue = upper;
-// --------------------------------------- Settings première analyse -------------------------------------
+// --------------------------------------- Settings premiï¿½re analyse -------------------------------------
 parametres_first_analysis = "area bounding area_fraction perimeter circularity feret's integrated limit redirect=None decimal=3";
 
 // ------------------- Parametres standard ImageJ ------------------------------------------------------------------------
-parametres_std_green = 	"area mean standard modal min centroid center perimeter bounding fit circularity feret's integrated median skewness kurtosis area_fraction limit redirect=Green_cor decimal=2";
-parametres_std_red = 	"mean standard modal min centroid center bounding fit integrated median skewness kurtosis limit redirect=Red_cor decimal=2";
-parametres_std_blue = 	"mean standard modal min centroid center bounding fit integrated median skewness kurtosis limit redirect=Blue_cor decimal=2";
+parametres_std_green = "area mean standard modal min centroid center perimeter bounding fit circularity feret's integrated median skewness kurtosis area_fraction limit redirect=Green_cor decimal=2";
+parametres_std_red = "mean standard modal min centroid center bounding fit integrated median skewness kurtosis limit redirect=Red_cor decimal=2";
+parametres_std_blue = "mean standard modal min centroid center bounding fit integrated median skewness kurtosis limit redirect=Blue_cor decimal=2";
 
 // ------------------------ Starting time -----------------------------------------------
-dateheurestart =	runMacro("Zooscan_get_time_5");
+dateheurestart = runMacro("Zooscan_get_time_5");
 
-// ------------------------- Vérification des fichiers CTX et summary -------------------
-filelist  = 	getFileList(pathraw+profileraw);
+// ------------------------- Vï¿½rification des fichiers CTX et summary -------------------
+filelist = getFileList(pathraw + profileraw);
 list = newArray(filelist.length);
-summaryfile ="not_file";
+summaryfile = "not_file";
 ctx_file = 0;
-for (i=0; i<filelist.length ; i++) {	
-	ctrlctx = 0;
-	if (endsWith(filelist[i],"_run_summary.txt") == true || endsWith(filelist[i],"summary.csv"))	{ summaryfile = filelist[i];		} // if
-	if (endsWith(filelist[i],".ctx") == true ){ ctxfile = filelist[i];	ctx_file++;	} // if
+for (i = 0; i < filelist.length; i++) {
+    ctrlctx = 0;
+    if (endsWith(filelist[i], "_run_summary.txt") == true || endsWith(filelist[i], "summary.csv")) {
+        summaryfile = filelist[i];
+    } // if
+    if (endsWith(filelist[i], ".ctx") == true) {
+        ctxfile = filelist[i];
+        ctx_file++;
+    } // if
 } // for	
-if (summaryfile =="not_file") { getBoolean("Summary file not found in "+pathraw+profileraw+"\n      \nPress Cancel to abort !");	} // if
-if (ctx_file > 1) { getBoolean("WARNING : \n "+ ctx_file + " *.ctx files have been exported from VS5 in the sample folder. \nDelete the useless files to keep only one. \nPress Cancel to abort and restart process afterward !");}
+if (summaryfile == "not_file") {
+    getBoolean("Summary file not found in " + pathraw + profileraw + "\n      \nPress Cancel to abort !");
+} // if
+if (ctx_file > 1) {
+    getBoolean("WARNING : \n " + ctx_file + " *.ctx files have been exported from VS5 in the sample folder. \nDelete the useless files to keep only one. \nPress Cancel to abort and restart process afterward !");
+}
 
 // ------------------------- Lecture RUN SUMMARY --------------------------------
-open (pathraw+profileraw+"\\"+summaryfile);
+open(pathraw + profileraw + "\\" + summaryfile);
 wait(100);
 summary = getInfo();
 run("Close");
-conf  = split(summary,"\n");
+conf = split(summary, "\n");
 
 // --------- Taille pixel ---------------------
 lenstype = "12X";
 Calibration_Factor = 100;
 i = 0;
-for (i=0; i<conf.length; i++) {
-	a = toString(conf[i]);
-	b = replace(a,":"," ");
-	c = split(b,"\ ");
-	if (c.length>1) {
-		if (startsWith(c[0],"	Magnification")) {	lenstype = c[1];		} // if
-		if (startsWith(c[0],"	Calibration") > 0) {	Calibration_Factor = c[2];		} // if
-	} // if
+for (i = 0; i < conf.length; i++) {
+    a = toString(conf[i]);
+    b = replace(a, ":", " ");
+    c = split(b, "\ ");
+    if (c.length > 1) {
+        if (startsWith(c[0], "	Magnification")) {
+            lenstype = c[1];
+        } // if
+        if (startsWith(c[0], "	Calibration") > 0) {
+            Calibration_Factor = c[2];
+        } // if
+    } // if
 } // for
 
 // ---------------------- Lecture CTX ----------------------------------
-open (pathraw+profileraw+"\\"+ctxfile);
+open(pathraw + profileraw + "\\" + ctxfile);
 wait(100);
 ctx_settings = getInfo();
 run("Close");
 
-// ----------------------- Lecture des valeurs de CROP (et taille pixel) utilisées par VS --------------------
-ctx_data = split(ctx_settings,"\n");
+// ----------------------- Lecture des valeurs de CROP (et taille pixel) utilisï¿½es par VS --------------------
+ctx_data = split(ctx_settings, "\n");
 i = 0;
-while ( i < ctx_data.length){
-	aa = split(ctx_data[i],"=");
-	if (aa.length == 2) {		
-		if (aa[0] == "AcceptableBottom") 	capture_bottom = parseInt(aa[1]);
-		if (aa[0] == "AcceptableLeft") 		capture_left = parseInt(aa[1]);
-		if (aa[0] == "AcceptableRight") 	capture_right = parseInt(aa[1]);
-		if (aa[0] == "AcceptableTop") 		capture_top = parseInt(aa[1]);
-		if (aa[0] == "ImagePixelBorder") 	capture_pixel_border = parseInt(aa[1]);	
-		if (aa[0] == "CalibrationConstant" && Calibration_Factor == 100)	Calibration_Factor = parseInt(aa[1]);	
-	}
-	i++;
+while (i < ctx_data.length) {
+    aa = split(ctx_data[i], "=");
+    if (aa.length == 2) {
+        if (aa[0] == "AcceptableBottom") capture_bottom = parseInt(aa[1]);
+        if (aa[0] == "AcceptableLeft") capture_left = parseInt(aa[1]);
+        if (aa[0] == "AcceptableRight") capture_right = parseInt(aa[1]);
+        if (aa[0] == "AcceptableTop") capture_top = parseInt(aa[1]);
+        if (aa[0] == "ImagePixelBorder") capture_pixel_border = parseInt(aa[1]);
+        if (aa[0] == "CalibrationConstant" && Calibration_Factor == 100) Calibration_Factor = parseInt(aa[1]);
+    }
+    i++;
 }
 
-// ---------------- après 8.09 (8.15 pour recherche ctx) ------------------------
-if (Calibration_Factor == 100) { aa = getBoolean("The ''Calibration Factor'' field could not be found in any of the "+summaryfile+" or "+ctxfile+" file. \n \nPress Cancel to abort.");	}
+// ---------------- aprï¿½s 8.09 (8.15 pour recherche ctx) ------------------------
+if (Calibration_Factor == 100) {
+    aa = getBoolean("The ''Calibration Factor'' field could not be found in any of the " + summaryfile + " or " + ctxfile + " file. \n \nPress Cancel to abort.");
+}
 pixel = Calibration_Factor;
 
 // ----------------------- Conversions  ----------------------------------------------------
-echelle_micro = 	parseInt(echelle_micro);
-scale = 	parseInt(scale);
-longline = 	round(scale*echelle_micro/pixel);
+echelle_micro = parseInt(echelle_micro);
+scale = parseInt(scale);
+longline = round(scale * echelle_micro / pixel);
 
 // ----------------------- Pixel size ---------------------------------------------------------
 esdmin = parseInt(esdmin);
 esdmax = parseInt(esdmax);
-esdminp = esdmin/pixel;
-esdmaxp = esdmax/pixel;
-Spmin = round(3.1416 * pow (esdminp/2,2));
-Spmax = round(3.1416 * pow (esdmaxp/2,2));
+esdminp = esdmin / pixel;
+esdmaxp = esdmax / pixel;
+Spmin = round(3.1416 * pow(esdminp / 2, 2));
+Spmax = round(3.1416 * pow(esdmaxp / 2, 2));
 
 // Area est la surface totale, incluant la surface des "trous"
 // %Area fournit le pourcentage de l'objet dans la surface totale
-first_analysis_settings_include =  "minimum=" + Spmin + " maximum=" + Spmax + " circularity=000-1.00 bins=20 show=Nothing include flood record";
-first_analysis_settings_exclude =  "minimum=" + Spmin + " maximum=" + Spmax + " circularity=0.00-1.00 bins=20 show=Nothing exclude include flood record";
+first_analysis_settings_include = "minimum=" + Spmin + " maximum=" + Spmax + " circularity=000-1.00 bins=20 show=Nothing include flood record";
+first_analysis_settings_exclude = "minimum=" + Spmin + " maximum=" + Spmax + " circularity=0.00-1.00 bins=20 show=Nothing exclude include flood record";
 
 // ---------------------------- Traitement du fond ----------------------------
-aa = split(background_method,"/");
-bb = split(aa[0],"_");
-nbimgavg =parseInt(bb[1]);
+aa = split(background_method, "/");
+bb = split(aa[0], "_");
+nbimgavg = parseInt(bb[1]);
 type_background = bb[0];
-bb = split(aa[1],"i");
+bb = split(aa[1], "i");
 nbimgstep = parseInt(bb[0]);
 
 // --------------------------------------- Matrices ----------------------------------------------------
 nb_blobs = 300000;
 
 // ------------ GENERAL ----------------------
-Back_G_median =	newArray(nb_blobs);
+Back_G_median = newArray(nb_blobs);
 Back_R_median = newArray(nb_blobs);
 Back_B_median = newArray(nb_blobs);
 
-Image_no = 	newArray(nb_blobs);
-Img_G_median =	newArray(nb_blobs);
+Image_no = newArray(nb_blobs);
+Img_G_median = newArray(nb_blobs);
 Img_R_median = newArray(nb_blobs);
 Img_B_median = newArray(nb_blobs);
 
 // ------------ GREEN ------------------------
-XSTART_green = 	newArray(nb_blobs);
-YSTART_green = 	newArray(nb_blobs);
-BX_green = 	newArray(nb_blobs);
-BY_green = 	newArray(nb_blobs);
-WIDTH_green = 	newArray(nb_blobs);
-HEIGTH_green = 	newArray(nb_blobs);
-PERIM_green = 	newArray(nb_blobs);
-CIRC_green = 	newArray(nb_blobs);
-FERET_green = 	newArray(nb_blobs);
-Area_green = 	newArray(nb_blobs);
-Mean_green =	newArray(nb_blobs);
-StdDev_green = 	newArray(nb_blobs);
-Mode_green = 	newArray(nb_blobs);
-Min_green = 	newArray(nb_blobs);
-Max_green = 	newArray(nb_blobs);
-X_green = 	newArray(nb_blobs);
-Y_green = 	newArray(nb_blobs);
-XM_green = 	newArray(nb_blobs);
-YM_green = 	newArray(nb_blobs);
-Area_frac_green =	newArray(nb_blobs);
-Major_green = 	newArray(nb_blobs);
-Minor_green = 	newArray(nb_blobs);
-Angle_green = 	newArray(nb_blobs);
-IntDen_green = 	newArray(nb_blobs);
-Median_green = 	newArray(nb_blobs);
-Skew_green = 	newArray(nb_blobs);
-Kurt_green = 	newArray(nb_blobs);
-Vignette_index = 	newArray(nb_blobs);
-Tag = 		newArray(nb_blobs);
+XSTART_green = newArray(nb_blobs);
+YSTART_green = newArray(nb_blobs);
+BX_green = newArray(nb_blobs);
+BY_green = newArray(nb_blobs);
+WIDTH_green = newArray(nb_blobs);
+HEIGTH_green = newArray(nb_blobs);
+PERIM_green = newArray(nb_blobs);
+CIRC_green = newArray(nb_blobs);
+FERET_green = newArray(nb_blobs);
+Area_green = newArray(nb_blobs);
+Mean_green = newArray(nb_blobs);
+StdDev_green = newArray(nb_blobs);
+Mode_green = newArray(nb_blobs);
+Min_green = newArray(nb_blobs);
+Max_green = newArray(nb_blobs);
+X_green = newArray(nb_blobs);
+Y_green = newArray(nb_blobs);
+XM_green = newArray(nb_blobs);
+YM_green = newArray(nb_blobs);
+Area_frac_green = newArray(nb_blobs);
+Major_green = newArray(nb_blobs);
+Minor_green = newArray(nb_blobs);
+Angle_green = newArray(nb_blobs);
+IntDen_green = newArray(nb_blobs);
+Median_green = newArray(nb_blobs);
+Skew_green = newArray(nb_blobs);
+Kurt_green = newArray(nb_blobs);
+Vignette_index = newArray(nb_blobs);
+Tag = newArray(nb_blobs);
 
 // ------------------------- RED --------------------------
-Mean_red =	newArray(nb_blobs);
-StdDev_red = 	newArray(nb_blobs);
-Mode_red = 	newArray(nb_blobs);
-Min_red = 	newArray(nb_blobs);
-Max_red = 	newArray(nb_blobs);
-XM_red = 	newArray(nb_blobs);
-YM_red = 	newArray(nb_blobs);
-IntDen_red = 	newArray(nb_blobs);
-Median_red = 	newArray(nb_blobs);
-Skew_red = 	newArray(nb_blobs);
-Kurt_red = 	newArray(nb_blobs);
+Mean_red = newArray(nb_blobs);
+StdDev_red = newArray(nb_blobs);
+Mode_red = newArray(nb_blobs);
+Min_red = newArray(nb_blobs);
+Max_red = newArray(nb_blobs);
+XM_red = newArray(nb_blobs);
+YM_red = newArray(nb_blobs);
+IntDen_red = newArray(nb_blobs);
+Median_red = newArray(nb_blobs);
+Skew_red = newArray(nb_blobs);
+Kurt_red = newArray(nb_blobs);
 
 // ------------------------- BLUE --------------------------
-Mean_blue =	newArray(nb_blobs);
-StdDev_blue = 	newArray(nb_blobs);
-Mode_blue = 	newArray(nb_blobs);
-Min_blue = 	newArray(nb_blobs);
-Max_blue = 	newArray(nb_blobs);
-XM_blue = 	newArray(nb_blobs);
-YM_blue = 	newArray(nb_blobs);
-IntDen_blue = 	newArray(nb_blobs);
-Median_blue = 	newArray(nb_blobs);
-Skew_blue = 	newArray(nb_blobs);
-Kurt_blue = 	newArray(nb_blobs);
+Mean_blue = newArray(nb_blobs);
+StdDev_blue = newArray(nb_blobs);
+Mode_blue = newArray(nb_blobs);
+Min_blue = newArray(nb_blobs);
+Max_blue = newArray(nb_blobs);
+XM_blue = newArray(nb_blobs);
+YM_blue = newArray(nb_blobs);
+IntDen_blue = newArray(nb_blobs);
+Median_blue = newArray(nb_blobs);
+Skew_blue = newArray(nb_blobs);
+Kurt_blue = newArray(nb_blobs);
 
 // ------------------- AUTRES ------------------------
-Skelarea = 	newArray(nb_blobs);
-Convperim =	newArray(nb_blobs);
-Convarea =	newArray(nb_blobs);
-Fractal = 	newArray(nb_blobs);
-Slope = 	newArray(nb_blobs);
-Histcum1 =	newArray(nb_blobs);		
-Histcum2 =	newArray(nb_blobs);
-Histcum3 =	newArray(nb_blobs);
-Fcons =		newArray(nb_blobs);
+Skelarea = newArray(nb_blobs);
+Convperim = newArray(nb_blobs);
+Convarea = newArray(nb_blobs);
+Fractal = newArray(nb_blobs);
+Slope = newArray(nb_blobs);
+Histcum1 = newArray(nb_blobs);
+Histcum2 = newArray(nb_blobs);
+Histcum3 = newArray(nb_blobs);
+Fcons = newArray(nb_blobs);
 
 /*
 PArea = 	newArray(nb_blobs);
@@ -299,1133 +331,1304 @@ vignettelist = newArray(nbvigar);
 vignettelist = newArray(1000);
 vigindex = 0;
 
-// ---------- NOMBRE d'images RAW dans le répertoire --------------
+// ---------- NOMBRE d'images RAW dans le rï¿½pertoire --------------
 nb_rawfiles = 0;
-filelist  = 	getFileList(path+"\\raw\\"+profileraw+"\\");
-for (i=0; i<filelist.length ; i++) {	
-	if (endsWith(filelist[i],".tif") == true &&  startsWith(filelist[i],"rawfile_") == true )	nb_rawfiles++;		
+filelist = getFileList(path + "\\raw\\" + profileraw + "\\");
+for (i = 0; i < filelist.length; i++) {
+    if (endsWith(filelist[i], ".tif") == true && startsWith(filelist[i], "rawfile_") == true) nb_rawfiles++;
 } // for
 
-// --------------- Recherche N° PREMIERE image et caractérisation -------------------
-existimage = false;	
+// --------------- Recherche Nï¿½ PREMIERE image et caractï¿½risation -------------------
+existimage = false;
 flowcam_1200x1920 = false;
 rgb_test = false;
 rgb_image = false;
 no_image = no_image_initial;
 while (existimage == false) {
-	no_image_texte = toString(no_image);
-	no_image_texte = substring(no_image_texte,1,7);
-	// ----------------------- NOM image à traiter --------------------------------
-	image =  "rawfile_"+no_image_texte+".tif";
-	existimage = File.exists(path+"\\raw\\"+profileraw+"\\"+image);
-	if (existimage == true) {
-		// --------------- Ouverture ------------------------------
-		open(path+"\\raw\\"+profileraw+"\\"+image);
-		rename("Imageraw");
-		// --------------- RGB ou N&B ???? ------------------------------
-		if (rgb_test == false) {
-			run("Show Info...");
-			wait(200);
-			imagedata = getInfo();
-			selectWindow("Info for Imageraw");
-			run("Close");          
-			if (indexOf(imagedata,'32 (RGB)')>0) rgb_image = true;
-			rgb_test = true;
-		} // rgb_test		
-		if (rgb_image == false) { aa = getBoolean("The raw images are not RGB. The analysis cannot be performed. \n \nPress Cancel to abort !");	}
-		
-		// ----------------- Taille image ------------------------
-		run("8-bit");
-		img_w = getWidth();
-		img_h = getHeight();
-		
-		if (img_w == 1200 && img_h == 1920) {
-			// ----------------- New FlowCam -----------------
-			run("Set Measurements...", "  mean redirect=None decimal=0");
-			flowcam_1200x1920 = true;
-			// ------------- Recherche limite gauche ------------		
-			if (isOpen("Results")) { selectWindow("Results");		run('Close');	}
-			min_grey = 255;
-			left_lim = 0;
-			index = 0;
-			for (XX = 900; XX > 0 ; XX--) {
-				makeLine(XX, 0, XX, img_h);
-				run("Measure");
-				mean_grey = getResult("Mean", index);
-				index++;
-				if (mean_grey < min_grey) {	
-					min_grey = minOf(mean_grey,min_grey);
-					left_lim = XX;
-				}
-			}
-			// ------------- Recherche limite droite ------------		
-			if (isOpen("Results")) { selectWindow("Results");		run('Close');	}
-			min_grey = 255;
-			right_lim = 0;
-			index = 0;
-			for (XX = img_w - 900; XX < img_w - 10; XX++) {
-				makeLine(XX, 0, XX, img_h);
-				run("Measure");
-				mean_grey = getResult("Mean", index);
-				index++;
-				if (mean_grey < min_grey) {	
-					min_grey = minOf(mean_grey,min_grey);
-					right_lim = XX;
-				}
-			}
-			if (isOpen("Results")) { selectWindow("Results");		run('Close');	}
-			// ----------------- Fermeture image ----------------------		
-		} 
-		else if (img_w == 1024 && img_h == 768) {
-			// --------------- OLD FlowCam --------------------
-			left_lim = 1;
-			right_lim = 1022;
-		}
-		else if (img_w == 1280 && img_h == 960) {
-			// --------------- OLD FlowCam --------------------
-			left_lim = 1;
-			right_lim = 1278;
-		}
-		// ------------ Fermeture image de test -------------------
-		selectImage("Imageraw");
-		close();
-	}
-	no_image++;
-	// -------------------- SI PAS DE RAW FILE ! -------------------------------
-	if (no_image == 1000000 ) {
-		aa = getBoolean("NO rawfile images for : \n \n "+profileraw+"\n \nPRESS Cancel to abort and fix problem !");
-	}
+    no_image_texte = toString(no_image);
+    no_image_texte = substring(no_image_texte, 1, 7);
+    // ----------------------- NOM image ï¿½ traiter --------------------------------
+    image = "rawfile_" + no_image_texte + ".tif";
+    existimage = File.exists(path + "\\raw\\" + profileraw + "\\" + image);
+    if (existimage == true) {
+        // --------------- Ouverture ------------------------------
+        open(path + "\\raw\\" + profileraw + "\\" + image);
+        rename("Imageraw");
+        // --------------- RGB ou N&B ???? ------------------------------
+        if (rgb_test == false) {
+            run("Show Info...");
+            wait(200);
+            imagedata = getInfo();
+            selectWindow("Info for Imageraw");
+            run("Close");
+            if (indexOf(imagedata, '32 (RGB)') > 0) rgb_image = true;
+            rgb_test = true;
+        } // rgb_test		
+        if (rgb_image == false) {
+            aa = getBoolean("The raw images are not RGB. The analysis cannot be performed. \n \nPress Cancel to abort !");
+        }
+
+        // ----------------- Taille image ------------------------
+        run("8-bit");
+        img_w = getWidth();
+        img_h = getHeight();
+
+        if (img_w == 1200 && img_h == 1920) {
+            // ----------------- New FlowCam -----------------
+            run("Set Measurements...", "  mean redirect=None decimal=0");
+            flowcam_1200x1920 = true;
+            // ------------- Recherche limite gauche ------------		
+            if (isOpen("Results")) {
+                selectWindow("Results");
+                run('Close');
+            }
+            min_grey = 255;
+            left_lim = 0;
+            index = 0;
+            for (XX = 900; XX > 0; XX--) {
+                makeLine(XX, 0, XX, img_h);
+                run("Measure");
+                mean_grey = getResult("Mean", index);
+                index++;
+                if (mean_grey < min_grey) {
+                    min_grey = minOf(mean_grey, min_grey);
+                    left_lim = XX;
+                }
+            }
+            // ------------- Recherche limite droite ------------		
+            if (isOpen("Results")) {
+                selectWindow("Results");
+                run('Close');
+            }
+            min_grey = 255;
+            right_lim = 0;
+            index = 0;
+            for (XX = img_w - 900; XX < img_w - 10; XX++) {
+                makeLine(XX, 0, XX, img_h);
+                run("Measure");
+                mean_grey = getResult("Mean", index);
+                index++;
+                if (mean_grey < min_grey) {
+                    min_grey = minOf(mean_grey, min_grey);
+                    right_lim = XX;
+                }
+            }
+            if (isOpen("Results")) {
+                selectWindow("Results");
+                run('Close');
+            }
+            // ----------------- Fermeture image ----------------------		
+        } else if (img_w == 1024 && img_h == 768) {
+            // --------------- OLD FlowCam --------------------
+            left_lim = 1;
+            right_lim = 1022;
+        } else if (img_w == 1280 && img_h == 960) {
+            // --------------- OLD FlowCam --------------------
+            left_lim = 1;
+            right_lim = 1278;
+        }
+        // ------------ Fermeture image de test -------------------
+        selectImage("Imageraw");
+        close();
+    }
+    no_image++;
+    // -------------------- SI PAS DE RAW FILE ! -------------------------------
+    if (no_image == 1000000) {
+        aa = getBoolean("NO rawfile images for : \n \n " + profileraw + "\n \nPRESS Cancel to abort and fix problem !");
+    }
 } //
 
-// =========================== Vérification des dimensions de Capture et limites =================
+// =========================== Vï¿½rification des dimensions de Capture et limites =================
 left_righ_test = false;
 top_bottom_test = false;
 border_pixel = false;
 if (flowcam_1200x1920 == true) {
-	// ------------ Comparaison avec bordures détectées ------------------
-	if (capture_left > left_lim+5 && capture_right < right_lim - 5) 	left_righ_test = true;
-	if (capture_top < 3 && capture_bottom >= 1917)				top_bottom_test = true;
-	if (capture_pixel_border < 6)						border_pixel = true;
-}
-else if (img_w == 1024 && img_h == 768) {	
-	if (capture_left < 3 && capture_right >= 1021) 			left_righ_test = true;
-	if (capture_top < 3 && capture_bottom >= 766)				top_bottom_test = true;
-	if (capture_pixel_border < 6)						border_pixel = true;
-}
-else if (img_w == 1280 && img_h == 960) {
-	if (capture_left < 3 && capture_right >= 1277) 			left_righ_test = true;
-	if (capture_top < 3 && capture_bottom >= 959)				top_bottom_test = true;
-	if (capture_pixel_border < 6)						border_pixel = true;
+    // ------------ Comparaison avec bordures dï¿½tectï¿½es ------------------
+    if (capture_left > left_lim + 5 && capture_right < right_lim - 5) left_righ_test = true;
+    if (capture_top < 3 && capture_bottom >= 1917) top_bottom_test = true;
+    if (capture_pixel_border < 6) border_pixel = true;
+} else if (img_w == 1024 && img_h == 768) {
+    if (capture_left < 3 && capture_right >= 1021) left_righ_test = true;
+    if (capture_top < 3 && capture_bottom >= 766) top_bottom_test = true;
+    if (capture_pixel_border < 6) border_pixel = true;
+} else if (img_w == 1280 && img_h == 960) {
+    if (capture_left < 3 && capture_right >= 1277) left_righ_test = true;
+    if (capture_top < 3 && capture_bottom >= 959) top_bottom_test = true;
+    if (capture_pixel_border < 6) border_pixel = true;
 }
 
-// ------------------------ Fichiers des limites pour contrôle ----------------------------
-if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
+// ------------------------ Fichiers des limites pour contrï¿½le ----------------------------
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 print("----------------------------------");
 print("Limit checks ");
-print("profileprocessed = "+profileprocessed);
-print("Image = "+image);
-print("capture_left = "+capture_left);
-print("left_lim = "+left_lim);
-print("capture_right = "+capture_right);
-print("right_lim = "+right_lim);
-print("capture_top (1) = "+capture_top);
-print("capture_bottom (1919,766) = "+capture_bottom);
+print("profileprocessed = " + profileprocessed);
+print("Image = " + image);
+print("capture_left = " + capture_left);
+print("left_lim = " + left_lim);
+print("capture_right = " + capture_right);
+print("right_lim = " + right_lim);
+print("capture_top (1) = " + capture_top);
+print("capture_bottom (1919,766) = " + capture_bottom);
 selectWindow("Log");
-run("Text...",sauvelog);
+run("Text...", sauvelog);
 
 if (left_righ_test == false || top_bottom_test == false || border_pixel == false) {
-	print("TEST limits = NOK");
-	if (capture_left <= left_lim + 5) { 	print("The left captured limit is defined too close to the LEFT side of the cell.");	}
-	if (capture_right >= right_lim - 5) { 	print("The right captured limit is defined too close to the RIGHT side of the cell.");	}
-	if (top_bottom_test == false) {		print("The top or bottom limits are not maximum.");					}
-	selectWindow("Log");
-	run("Text...",sauvelog);
-	if (capture_left <= left_lim + 5) { showMessage("The captured area is defined too close to the LEFT side of the cell.");	}
-	if (capture_right >= right_lim - 5) { showMessage("The captured area is defined too close to the RIGHT side of the cell.");	}
-	if (top_bottom_test == false) {showMessage("The top or bottom limits are not maximum.");	}
-	aa = getBoolean(" The captured zone is not optimum (it was reduced in Visual Spreadsheet). The resulting concentrations may be wrong. \n We recommend to verify the Capture settings in the Context section of Visual Spreadsheet \n and to redo the acquisition of the sample. \n Press CANCEL to abort (highly recommended) or YES to continue at your own risks.");
+    print("TEST limits = NOK");
+    if (capture_left <= left_lim + 5) {
+        print("The left captured limit is defined too close to the LEFT side of the cell.");
+    }
+    if (capture_right >= right_lim - 5) {
+        print("The right captured limit is defined too close to the RIGHT side of the cell.");
+    }
+    if (top_bottom_test == false) {
+        print("The top or bottom limits are not maximum.");
+    }
+    selectWindow("Log");
+    run("Text...", sauvelog);
+    if (capture_left <= left_lim + 5) {
+        showMessage("The captured area is defined too close to the LEFT side of the cell.");
+    }
+    if (capture_right >= right_lim - 5) {
+        showMessage("The captured area is defined too close to the RIGHT side of the cell.");
+    }
+    if (top_bottom_test == false) {
+        showMessage("The top or bottom limits are not maximum.");
+    }
+    aa = getBoolean(" The captured zone is not optimum (it was reduced in Visual Spreadsheet). The resulting concentrations may be wrong. \n We recommend to verify the Capture settings in the Context section of Visual Spreadsheet \n and to redo the acquisition of the sample. \n Press CANCEL to abort (highly recommended) or YES to continue at your own risks.");
 }
 
 // -----------------------------------------------------------------------------------------------
 // +++++++++++++++++++++++++++++++++++++++ ANALYSE +++++++++++++++++++++++++++++++++++++++++++++++
 // -----------------------------------------------------------------------------------------------	
 // --------------------------- LOG ------------------------------------------
-if (isOpen("Log") && printlog == 1) {	selectWindow("Log");	run("Close"); 	} // if
+if (isOpen("Log") && printlog == 1) {
+    selectWindow("Log");
+    run("Close");
+} // if
 print("----------------------------------");
 print("Process started");
 no_image = no_image_initial;
 process_image = true;
 nb_image_not_found = 0;
-while (process_image == true){	
-	// ----------------------- NOM image à traiter --------------------------------
-	no_image_texte = toString(no_image);
-	no_image_texte = substring(no_image_texte,1,7);
-	image =  "rawfile_"+no_image_texte+".tif";
-	existimage = File.exists(path+"\\raw\\"+profileraw+"\\"+image);
-	if (existimage == true) {
-		// -------------------- Ouverture image ------------------------
-		open(path+"\\raw\\"+profileraw+"\\"+image);
-		rename("Imageraw");
-		
-		// ------------------- Crop si 1200 x 1920 ----------------------
-		if (flowcam_1200x1920 == true) {
-			makeRectangle(capture_left, 0 ,capture_right - capture_left, img_h);
-			run("Crop");
-		}
-		
-		// -------------------- Test process background nécessaire ---------------------
-		if (parseInt(no_image_texte)/nbimgstep == floor(parseInt(no_image_texte)/nbimgstep)  || isOpen("Fond_R") == false) { process_background = true;	}
-		else {	process_background = false;	}		
-		
-		//------------------------ Creation des 3 fonds automatiques lorsque nécessaire selon config ------------------------------
-		if (process_background == true  ) {
-			// --------------- Renbommage fonds précédents ------------------------------------------------------------------------
-			if(isOpen("Fond_R")) {	selectImage("Fond_R");	rename("Fond_R_prev");		} // if
-			if(isOpen("Fond_G")) {	selectImage("Fond_G");	rename("Fond_G_prev");		} // if
-			if(isOpen("Fond_B")) {	selectImage("Fond_B");	rename("Fond_B_prev");		} // if
-			
-			selectImage("Imageraw");
-			run("Duplicate...", "title=Fond");
-			
-			// ------------------ increment du nombre d'images utilisées pour le fond ------------------
-			nb_images_fond++;
-			
-			// ----------------- Split RGB ------------------------------------------
-			run("Split Channels");
-			
-			// ----------------- 16 bits pour addition des images du fond -----------
-			selectImage("Fond (red)");		rename("Fond_R");	run("32-bit");
-			selectImage("Fond (green)");		rename("Fond_G");	run("32-bit");
-			selectImage("Fond (blue)");		rename("Fond_B");	run("32-bit");
-			
-			noimgfond = 1;
-			no_imagefond = no_image;
-			nbtest = 0;
-			sortie = false;
-			// --------------- Recherche image suivante et addition aux fonds -------------------
-			while (noimgfond < nbimgavg && sortie == false) {
-				no_imagefond++;	
-				no_image_textefond = toString(no_imagefond);
-				no_image_textefond = substring(no_image_textefond,1,7);
-				txtback = no_image_texte;
-				imagefd =  "rawfile_"+no_image_textefond+".tif";
-				existimagefd = File.exists(path+"\\raw\\"+profileraw+"\\"+imagefd);
-				if (existimagefd == true ) {
-					// ---------------------- Ajout pour moyenne ---------------------------------
-					open(path+"\\raw\\"+profileraw+"\\"+imagefd);
-					rename("imagefd");
-					
-					// ------------------ increment du nombre d'images utilisées pour le fond ------------------
-					nb_images_fond++;
-					
-					// ------------------- Crop si 1200 x 1920 ----------------------
-					if (flowcam_1200x1920 == true) {
-						makeRectangle(capture_left, 0 ,capture_right - capture_left, img_h);
-						run("Crop");
-					}
-					
-					// ----------------- Split RGB ------------------------------------------
-					run("Split Channels");
-					
-					// ----------------- 32 bits pour addition des images du fond -----------
-					selectImage("imagefd (red)");	rename("imagefd_R");	run("32-bit");
-					selectImage("imagefd (green)");	rename("imagefd_G");	run("32-bit");
-					selectImage("imagefd (blue)");	rename("imagefd_B");	run("32-bit");
-					
-					// ----------------- Ajout des 3 fonds -----------------------------------
-					run("Image Calculator...", "image1=Fond_R operation=Add image2=imagefd_R");
-					run("Image Calculator...", "image1=Fond_G operation=Add image2=imagefd_G");
-					run("Image Calculator...", "image1=Fond_B operation=Add image2=imagefd_B");
-					
-					// ----------------- Fermeture image courante -----------------------------
-					if(isOpen("imagefd_R"))		selectImage("imagefd_R");		close();
-					if(isOpen("imagefd_G"))		selectImage("imagefd_G");		close();
-					if(isOpen("imagefd_B"))		selectImage("imagefd_B");		close();
-					
-					noimgfond++;
-					
-				} // if
-				else {	nbtest = 0;
-					while (existimagefd == false) {
-						nbtest++;
-						no_imagefond++;	
-						no_image_textefond = toString(no_imagefond);
-						no_image_textefond = substring(no_image_textefond,1,7);
-						imagefd =  "rawfile_"+no_image_textefond+".tif";
-						existimagefd = File.exists(path+"\\raw\\"+profileraw+"\\"+imagefd);
-						// ----------- Sortie si 100 images non trouvees -------------------------------
-						if (nbtest > 100) {	existimagefd = true;
-							sortie = true;	
-							// ------------------- Fermeture fonds incomplets ------------------------
-							if(isOpen("Fond_R")) {	selectImage("Fond_R");	close();		} // if
-							if(isOpen("Fond_G")) {	selectImage("Fond_G");	close();		} // if
-							if(isOpen("Fond_B")) {	selectImage("Fond_B");	close();		} // if
-							
-						} // if
-					} // while
-				}// else 
-			} // while noimgfond
-			// --------------- Si on a bien ajouté le nombre d'images au fond --------------------------
-			if (noimgfond == nbimgavg) {
-				// ------------------------------ Division Fonds 32 bits -----------------------------------
-				textdivide = "value="+nbimgavg;
-				
-				selectImage("Fond_R");
-				run("Divide...", textdivide);
-				
-				selectImage("Fond_G");
-				run("Divide...", textdivide);
-				
-				selectImage("Fond_B");
-				run("Divide...", textdivide);
-				
-				// ------------------------------ Mesure du niveau de gris -----------------------
-				run("Set Measurements...", "  mean median redirect=None decimal=1");
-				selectImage("Fond_R");
-				run("Select All");
-				run("Measure");
-				updateResults();
-				meangreyfond_R = 		getResult("Mean", 0);
-				mediangreyfond_R = 		getResult("Median", 0);
-				if (isOpen("Results")) { selectWindow("Results");		run('Close');	}	
-				print("mediangreyfond_R "+mediangreyfond_R);
-				print("meangreyfond_R "+meangreyfond_R);
-				
-				selectImage("Fond_G");
-				run("Select All");
-				run("Measure");
-				updateResults();
-				meangreyfond_G = 		getResult("Mean", 0);
-				mediangreyfond_G = 		getResult("Median", 0);
-				if (isOpen("Results")) { selectWindow("Results");		run('Close');	}
-				print("mediangreyfond_G "+mediangreyfond_G);
-				print("meangreyfond_G "+meangreyfond_G);
-				
-				selectImage("Fond_B");
-				run("Select All");
-				run("Measure");
-				updateResults();
-				meangreyfond_B = 		getResult("Mean", 0);
-				mediangreyfond_B = 		getResult("Median", 0);
-				if (isOpen("Results")) { selectWindow("Results");		run('Close');	}	
-				print("mediangreyfond_B "+mediangreyfond_B);
-				print("meangreyfond_B "+meangreyfond_B);
-				
-				// ------------------------------- Sauvegarde du fond -------------------------------
-				dateheurestart =	runMacro("Zooscan_get_time_5");
-				lastfond = pathback+"autoback_R_"+txtback+".tif";
-				selectImage("Fond_R");	saveAs("Tif",lastfond);
-				rename("Fond_R");				
-				print(dateheurestart+"    "+pathback+"autoback_R_"+txtback+".tif    saved now");
-				
-				lastfond = pathback+"autoback_G_"+txtback+".tif";
-				selectImage("Fond_G");	saveAs("Tif",lastfond);
-				rename("Fond_G");				
-				print(dateheurestart+"    "+pathback+"autoback_G_"+txtback+".tif    saved now");
-				
-				lastfond = pathback+"autoback_B_"+txtback+".tif";
-				selectImage("Fond_B");	saveAs("Tif",lastfond);
-				rename("Fond_B");				
-				print(dateheurestart+"    "+pathback+"autoback_B_"+txtback+".tif    saved now");
-				wait(200);
-				
-				// ----------------- Free memory -------------
-				showStatus("End of background");
-				for (b=0;b<4;b++)	{	run("free memory");		wait(1000);	progress = (b+1)/4;	showProgress(progress);   } // for
-				
-				// ------------------ Sortie -----------------
-				sortie = true;
-			} // 
-		} // if calcul du fond
-		
-		// --------------- Fermeture fonds précédents si nouveaux fonds -------------------------------------------------------
-		if(isOpen("Fond_R")) {	
-			if (isOpen("Fond_R_prev")) {selectImage("Fond_R_prev");	close();	} 
-		}		
-		else {	selectImage("Fond_R_prev");	rename("Fond_R");			}
-		
-		if(isOpen("Fond_G")) {	
-			if (isOpen("Fond_G_prev")) {selectImage("Fond_G_prev");	close();	} 
-		}		 
-		else {	selectImage("Fond_G_prev");	rename("Fond_G");			}
-		
-		if(isOpen("Fond_B")) {	
-			if (isOpen("Fond_B_prev")) {selectImage("Fond_B_prev");	close();	} 
-		}		 
-		else {	selectImage("Fond_B_prev");	rename("Fond_B");			}
-		
-		// ============================= process images =========================================
-		// ---------------------- Trois images R, G et B + pixels noirs -------------------------
-		selectImage("Imageraw");
-		run("Duplicate...", "title=new_img");
-		selectImage("new_img");
-		run("Split Channels");		
-		selectImage("new_img (red)");		run("32-bit");	rename("Red");		makeRectangle(1, 1, 3, 3);	run("Fill");
-		selectImage("new_img (green)");		run("32-bit");	rename("Green");	makeRectangle(1, 1, 3, 3);	run("Fill");
-		selectImage("new_img (blue)");		run("32-bit");	rename("Blue");		makeRectangle(1, 1, 3, 3);	run("Fill");
-		
-		// ---------------------- Correction du fond et inversion ----------------------
-		run("Image Calculator...", "image1=Blue operation=Divide image2=Fond_B create");
-		rename("Blue_cor");
-		//		wait(20);
-		
-		run("Image Calculator...", "image1=Green operation=Divide image2=Fond_G create");
-		rename("Green_cor");
-		//		wait(20);
-		
-		run("Image Calculator...", "image1=Red operation=Divide image2=Fond_R create");
-		rename("Red_cor");
-		//		wait(20);
-		
-		// -------------------- Normalisation et conversion 8 bits ---------------------------
-		run("Set Measurements...", "  mean modal min median redirect=None decimal=5");
-		if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if
-		
-		selectImage("Blue_cor");
-		setMinAndMax(0, 1.04);
-		run("8-bit");
-		run("Select All");
-		run("Measure");
-		Blue_cor_median = 	getResult("Median",0);
-		
-		selectImage("Green_cor");
-		setMinAndMax(0, 1.04);
-		run("8-bit");	
-		run("Select All");
-		run("Measure");
-		Green_cor_median = 	getResult("Median",1);
-		
-		selectImage("Red_cor");	
-		setMinAndMax(0, 1.04);
-		run("8-bit");
-		run("Select All");
-		run("Measure");
-		Red_cor_median = 	getResult("Median",2);
-		
-		// --------------------------- INCLUDE / EXCLUDE option --------------------------------------------------	
-		if (remove_objects_on_sides == "yes") { first_analysis_settings = first_analysis_settings_exclude;	}
-		else {	first_analysis_settings = first_analysis_settings_include;	}
-		
-		// ---------------------- Analyse particules GREEN ---------------------------------------------------------
-		if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-		
-		selectImage("Green_cor");
-		run("Duplicate...", "title=Green_cor_mask");
-		setThreshold(0,threshold_green);
-		run("Convert to Mask");
-		run("Set Measurements...", parametres_std_green);
-		run("Analyze Particles...",first_analysis_settings);		
-		updateResults();
-		nb_blobs = 	nResults;		
-		for (i=0; i<nb_blobs; i++) {
-			// --------------- BACK -------------------
-			Back_G_median[nb_objets+i] =		mediangreyfond_G;
-			Back_R_median[nb_objets+i] = 		mediangreyfond_R;
-			Back_B_median[nb_objets+i] = 		mediangreyfond_B;
-			
-			// --------------- IMAGE ------------------
-			Image_no[nb_objets+i] =			parseInt(no_image_texte);
-			Img_G_median[nb_objets+i] =		Green_cor_median;
-			Img_R_median[nb_objets+i] = 		Red_cor_median;
-			Img_B_median[nb_objets+i] = 		Blue_cor_median;
-			Tag[nb_objets+i] = 			1;
-			
-			// --------------- OBJETS -----------------
-			XSTART_green[nb_objets+i] = 	getResult("XStart", i);
-			YSTART_green[nb_objets+i] = 	getResult("YStart", i);
-			BX_green[nb_objets+i] = 	getResult("BX", i);
-			BY_green[nb_objets+i] = 	getResult("BY", i);
-			WIDTH_green[nb_objets+i] = 	getResult("Width", i);
-			HEIGTH_green[nb_objets+i] = 	getResult("Height", i);
-			PERIM_green[nb_objets+i] = 	getResult("Perim.",i);
-			CIRC_green[nb_objets+i] = 	getResult("Circ.", i);
-			FERET_green[nb_objets+i] = 	getResult("Feret", i);
-			Area_green[nb_objets+i] = 	getResult("Area", i);	
-			Mean_green[nb_objets+i] =	getResult("Mean", i);
-			StdDev_green[nb_objets+i] = 	getResult("StdDev", i);
-			Mode_green[nb_objets+i] = 	getResult("Mode", i);
-			Min_green[nb_objets+i] = 	getResult("Min", i);
-			Max_green[nb_objets+i] = 	getResult("Max", i);
-			X_green[nb_objets+i] = 		getResult("X", i);
-			Y_green[nb_objets+i] = 		getResult("Y", i);
-			XM_green[nb_objets+i] = 	getResult("XM", i);
-			YM_green[nb_objets+i] = 	getResult("YM", i);
-			Area_frac_green[nb_objets+i] =	getResult("%Area", i);
-			Major_green[nb_objets+i] = 	getResult("Major",i);
-			Minor_green[nb_objets+i] = 	getResult("Minor",i);
-			Angle_green[nb_objets+i] = 	getResult("Angle",i);
-			IntDen_green[nb_objets+i] = 	getResult("IntDen", i);
-			Median_green[nb_objets+i] = 	getResult("Median",i);
-			Skew_green[nb_objets+i] = 	getResult("Skew", i);
-			Kurt_green[nb_objets+i] = 	getResult("Kurt", i);
-		}
-		
-		// ---------------------- Analyse particules RED avec mask GREEN --------------------------------------------
-		if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-		
-		selectImage("Green_cor_mask");
-		run("Set Measurements...", parametres_std_red);
-		run("Analyze Particles...",first_analysis_settings);		
-		updateResults();
-		for (i=0; i<nb_blobs; i++) {
-			Mean_red[nb_objets+i] =		getResult("Mean", i);
-			StdDev_red[nb_objets+i] = 	getResult("StdDev", i);
-			Mode_red[nb_objets+i] = 	getResult("Mode", i);
-			Min_red[nb_objets+i] = 		getResult("Min", i);
-			Max_red[nb_objets+i] = 		getResult("Max", i);
-			XM_red[nb_objets+i] = 		getResult("XM", i);
-			YM_red[nb_objets+i] = 		getResult("YM", i);
-			IntDen_red[nb_objets+i] = 	getResult("IntDen", i);
-			Median_red[nb_objets+i] = 	getResult("Median",i);
-			Skew_red[nb_objets+i] = 	getResult("Skew", i);
-			Kurt_red[nb_objets+i] = 	getResult("Kurt", i);
-		}	
-		
-		// ---------------------- Analyse particules BLUE avec mask GREEN --------------------------------------------
-		if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-		
-		selectImage("Green_cor_mask");
-		run("Set Measurements...", parametres_std_blue);
-		run("Analyze Particles...",first_analysis_settings);		
-		updateResults();		
-		for (i=0; i<nb_blobs; i++) {
-			Mean_blue[nb_objets+i] =	getResult("Mean", i);
-			StdDev_blue[nb_objets+i] = 	getResult("StdDev", i);
-			Mode_blue[nb_objets+i] = 	getResult("Mode", i);
-			Min_blue[nb_objets+i] = 	getResult("Min", i);
-			Max_blue[nb_objets+i] = 	getResult("Max", i);
-			XM_blue[nb_objets+i] = 		getResult("XM", i);
-			YM_blue[nb_objets+i] = 		getResult("YM", i);
-			IntDen_blue[nb_objets+i] = 	getResult("IntDen", i);
-			Median_blue[nb_objets+i] = 	getResult("Median",i);
-			Skew_blue[nb_objets+i] = 	getResult("Skew", i);
-			Kurt_blue[nb_objets+i] = 	getResult("Kurt", i);
-		}	
-		
-		// --------------------- AUTRES MESURES sur vignettes -----------------------------------------------------
-		/*		for (i=0; i<nb_blobs; i++) {	
-		// ---------------------- no image -------------------
-		noimg = i+nb_objets+1;
-		
-		// ---------------------- Creation vignette mask nettoyée (un objet)-------------------
-		bx_vignette =	BX_green[nb_objets+i];
-		by_vignette = 	BY_green[nb_objets+i];
-		width_vignette = WIDTH_green[nb_objets+i];
-		heigth_vignette = HEIGTH_green[nb_objets+i];
-		selectImage("Green_cor_mask");
-		makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
-		run("Duplicate...", "title=vignette_msk");
-		
-		// ----------------------- resize >> marge blanche ---------------------------
-		width_plus = 8+width_vignette;
-		heigth_plus = 8+heigth_vignette;
-		textesize = "width="+width_plus+" height="+heigth_plus+" position=Center";
-		selectImage("vignette_msk");
-		run("Canvas Size...", textesize);
-		
-		// ----------------------- nettoyage autour de l'objet -----------------------
-		run("Set Measurements...", "area centroid bounding fit redirect=[vignette_msk] decimal=2");
-		run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing include record");
-		updateResults();			
-		nbobj = nResults;
-		ligne = 0;		g = 0;		Ratio = 0;
-		// ---------------------- Si probleme de vignette blanche -----------------------------------
-		if (nbobj == 0) {
-		// ------------ Sauvegarde pour verification ----------------------
-		selectImage("title=vignette_msk");
-		saveAs("jpg", pathprocessed+SampleId+"_"+noimg+"_msk.jpg"); 
-		aa = getBoolean(image+" has a blank vignette, press Cancel to ABORT !  ");
-		} //
-		
-		// ---------------------- Au moins un objet --------------------------------
-		areainit = 	getResult("Area", 0);
-		while (g < nbobj) {		
-		area = 		getResult("Area", g);	
-		if (area > areainit ) ligne = g;
-		areainit = 	maxOf(area,areainit);
-		g++;
-		} // for
-		xstart = 	getResult("XStart", ligne);
-		ystart =	getResult("YStart", ligne);			
-		
-		// --------------- nettoyage autour du plus gros objet ----------------------
-		selectImage("vignette_msk");
-		DEBX = xstart;
-		DEBY= ystart;
-		doWand(DEBX,DEBY);
-		
-		// ---------------- Fond blanc ----------------------------------------------
-		run("Clear Outside");
-		
-		// ------------- Creation d'une vignette grise nettoyée ------
-		selectImage("Green_cor");
-		makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
-		run("Duplicate...", "title=vignette_grey");		
-		
-		// ------------------- Agrandissement --------------
-		selectImage("vignette_grey");
-		run("Canvas Size...", textesize);
-		
-		// ------------------- Ajout du mask ---------------
-		selectImage("vignette_msk");
-		run("Duplicate...", "title=vignette_msk_inverted");
-		run("Invert");
-		run("Image Calculator...", "image1=vignette_grey operation=Add image2=vignette_msk_inverted");
-		selectImage("vignette_grey");
-		rename("vignette_grey_cleaned");
-		
-		// -------------------- Pente histo grey  ------------------------------
-		selectImage("vignette_grey_cleaned");
-		getHistogram(0, hist, 256);
-		sumg = 0;	suma = 0;	hh = 0;		secartg = 0;	secarta = 0;
-		// ----------------------- On ne prend pas les pixels à 255 ! -----------------------------------------
-		Histcum = 	newArray(255);
-		for (k=0; k<255; k++) {	sumg = sumg+hist[k];	Histcum[k] = sumg;		suma = suma+k;		} // for
-		while (hh < 255) {	dat = Histcum[hh]/sumg;
-		// ++++++++++++++++++++++++++
-		if (dat < 0.25 ) Histcum1[nb_objets+i] = hh;
-		if (dat < 0.50 ) Histcum2[nb_objets+i] = hh;
-		if (dat < 0.75 ) Histcum3[nb_objets+i] = hh;
-		// ++++++++++++++++++++++++++	
-		if (dat > 0.75) 	hh = 256;
-		hh++;
-		} // for
-		moyenneg = sumg/255;	moyennea = suma/255;
-		//---------Calcul de la pente de la regression  : stda/stdg -------------------
-		for (t =0;t<255;t++) { 
-		ecartgcar = pow(hist[t]-moyenneg,2);
-		secartg = secartg+ecartgcar;
-		ecartacar = pow(t-moyennea,2);
-		secarta = secarta+ecartacar;
-		} // for
-		stdg = secartg*1/(255-1) ;
-		stdg = pow(stdg,0.5);
-		stda = secarta*1/(255-1) ;
-		stda = pow(stda,0.5);
-		// ++++++++++++++++++++++++++
-		Slope[nb_objets+i] = stdg/stda;
-		// ++++++++++++++++++++++++++
-		/*
-		// --------------------- Contrast --------------------------------------------
-		S = newArray(256);
-		F = 0;                  	count = 1;
-		// ------------- Correction seuils ----------------------------------
-		AAA = 0;	BBB = 0;	CCC = 0;
-		for (k=0; k<255; k++) {	data = hist[k];
-		if (hist[k] !=0 && hist[k] <= Histcum1[nb_objets+i]) AAA = k;
-		if (hist[k] !=0 && hist[k] <= Histcum2[nb_objets+i]) BBB = k;
-		if (hist[k] !=0 && hist[k] <= Histcum3[nb_objets+i]) CCC = k;
-		} // for
-		selectImage("vignette_grey_cleaned");
-		for(x=1 ; x<width_plus-1 ; x++)	{
-		for(y=1 ; y<heigth_plus-1 ; y++)	{        		
-		p = getPixel(x,y);
-		if(p==AAA || p==BBB || p==CCC )	{	p1 = getPixel(x-1,y-1);
-		p2 = getPixel(x-1,y);
-		p3 = getPixel(x-1,y+1);
-		p4 = getPixel(x,y-1);
-		p5 = getPixel(x,y+1);
-		p6 = getPixel(x+1,y-1);
-		p7 = getPixel(x+1,y);
-		p8 = getPixel(x+1,y+1);
-		A= (p1+p2+p3+p4+p5+p6+p7+p8)/8;
-		S[p]=S[p]+ abs(p-A);
-		count = count + 1;
-		F = F + S[p]*hist[p]/256;
-		} // if
-		} // for
-		} // for
-		// ++++++++++++++++++++++++++
-		Fcons[nb_objets+i] = F/count;;	
-		// ++++++++++++++++++++++++++				
-		selectImage("vignette_grey_cleaned");	close();
-		
-		//--------------------------------Skeleton Area--------------------------------------------------
-		selectImage("vignette_msk");
-		run("Duplicate...", "title=vignette_msk_skeleton");
-		run("Skeletonize");
-		getHistogram(0, histS, 256);
-		// ++++++++++++++++++++++++++
-		Skelarea[nb_objets+i] = histS[0];
-		// ++++++++++++++++++++++++++
-		selectImage("vignette_msk_skeleton");	close();	
-		
-		//--------------------------------Fractal analyse-------------------------------------------------
-		selectImage("vignette_msk");			
-		run("Duplicate...", "title=vignette_msk_fractal_edm1");						
-		run("Make Binary");
-		width_plus = 4 * width_vignette;
-		heigth_plus = 4 * heigth_vignette;			
-		textesize_fractal = "width="+width_plus+" height="+heigth_plus+" position=Center";
-		selectImage("vignette_msk");
-		run("Canvas Size...", textesize_fractal);
-		selectImage("vignette_msk_fractal_edm1");			
-		run("Duplicate...", "title=vignette_msk_fractal_edm2");
-		run("Make Binary");
-		run("Distance Map");
-		selectImage("vignette_msk_fractal_edm2");
-		run("Invert");
-		run("Make Binary");
-		run("Distance Map");
-		run("Invert");
-		
-		selectImage("vignette_msk_fractal_edm1");
-		run("Invert");
-		run("Image Calculator...", "image1=vignette_msk_fractal_edm1 operation=Add image2=vignette_msk_fractal_edm2");
-		//  			run("Clear Results");
-		selectImage("vignette_msk_fractal_edm1");
-		run("Set Measurements...", "area limit decimal=3");
-		aa = getBoolean("OK_01");
-		
-		lg = 0;  	counter=0;	iterations = 40;	sumg = 0;	suma = 0;	index = 0;
-		Lg = newArray(iterations);
-		Aire = newArray(iterations);
-		for (k=1; k<=iterations; k++) {	 y = round(pow(1.1, k));
-		if (lg!=y) {	lg = y;
-		selectImage("vignette_msk_fractal_edm1");
-		setThreshold(0, lg);
-		run("Measure");
-		Lg[index] = log(2*lg);
-		arr = getResult("Area", index);
-		Aire[index] = log(arr);
-		sumg = sumg+Lg[index];
-		suma = suma+Aire[index];
-		index++;
-		} // if
-		} // for
-		moyenneg = sumg/index;
-		moyennea = suma/index;
-		//---------Calcul de la pente de la regression  : stda/stdg -------------------
-		secartg = 0;	secarta = 0;
-		for (t =0;t<index;t++) { 
-		ecartgcar = pow(Lg[t]-moyenneg,2);
-		secartg = secartg+ecartgcar;
-		ecartacar = pow(Aire[t]-moyennea,2);
-		secarta = secarta+ecartacar;
-		} // for
-		stdg = secartg*1/(index-1) ;
-		stdg = pow(stdg,0.5);
-		stda = secarta*1/(index-1) ;
-		stda = pow(stda,0.5);
-		// ++++++++++++++++++++++++++
-		Fractal[nb_objets+i] = 2 - stda/stdg;
-		// ++++++++++++++++++++++++++
-		selectImage("vignette_msk_fractal_edm1");	close();
-		selectImage("vignette_msk_fractal_edm2");	close();
-		
-		aa = getBoolean("OK_02");			
-		
-		//------------------------ convex perimeter calculation ----------------------------
-		selectImage("vignette_msk");
-		run("Duplicate...","title=vignette_msk_convex");
-		run("Convex Hull esmer", "mode=[Draw Convex Hull]");
-		run("my Bin");
-		run("Fill Holes");
-		getHistogram(0, hist, 256);
-		// ++++++++++++++++++++++++++
-		Convarea[nb_objets+i] = hist[0];
-		// ++++++++++++++++++++++++++
-		run("Outline");
-		getHistogram(0, hist, 256);
-		// ++++++++++++++++++++++++++
-		Convperim[nb_objets+i] = hist[0];
-		// ++++++++++++++++++++++++++
-		selectImage("vignette_msk_convex");	close();
-		
-		// -------------- fermeture vignette msk agrandie et nettoyée ---------
-		selectImage("vignette_msk");	close();		
-		}
-		*/		
-		// ---------------------- Creation de l'image recomposée pour faire la vignette RGB ------------------------
-		run("Merge Channels...", "red=Red_cor green=Green_cor blue=Blue_cor gray=*None* create keep");
-		rename("Composite_for_vignette");
-		
-		for (i=0; i<nb_blobs; i++) {
-			// ----------------------- Creation de la vignette --------------------------
-			bx_vignette =	BX_green[nb_objets+i];
-			by_vignette = 	BY_green[nb_objets+i];
-			width_vignette = WIDTH_green[nb_objets+i];
-			heigth_vignette = HEIGTH_green[nb_objets+i];
-			selectImage("Composite_for_vignette");	
-			makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
-			run("Duplicate...", "title=vignette_RGB duplicate");
-			
-			// ----------- Largeur ------------
-			width_vignette =	maxOf(width_vignette,longline + 20);
-			text = "width="+width_vignette+" height="+heigth_vignette+" position=Top-Left";
-			run("Canvas Size...", text);
-			// ----------- Bordure blanche ----------
-			width_vignette = width_vignette + 20;
-			Hfinal = heigth_vignette + 10;
-			text = "width="+width_vignette+" height="+Hfinal+" position=Center";
-			run("Canvas Size...", text);
-			// ----------- Footer legende -----------
-			heigth_vignette = heigth_vignette + 10 + 31;
-			text = "width="+width_vignette+" height="+heigth_vignette+" position=Top-Center";
-			run("Canvas Size...", text);
-			
-			// ----------- Contour gris -------------
-			if (rgb_image == true) {	run("Max...", "value=243");		}//	
-			
-			makeLine(10,Hfinal+10,10+longline,Hfinal+10);		run("Fill");
-			makeLine(10,Hfinal+10,10,Hfinal+5);			run("Fill");
-			makeLine(10+longline,Hfinal+10,10+longline,Hfinal+5);	run("Fill");
-			setFont("SansSerif", 9);
-			if (echelle_micro > 50) {	drawString(echelletext+" "+no_image_texte,12,heigth_vignette-8);	}
-			else {				drawString(echelletext,12,heigth_vignette-8);	} // else
-			
-			// -------- Enregistrement et fermeture ---------------
-			noimg = i+nb_objets+1;
-			
-			// -------- Tableau des vignettes a sauver -----------
-			Vignette_index[nb_objets+i] = noimg;
-			vignettelist[vigindex] = profileprocessed+"_"+noimg+".jpg";
-			selectImage("vignette_RGB");
-			rename(profileprocessed+"_"+noimg+".jpg");
-			vigindex++;
-		}
-		
-		// ---------------------- Incrément du nombre d'objets ---------------------
-		nb_objets = nb_objets + nb_blobs;
-		
-		// ---------------------- Fermeture des images R, G et B et RAW -----------------------------
-		selectImage("Red_cor");		close();		
-		selectImage("Green_cor");	close();		
-		selectImage("Blue_cor");	close();
-		selectImage("Composite_for_vignette");	close();
-		
-		selectImage("Red");		close();		
-		selectImage("Green");		close();		
-		selectImage("Blue");		close();
-		
-		selectImage("Imageraw");	close();
-		
-		selectImage("Green_cor_mask");	close();
-		
-		// -------------------- Increment du nombre d'images traitées --------------------------
-		nbimage++;
-		
-	} // fin du process de l'image
-	else { nb_image_not_found++;	}
-	// -------------------- Increment du no d'image à analyser ----------------------
-	no_image++;
-	
-	if (nb_objets/nbvigar == round(nb_objets/nbvigar) && nb_objets/nbvigar != previous_ratio ) {	
-		previous_ratio = nb_objets/nbvigar;
-		// --------------------------Affichage de la date et de l'heure de traitement ---------------------------------
-		dateheure =	runMacro("Zooscan_get_time_5");
-		print(dateheure+"    "+image+"   No_images= "+no_image+"    Nb_objets= "+nb_objets+ " Open images= "+nImages+"  Exceptions= "+except+"  Nbvigar= "+nbvigar);
-		selectWindow("Log");
-		run("Text...",sauvelog);
-		wait(2000);
-		// ----------------- Fermeture Exceptions ------------------------------
-		while (isOpen("Exception")) {	selectWindow("Exception");	run("Close");		except++;	}
-		
-		// ----------------- Free memory ---------------------------------------
-		showStatus("Freeing memory");
-		for (b=0;b<4;b++)	{	run("free memory");		wait(1000);	progress = (b+1)/4;	showProgress(progress);   } // for
-		
-		// -------- Enregistrement des vignettes -----------
-		for (q = 0;q < vigindex;q++) {
-			textesauv = vignettelist[q];
-			selectImage(textesauv);
-			saveAs("jpg", pathprocessed+textesauv);
-			close();
-		} // for
-		vigindex = 0;
-	}
-	// ---------------------- Condition d'arrêt --------------------------------
-	if (nb_objets >= stop_after_m_objects || nbimage >= stop_after_n_images || nb_image_not_found > 25) {	process_image = false;	}
-	
+while (process_image == true) {
+    // ----------------------- NOM image ï¿½ traiter --------------------------------
+    no_image_texte = toString(no_image);
+    no_image_texte = substring(no_image_texte, 1, 7);
+    image = "rawfile_" + no_image_texte + ".tif";
+    existimage = File.exists(path + "\\raw\\" + profileraw + "\\" + image);
+    if (existimage == true) {
+        // -------------------- Ouverture image ------------------------
+        open(path + "\\raw\\" + profileraw + "\\" + image);
+        rename("Imageraw");
+
+        // ------------------- Crop si 1200 x 1920 ----------------------
+        if (flowcam_1200x1920 == true) {
+            makeRectangle(capture_left, 0, capture_right - capture_left, img_h);
+            run("Crop");
+        }
+
+        // -------------------- Test process background nï¿½cessaire ---------------------
+        if (parseInt(no_image_texte) / nbimgstep == floor(parseInt(no_image_texte) / nbimgstep) || isOpen("Fond_R") == false) {
+            process_background = true;
+        } else {
+            process_background = false;
+        }
+
+        //------------------------ Creation des 3 fonds automatiques lorsque nï¿½cessaire selon config ------------------------------
+        if (process_background == true) {
+            // --------------- Renbommage fonds prï¿½cï¿½dents ------------------------------------------------------------------------
+            if (isOpen("Fond_R")) {
+                selectImage("Fond_R");
+                rename("Fond_R_prev");
+            } // if
+            if (isOpen("Fond_G")) {
+                selectImage("Fond_G");
+                rename("Fond_G_prev");
+            } // if
+            if (isOpen("Fond_B")) {
+                selectImage("Fond_B");
+                rename("Fond_B_prev");
+            } // if
+
+            selectImage("Imageraw");
+            run("Duplicate...", "title=Fond");
+
+            // ------------------ increment du nombre d'images utilisï¿½es pour le fond ------------------
+            nb_images_fond++;
+
+            // ----------------- Split RGB ------------------------------------------
+            run("Split Channels");
+
+            // ----------------- 16 bits pour addition des images du fond -----------
+            selectImage("Fond (red)");
+            rename("Fond_R");
+            run("32-bit");
+            selectImage("Fond (green)");
+            rename("Fond_G");
+            run("32-bit");
+            selectImage("Fond (blue)");
+            rename("Fond_B");
+            run("32-bit");
+
+            noimgfond = 1;
+            no_imagefond = no_image;
+            nbtest = 0;
+            sortie = false;
+            // --------------- Recherche image suivante et addition aux fonds -------------------
+            while (noimgfond < nbimgavg && sortie == false) {
+                no_imagefond++;
+                no_image_textefond = toString(no_imagefond);
+                no_image_textefond = substring(no_image_textefond, 1, 7);
+                txtback = no_image_texte;
+                imagefd = "rawfile_" + no_image_textefond + ".tif";
+                existimagefd = File.exists(path + "\\raw\\" + profileraw + "\\" + imagefd);
+                if (existimagefd == true) {
+                    // ---------------------- Ajout pour moyenne ---------------------------------
+                    open(path + "\\raw\\" + profileraw + "\\" + imagefd);
+                    rename("imagefd");
+
+                    // ------------------ increment du nombre d'images utilisï¿½es pour le fond ------------------
+                    nb_images_fond++;
+
+                    // ------------------- Crop si 1200 x 1920 ----------------------
+                    if (flowcam_1200x1920 == true) {
+                        makeRectangle(capture_left, 0, capture_right - capture_left, img_h);
+                        run("Crop");
+                    }
+
+                    // ----------------- Split RGB ------------------------------------------
+                    run("Split Channels");
+
+                    // ----------------- 32 bits pour addition des images du fond -----------
+                    selectImage("imagefd (red)");
+                    rename("imagefd_R");
+                    run("32-bit");
+                    selectImage("imagefd (green)");
+                    rename("imagefd_G");
+                    run("32-bit");
+                    selectImage("imagefd (blue)");
+                    rename("imagefd_B");
+                    run("32-bit");
+
+                    // ----------------- Ajout des 3 fonds -----------------------------------
+                    run("Image Calculator...", "image1=Fond_R operation=Add image2=imagefd_R");
+                    run("Image Calculator...", "image1=Fond_G operation=Add image2=imagefd_G");
+                    run("Image Calculator...", "image1=Fond_B operation=Add image2=imagefd_B");
+
+                    // ----------------- Fermeture image courante -----------------------------
+                    if (isOpen("imagefd_R")) selectImage("imagefd_R");
+                    close();
+                    if (isOpen("imagefd_G")) selectImage("imagefd_G");
+                    close();
+                    if (isOpen("imagefd_B")) selectImage("imagefd_B");
+                    close();
+
+                    noimgfond++;
+
+                } // if
+                else {
+                    nbtest = 0;
+                    while (existimagefd == false) {
+                        nbtest++;
+                        no_imagefond++;
+                        no_image_textefond = toString(no_imagefond);
+                        no_image_textefond = substring(no_image_textefond, 1, 7);
+                        imagefd = "rawfile_" + no_image_textefond + ".tif";
+                        existimagefd = File.exists(path + "\\raw\\" + profileraw + "\\" + imagefd);
+                        // ----------- Sortie si 100 images non trouvees -------------------------------
+                        if (nbtest > 100) {
+                            existimagefd = true;
+                            sortie = true;
+                            // ------------------- Fermeture fonds incomplets ------------------------
+                            if (isOpen("Fond_R")) {
+                                selectImage("Fond_R");
+                                close();
+                            } // if
+                            if (isOpen("Fond_G")) {
+                                selectImage("Fond_G");
+                                close();
+                            } // if
+                            if (isOpen("Fond_B")) {
+                                selectImage("Fond_B");
+                                close();
+                            } // if
+
+                        } // if
+                    } // while
+                } // else 
+            } // while noimgfond
+            // --------------- Si on a bien ajoutï¿½ le nombre d'images au fond --------------------------
+            if (noimgfond == nbimgavg) {
+                // ------------------------------ Division Fonds 32 bits -----------------------------------
+                textdivide = "value=" + nbimgavg;
+
+                selectImage("Fond_R");
+                run("Divide...", textdivide);
+
+                selectImage("Fond_G");
+                run("Divide...", textdivide);
+
+                selectImage("Fond_B");
+                run("Divide...", textdivide);
+
+                // ------------------------------ Mesure du niveau de gris -----------------------
+                run("Set Measurements...", "  mean median redirect=None decimal=1");
+                selectImage("Fond_R");
+                run("Select All");
+                run("Measure");
+                updateResults();
+                meangreyfond_R = getResult("Mean", 0);
+                mediangreyfond_R = getResult("Median", 0);
+                if (isOpen("Results")) {
+                    selectWindow("Results");
+                    run('Close');
+                }
+                print("mediangreyfond_R " + mediangreyfond_R);
+                print("meangreyfond_R " + meangreyfond_R);
+
+                selectImage("Fond_G");
+                run("Select All");
+                run("Measure");
+                updateResults();
+                meangreyfond_G = getResult("Mean", 0);
+                mediangreyfond_G = getResult("Median", 0);
+                if (isOpen("Results")) {
+                    selectWindow("Results");
+                    run('Close');
+                }
+                print("mediangreyfond_G " + mediangreyfond_G);
+                print("meangreyfond_G " + meangreyfond_G);
+
+                selectImage("Fond_B");
+                run("Select All");
+                run("Measure");
+                updateResults();
+                meangreyfond_B = getResult("Mean", 0);
+                mediangreyfond_B = getResult("Median", 0);
+                if (isOpen("Results")) {
+                    selectWindow("Results");
+                    run('Close');
+                }
+                print("mediangreyfond_B " + mediangreyfond_B);
+                print("meangreyfond_B " + meangreyfond_B);
+
+                // ------------------------------- Sauvegarde du fond -------------------------------
+                dateheurestart = runMacro("Zooscan_get_time_5");
+                lastfond = pathback + "autoback_R_" + txtback + ".tif";
+                selectImage("Fond_R");
+                saveAs("Tif", lastfond);
+                rename("Fond_R");
+                print(dateheurestart + "    " + pathback + "autoback_R_" + txtback + ".tif    saved now");
+
+                lastfond = pathback + "autoback_G_" + txtback + ".tif";
+                selectImage("Fond_G");
+                saveAs("Tif", lastfond);
+                rename("Fond_G");
+                print(dateheurestart + "    " + pathback + "autoback_G_" + txtback + ".tif    saved now");
+
+                lastfond = pathback + "autoback_B_" + txtback + ".tif";
+                selectImage("Fond_B");
+                saveAs("Tif", lastfond);
+                rename("Fond_B");
+                print(dateheurestart + "    " + pathback + "autoback_B_" + txtback + ".tif    saved now");
+                wait(200);
+
+                // ----------------- Free memory -------------
+                showStatus("End of background");
+                for (b = 0; b < 4; b++) {
+                    run("free memory");
+                    wait(1000);
+                    progress = (b + 1) / 4;
+                    showProgress(progress);
+                } // for
+
+                // ------------------ Sortie -----------------
+                sortie = true;
+            } // 
+        } // if calcul du fond
+
+        // --------------- Fermeture fonds prï¿½cï¿½dents si nouveaux fonds -------------------------------------------------------
+        if (isOpen("Fond_R")) {
+            if (isOpen("Fond_R_prev")) {
+                selectImage("Fond_R_prev");
+                close();
+            }
+        } else {
+            selectImage("Fond_R_prev");
+            rename("Fond_R");
+        }
+
+        if (isOpen("Fond_G")) {
+            if (isOpen("Fond_G_prev")) {
+                selectImage("Fond_G_prev");
+                close();
+            }
+        } else {
+            selectImage("Fond_G_prev");
+            rename("Fond_G");
+        }
+
+        if (isOpen("Fond_B")) {
+            if (isOpen("Fond_B_prev")) {
+                selectImage("Fond_B_prev");
+                close();
+            }
+        } else {
+            selectImage("Fond_B_prev");
+            rename("Fond_B");
+        }
+
+        // ============================= process images =========================================
+        // ---------------------- Trois images R, G et B + pixels noirs -------------------------
+        selectImage("Imageraw");
+        run("Duplicate...", "title=new_img");
+        selectImage("new_img");
+        run("Split Channels");
+        selectImage("new_img (red)");
+        run("32-bit");
+        rename("Red");
+        makeRectangle(1, 1, 3, 3);
+        run("Fill");
+        selectImage("new_img (green)");
+        run("32-bit");
+        rename("Green");
+        makeRectangle(1, 1, 3, 3);
+        run("Fill");
+        selectImage("new_img (blue)");
+        run("32-bit");
+        rename("Blue");
+        makeRectangle(1, 1, 3, 3);
+        run("Fill");
+
+        // ---------------------- Correction du fond et inversion ----------------------
+        run("Image Calculator...", "image1=Blue operation=Divide image2=Fond_B create");
+        rename("Blue_cor");
+        //		wait(20);
+
+        run("Image Calculator...", "image1=Green operation=Divide image2=Fond_G create");
+        rename("Green_cor");
+        //		wait(20);
+
+        run("Image Calculator...", "image1=Red operation=Divide image2=Fond_R create");
+        rename("Red_cor");
+        //		wait(20);
+
+        // -------------------- Normalisation et conversion 8 bits ---------------------------
+        run("Set Measurements...", "  mean modal min median redirect=None decimal=5");
+        if (isOpen("Results")) {
+            selectWindow("Results");
+            run('Close');
+        } // if
+
+        selectImage("Blue_cor");
+        setMinAndMax(0, 1.04);
+        run("8-bit");
+        run("Select All");
+        run("Measure");
+        Blue_cor_median = getResult("Median", 0);
+
+        selectImage("Green_cor");
+        setMinAndMax(0, 1.04);
+        run("8-bit");
+        run("Select All");
+        run("Measure");
+        Green_cor_median = getResult("Median", 1);
+
+        selectImage("Red_cor");
+        setMinAndMax(0, 1.04);
+        run("8-bit");
+        run("Select All");
+        run("Measure");
+        Red_cor_median = getResult("Median", 2);
+
+        // --------------------------- INCLUDE / EXCLUDE option --------------------------------------------------	
+        if (remove_objects_on_sides == "yes") {
+            first_analysis_settings = first_analysis_settings_exclude;
+        } else {
+            first_analysis_settings = first_analysis_settings_include;
+        }
+
+        // ---------------------- Analyse particules GREEN ---------------------------------------------------------
+        if (isOpen("Results")) {
+            selectWindow("Results");
+            run('Close');
+        } // if	
+
+        selectImage("Green_cor");
+        run("Duplicate...", "title=Green_cor_mask");
+        setThreshold(0, threshold_green);
+        run("Convert to Mask");
+        run("Set Measurements...", parametres_std_green);
+        run("Analyze Particles...", first_analysis_settings);
+        updateResults();
+        nb_blobs = nResults;
+        for (i = 0; i < nb_blobs; i++) {
+            // --------------- BACK -------------------
+            Back_G_median[nb_objets + i] = mediangreyfond_G;
+            Back_R_median[nb_objets + i] = mediangreyfond_R;
+            Back_B_median[nb_objets + i] = mediangreyfond_B;
+
+            // --------------- IMAGE ------------------
+            Image_no[nb_objets + i] = parseInt(no_image_texte);
+            Img_G_median[nb_objets + i] = Green_cor_median;
+            Img_R_median[nb_objets + i] = Red_cor_median;
+            Img_B_median[nb_objets + i] = Blue_cor_median;
+            Tag[nb_objets + i] = 1;
+
+            // --------------- OBJETS -----------------
+            XSTART_green[nb_objets + i] = getResult("XStart", i);
+            YSTART_green[nb_objets + i] = getResult("YStart", i);
+            BX_green[nb_objets + i] = getResult("BX", i);
+            BY_green[nb_objets + i] = getResult("BY", i);
+            WIDTH_green[nb_objets + i] = getResult("Width", i);
+            HEIGTH_green[nb_objets + i] = getResult("Height", i);
+            PERIM_green[nb_objets + i] = getResult("Perim.", i);
+            CIRC_green[nb_objets + i] = getResult("Circ.", i);
+            FERET_green[nb_objets + i] = getResult("Feret", i);
+            Area_green[nb_objets + i] = getResult("Area", i);
+            Mean_green[nb_objets + i] = getResult("Mean", i);
+            StdDev_green[nb_objets + i] = getResult("StdDev", i);
+            Mode_green[nb_objets + i] = getResult("Mode", i);
+            Min_green[nb_objets + i] = getResult("Min", i);
+            Max_green[nb_objets + i] = getResult("Max", i);
+            X_green[nb_objets + i] = getResult("X", i);
+            Y_green[nb_objets + i] = getResult("Y", i);
+            XM_green[nb_objets + i] = getResult("XM", i);
+            YM_green[nb_objets + i] = getResult("YM", i);
+            Area_frac_green[nb_objets + i] = getResult("%Area", i);
+            Major_green[nb_objets + i] = getResult("Major", i);
+            Minor_green[nb_objets + i] = getResult("Minor", i);
+            Angle_green[nb_objets + i] = getResult("Angle", i);
+            IntDen_green[nb_objets + i] = getResult("IntDen", i);
+            Median_green[nb_objets + i] = getResult("Median", i);
+            Skew_green[nb_objets + i] = getResult("Skew", i);
+            Kurt_green[nb_objets + i] = getResult("Kurt", i);
+        }
+
+        // ---------------------- Analyse particules RED avec mask GREEN --------------------------------------------
+        if (isOpen("Results")) {
+            selectWindow("Results");
+            run('Close');
+        } // if	
+
+        selectImage("Green_cor_mask");
+        run("Set Measurements...", parametres_std_red);
+        run("Analyze Particles...", first_analysis_settings);
+        updateResults();
+        for (i = 0; i < nb_blobs; i++) {
+            Mean_red[nb_objets + i] = getResult("Mean", i);
+            StdDev_red[nb_objets + i] = getResult("StdDev", i);
+            Mode_red[nb_objets + i] = getResult("Mode", i);
+            Min_red[nb_objets + i] = getResult("Min", i);
+            Max_red[nb_objets + i] = getResult("Max", i);
+            XM_red[nb_objets + i] = getResult("XM", i);
+            YM_red[nb_objets + i] = getResult("YM", i);
+            IntDen_red[nb_objets + i] = getResult("IntDen", i);
+            Median_red[nb_objets + i] = getResult("Median", i);
+            Skew_red[nb_objets + i] = getResult("Skew", i);
+            Kurt_red[nb_objets + i] = getResult("Kurt", i);
+        }
+
+        // ---------------------- Analyse particules BLUE avec mask GREEN --------------------------------------------
+        if (isOpen("Results")) {
+            selectWindow("Results");
+            run('Close');
+        } // if	
+
+        selectImage("Green_cor_mask");
+        run("Set Measurements...", parametres_std_blue);
+        run("Analyze Particles...", first_analysis_settings);
+        updateResults();
+        for (i = 0; i < nb_blobs; i++) {
+            Mean_blue[nb_objets + i] = getResult("Mean", i);
+            StdDev_blue[nb_objets + i] = getResult("StdDev", i);
+            Mode_blue[nb_objets + i] = getResult("Mode", i);
+            Min_blue[nb_objets + i] = getResult("Min", i);
+            Max_blue[nb_objets + i] = getResult("Max", i);
+            XM_blue[nb_objets + i] = getResult("XM", i);
+            YM_blue[nb_objets + i] = getResult("YM", i);
+            IntDen_blue[nb_objets + i] = getResult("IntDen", i);
+            Median_blue[nb_objets + i] = getResult("Median", i);
+            Skew_blue[nb_objets + i] = getResult("Skew", i);
+            Kurt_blue[nb_objets + i] = getResult("Kurt", i);
+        }
+
+        // --------------------- AUTRES MESURES sur vignettes -----------------------------------------------------
+        /*		for (i=0; i<nb_blobs; i++) {	
+        // ---------------------- no image -------------------
+        noimg = i+nb_objets+1;
+        
+        // ---------------------- Creation vignette mask nettoyï¿½e (un objet)-------------------
+        bx_vignette =	BX_green[nb_objets+i];
+        by_vignette = 	BY_green[nb_objets+i];
+        width_vignette = WIDTH_green[nb_objets+i];
+        heigth_vignette = HEIGTH_green[nb_objets+i];
+        selectImage("Green_cor_mask");
+        makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
+        run("Duplicate...", "title=vignette_msk");
+        
+        // ----------------------- resize >> marge blanche ---------------------------
+        width_plus = 8+width_vignette;
+        heigth_plus = 8+heigth_vignette;
+        textesize = "width="+width_plus+" height="+heigth_plus+" position=Center";
+        selectImage("vignette_msk");
+        run("Canvas Size...", textesize);
+        
+        // ----------------------- nettoyage autour de l'objet -----------------------
+        run("Set Measurements...", "area centroid bounding fit redirect=[vignette_msk] decimal=2");
+        run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing include record");
+        updateResults();			
+        nbobj = nResults;
+        ligne = 0;		g = 0;		Ratio = 0;
+        // ---------------------- Si probleme de vignette blanche -----------------------------------
+        if (nbobj == 0) {
+        // ------------ Sauvegarde pour verification ----------------------
+        selectImage("title=vignette_msk");
+        saveAs("jpg", pathprocessed+SampleId+"_"+noimg+"_msk.jpg"); 
+        aa = getBoolean(image+" has a blank vignette, press Cancel to ABORT !  ");
+        } //
+        
+        // ---------------------- Au moins un objet --------------------------------
+        areainit = 	getResult("Area", 0);
+        while (g < nbobj) {		
+        area = 		getResult("Area", g);	
+        if (area > areainit ) ligne = g;
+        areainit = 	maxOf(area,areainit);
+        g++;
+        } // for
+        xstart = 	getResult("XStart", ligne);
+        ystart =	getResult("YStart", ligne);			
+        
+        // --------------- nettoyage autour du plus gros objet ----------------------
+        selectImage("vignette_msk");
+        DEBX = xstart;
+        DEBY= ystart;
+        doWand(DEBX,DEBY);
+        
+        // ---------------- Fond blanc ----------------------------------------------
+        run("Clear Outside");
+        
+        // ------------- Creation d'une vignette grise nettoyï¿½e ------
+        selectImage("Green_cor");
+        makeRectangle(bx_vignette,by_vignette,width_vignette,heigth_vignette);
+        run("Duplicate...", "title=vignette_grey");		
+        
+        // ------------------- Agrandissement --------------
+        selectImage("vignette_grey");
+        run("Canvas Size...", textesize);
+        
+        // ------------------- Ajout du mask ---------------
+        selectImage("vignette_msk");
+        run("Duplicate...", "title=vignette_msk_inverted");
+        run("Invert");
+        run("Image Calculator...", "image1=vignette_grey operation=Add image2=vignette_msk_inverted");
+        selectImage("vignette_grey");
+        rename("vignette_grey_cleaned");
+        
+        // -------------------- Pente histo grey  ------------------------------
+        selectImage("vignette_grey_cleaned");
+        getHistogram(0, hist, 256);
+        sumg = 0;	suma = 0;	hh = 0;		secartg = 0;	secarta = 0;
+        // ----------------------- On ne prend pas les pixels ï¿½ 255 ! -----------------------------------------
+        Histcum = 	newArray(255);
+        for (k=0; k<255; k++) {	sumg = sumg+hist[k];	Histcum[k] = sumg;		suma = suma+k;		} // for
+        while (hh < 255) {	dat = Histcum[hh]/sumg;
+        // ++++++++++++++++++++++++++
+        if (dat < 0.25 ) Histcum1[nb_objets+i] = hh;
+        if (dat < 0.50 ) Histcum2[nb_objets+i] = hh;
+        if (dat < 0.75 ) Histcum3[nb_objets+i] = hh;
+        // ++++++++++++++++++++++++++	
+        if (dat > 0.75) 	hh = 256;
+        hh++;
+        } // for
+        moyenneg = sumg/255;	moyennea = suma/255;
+        //---------Calcul de la pente de la regression  : stda/stdg -------------------
+        for (t =0;t<255;t++) { 
+        ecartgcar = pow(hist[t]-moyenneg,2);
+        secartg = secartg+ecartgcar;
+        ecartacar = pow(t-moyennea,2);
+        secarta = secarta+ecartacar;
+        } // for
+        stdg = secartg*1/(255-1) ;
+        stdg = pow(stdg,0.5);
+        stda = secarta*1/(255-1) ;
+        stda = pow(stda,0.5);
+        // ++++++++++++++++++++++++++
+        Slope[nb_objets+i] = stdg/stda;
+        // ++++++++++++++++++++++++++
+        /*
+        // --------------------- Contrast --------------------------------------------
+        S = newArray(256);
+        F = 0;                  	count = 1;
+        // ------------- Correction seuils ----------------------------------
+        AAA = 0;	BBB = 0;	CCC = 0;
+        for (k=0; k<255; k++) {	data = hist[k];
+        if (hist[k] !=0 && hist[k] <= Histcum1[nb_objets+i]) AAA = k;
+        if (hist[k] !=0 && hist[k] <= Histcum2[nb_objets+i]) BBB = k;
+        if (hist[k] !=0 && hist[k] <= Histcum3[nb_objets+i]) CCC = k;
+        } // for
+        selectImage("vignette_grey_cleaned");
+        for(x=1 ; x<width_plus-1 ; x++)	{
+        for(y=1 ; y<heigth_plus-1 ; y++)	{        		
+        p = getPixel(x,y);
+        if(p==AAA || p==BBB || p==CCC )	{	p1 = getPixel(x-1,y-1);
+        p2 = getPixel(x-1,y);
+        p3 = getPixel(x-1,y+1);
+        p4 = getPixel(x,y-1);
+        p5 = getPixel(x,y+1);
+        p6 = getPixel(x+1,y-1);
+        p7 = getPixel(x+1,y);
+        p8 = getPixel(x+1,y+1);
+        A= (p1+p2+p3+p4+p5+p6+p7+p8)/8;
+        S[p]=S[p]+ abs(p-A);
+        count = count + 1;
+        F = F + S[p]*hist[p]/256;
+        } // if
+        } // for
+        } // for
+        // ++++++++++++++++++++++++++
+        Fcons[nb_objets+i] = F/count;;	
+        // ++++++++++++++++++++++++++				
+        selectImage("vignette_grey_cleaned");	close();
+        
+        //--------------------------------Skeleton Area--------------------------------------------------
+        selectImage("vignette_msk");
+        run("Duplicate...", "title=vignette_msk_skeleton");
+        run("Skeletonize");
+        getHistogram(0, histS, 256);
+        // ++++++++++++++++++++++++++
+        Skelarea[nb_objets+i] = histS[0];
+        // ++++++++++++++++++++++++++
+        selectImage("vignette_msk_skeleton");	close();	
+        
+        //--------------------------------Fractal analyse-------------------------------------------------
+        selectImage("vignette_msk");			
+        run("Duplicate...", "title=vignette_msk_fractal_edm1");						
+        run("Make Binary");
+        width_plus = 4 * width_vignette;
+        heigth_plus = 4 * heigth_vignette;			
+        textesize_fractal = "width="+width_plus+" height="+heigth_plus+" position=Center";
+        selectImage("vignette_msk");
+        run("Canvas Size...", textesize_fractal);
+        selectImage("vignette_msk_fractal_edm1");			
+        run("Duplicate...", "title=vignette_msk_fractal_edm2");
+        run("Make Binary");
+        run("Distance Map");
+        selectImage("vignette_msk_fractal_edm2");
+        run("Invert");
+        run("Make Binary");
+        run("Distance Map");
+        run("Invert");
+        
+        selectImage("vignette_msk_fractal_edm1");
+        run("Invert");
+        run("Image Calculator...", "image1=vignette_msk_fractal_edm1 operation=Add image2=vignette_msk_fractal_edm2");
+        //  			run("Clear Results");
+        selectImage("vignette_msk_fractal_edm1");
+        run("Set Measurements...", "area limit decimal=3");
+        aa = getBoolean("OK_01");
+        
+        lg = 0;  	counter=0;	iterations = 40;	sumg = 0;	suma = 0;	index = 0;
+        Lg = newArray(iterations);
+        Aire = newArray(iterations);
+        for (k=1; k<=iterations; k++) {	 y = round(pow(1.1, k));
+        if (lg!=y) {	lg = y;
+        selectImage("vignette_msk_fractal_edm1");
+        setThreshold(0, lg);
+        run("Measure");
+        Lg[index] = log(2*lg);
+        arr = getResult("Area", index);
+        Aire[index] = log(arr);
+        sumg = sumg+Lg[index];
+        suma = suma+Aire[index];
+        index++;
+        } // if
+        } // for
+        moyenneg = sumg/index;
+        moyennea = suma/index;
+        //---------Calcul de la pente de la regression  : stda/stdg -------------------
+        secartg = 0;	secarta = 0;
+        for (t =0;t<index;t++) { 
+        ecartgcar = pow(Lg[t]-moyenneg,2);
+        secartg = secartg+ecartgcar;
+        ecartacar = pow(Aire[t]-moyennea,2);
+        secarta = secarta+ecartacar;
+        } // for
+        stdg = secartg*1/(index-1) ;
+        stdg = pow(stdg,0.5);
+        stda = secarta*1/(index-1) ;
+        stda = pow(stda,0.5);
+        // ++++++++++++++++++++++++++
+        Fractal[nb_objets+i] = 2 - stda/stdg;
+        // ++++++++++++++++++++++++++
+        selectImage("vignette_msk_fractal_edm1");	close();
+        selectImage("vignette_msk_fractal_edm2");	close();
+        
+        aa = getBoolean("OK_02");			
+        
+        //------------------------ convex perimeter calculation ----------------------------
+        selectImage("vignette_msk");
+        run("Duplicate...","title=vignette_msk_convex");
+        run("Convex Hull esmer", "mode=[Draw Convex Hull]");
+        run("my Bin");
+        run("Fill Holes");
+        getHistogram(0, hist, 256);
+        // ++++++++++++++++++++++++++
+        Convarea[nb_objets+i] = hist[0];
+        // ++++++++++++++++++++++++++
+        run("Outline");
+        getHistogram(0, hist, 256);
+        // ++++++++++++++++++++++++++
+        Convperim[nb_objets+i] = hist[0];
+        // ++++++++++++++++++++++++++
+        selectImage("vignette_msk_convex");	close();
+        
+        // -------------- fermeture vignette msk agrandie et nettoyï¿½e ---------
+        selectImage("vignette_msk");	close();		
+        }
+        */
+        // ---------------------- Creation de l'image recomposï¿½e pour faire la vignette RGB ------------------------
+        run("Merge Channels...", "red=Red_cor green=Green_cor blue=Blue_cor gray=*None* create keep");
+        rename("Composite_for_vignette");
+
+        for (i = 0; i < nb_blobs; i++) {
+            // ----------------------- Creation de la vignette --------------------------
+            bx_vignette = BX_green[nb_objets + i];
+            by_vignette = BY_green[nb_objets + i];
+            width_vignette = WIDTH_green[nb_objets + i];
+            heigth_vignette = HEIGTH_green[nb_objets + i];
+            selectImage("Composite_for_vignette");
+            makeRectangle(bx_vignette, by_vignette, width_vignette, heigth_vignette);
+            run("Duplicate...", "title=vignette_RGB duplicate");
+
+            // ----------- Largeur ------------
+            width_vignette = maxOf(width_vignette, longline + 20);
+            text = "width=" + width_vignette + " height=" + heigth_vignette + " position=Top-Left";
+            run("Canvas Size...", text);
+            // ----------- Bordure blanche ----------
+            width_vignette = width_vignette + 20;
+            Hfinal = heigth_vignette + 10;
+            text = "width=" + width_vignette + " height=" + Hfinal + " position=Center";
+            run("Canvas Size...", text);
+            // ----------- Footer legende -----------
+            heigth_vignette = heigth_vignette + 10 + 31;
+            text = "width=" + width_vignette + " height=" + heigth_vignette + " position=Top-Center";
+            run("Canvas Size...", text);
+
+            // ----------- Contour gris -------------
+            if (rgb_image == true) {
+                run("Max...", "value=243");
+            } //	
+
+            makeLine(10, Hfinal + 10, 10 + longline, Hfinal + 10);
+            run("Fill");
+            makeLine(10, Hfinal + 10, 10, Hfinal + 5);
+            run("Fill");
+            makeLine(10 + longline, Hfinal + 10, 10 + longline, Hfinal + 5);
+            run("Fill");
+            setFont("SansSerif", 9);
+            if (echelle_micro > 50) {
+                drawString(echelletext + " " + no_image_texte, 12, heigth_vignette - 8);
+            } else {
+                drawString(echelletext, 12, heigth_vignette - 8);
+            } // else
+
+            // -------- Enregistrement et fermeture ---------------
+            noimg = i + nb_objets + 1;
+
+            // -------- Tableau des vignettes a sauver -----------
+            Vignette_index[nb_objets + i] = noimg;
+            vignettelist[vigindex] = profileprocessed + "_" + noimg + ".jpg";
+            selectImage("vignette_RGB");
+            rename(profileprocessed + "_" + noimg + ".jpg");
+            vigindex++;
+        }
+
+        // ---------------------- Incrï¿½ment du nombre d'objets ---------------------
+        nb_objets = nb_objets + nb_blobs;
+
+        // ---------------------- Fermeture des images R, G et B et RAW -----------------------------
+        selectImage("Red_cor");
+        close();
+        selectImage("Green_cor");
+        close();
+        selectImage("Blue_cor");
+        close();
+        selectImage("Composite_for_vignette");
+        close();
+
+        selectImage("Red");
+        close();
+        selectImage("Green");
+        close();
+        selectImage("Blue");
+        close();
+
+        selectImage("Imageraw");
+        close();
+
+        selectImage("Green_cor_mask");
+        close();
+
+        // -------------------- Increment du nombre d'images traitï¿½es --------------------------
+        nbimage++;
+
+    } // fin du process de l'image
+    else {
+        nb_image_not_found++;
+    }
+    // -------------------- Increment du no d'image ï¿½ analyser ----------------------
+    no_image++;
+
+    if (nb_objets / nbvigar == round(nb_objets / nbvigar) && nb_objets / nbvigar != previous_ratio) {
+        previous_ratio = nb_objets / nbvigar;
+        // --------------------------Affichage de la date et de l'heure de traitement ---------------------------------
+        dateheure = runMacro("Zooscan_get_time_5");
+        print(dateheure + "    " + image + "   No_images= " + no_image + "    Nb_objets= " + nb_objets + " Open images= " + nImages + "  Exceptions= " + except + "  Nbvigar= " + nbvigar);
+        selectWindow("Log");
+        run("Text...", sauvelog);
+        wait(2000);
+        // ----------------- Fermeture Exceptions ------------------------------
+        while (isOpen("Exception")) {
+            selectWindow("Exception");
+            run("Close");
+            except++;
+        }
+
+        // ----------------- Free memory ---------------------------------------
+        showStatus("Freeing memory");
+        for (b = 0; b < 4; b++) {
+            run("free memory");
+            wait(1000);
+            progress = (b + 1) / 4;
+            showProgress(progress);
+        } // for
+
+        // -------- Enregistrement des vignettes -----------
+        for (q = 0; q < vigindex; q++) {
+            textesauv = vignettelist[q];
+            selectImage(textesauv);
+            saveAs("jpg", pathprocessed + textesauv);
+            close();
+        } // for
+        vigindex = 0;
+    }
+    // ---------------------- Condition d'arrï¿½t --------------------------------
+    if (nb_objets >= stop_after_m_objects || nbimage >= stop_after_n_images || nb_image_not_found > 25) {
+        process_image = false;
+    }
+
 } // while nbimages
 
 // ======================================== Tag des doublons ========================================
-// -------------------- Boucle décroissante sur les objets --------
-for (i = Tag.length - 1 ; i >= 0 ; i--) {
-	Tag_object_en_cours = 	parseInt(Tag[i]);
-	// -------------------- test si l'objet n'est pas un duplicate ------------
-	if (Tag_object_en_cours == 1 ) {
-		// -------------------- Objet à tester ----------------------------
-		Area_objet_en_cours = 		parseInt(Area_green[i]);
-		Area_min_objet_en_cours = 	Area_objet_en_cours*(1-duplicaterange*2);	
-		Area_max_objet_en_cours = 	Area_objet_en_cours*(1+duplicaterange*2);
-		
-		Width_objet_en_cours = 		parseInt(WIDTH_green[i]);	
-		Heigth_objet_en_cours = 	parseInt(HEIGTH_green[i]);	
-		
-		Xstart_objet_en_cours = 	parseInt(XSTART_green[i]);
-		Xstart_min_objet_en_cours = 	maxOf(0,Xstart_objet_en_cours*(1-duplicaterange));
-		Xstart_max_objet_en_cours = 	minOf(Width_objet_en_cours,Xstart_objet_en_cours*(1+duplicaterange));
-		
-		Ystart_objet_en_cours = 	parseIntYSTART_green[i]);
-		Ystartmin_objet_en_cours = 	maxOf(0,Ystart_objet_en_cours*(1-duplicaterange));	
-		Ystartmax_objet_en_cours = 	minOf(Heigth_objet_en_cours,Ystart_objet_en_cours*(1+duplicaterange));
-		
-		index_duplicate = 1;
-		while (index_duplicate <= nb_max_test_duplicate && (i - index_duplicate) >= 0) {
-			// ---------------------- Test --------------------------------
-			Area = 			parseInt-Area_green[i - index_duplicate]);				
-			Xstart = 		parseInt(XSTART_green[i - index_duplicate]);			
-			Ystart = 		parseInt(YSTART_green[i - index_duplicate]);	
-			if ( Xstart_min_objet_en_cours <= Xstart && Xstart_max_objet_en_cours >= Xstart && Ystart_min_objet_en_cours <= Ystart && Ystartmax_objet_en_cours >= Ystart && Area_min_objet_en_cours <= Area && Area_max_objet_en_cours >= Area) {
-				// ------------------------ Duplicate -------------------------
-				Tag[i - index_duplicate] = 2;
-				nb_removed_duplicates++;
-			}
-			index_duplicate++;			
-		}
-	}
-}// for
+// -------------------- Boucle dï¿½croissante sur les objets --------
+for (i = Tag.length - 1; i >= 0; i--) {
+    Tag_object_en_cours = parseInt(Tag[i]);
+    // -------------------- test si l'objet n'est pas un duplicate ------------
+    if (Tag_object_en_cours == 1) {
+        // -------------------- Objet ï¿½ tester ----------------------------
+        Area_objet_en_cours = parseInt(Area_green[i]);
+        Area_min_objet_en_cours = Area_objet_en_cours * (1 - duplicaterange * 2);
+        Area_max_objet_en_cours = Area_objet_en_cours * (1 + duplicaterange * 2);
+
+        Width_objet_en_cours = parseInt(WIDTH_green[i]);
+        Heigth_objet_en_cours = parseInt(HEIGTH_green[i]);
+
+        Xstart_objet_en_cours = parseInt(XSTART_green[i]);
+        Xstart_min_objet_en_cours = maxOf(0, Xstart_objet_en_cours * (1 - duplicaterange));
+        Xstart_max_objet_en_cours = minOf(Width_objet_en_cours, Xstart_objet_en_cours * (1 + duplicaterange));
+
+        Ystart_objet_en_cours = parseIntYSTART_green[i]);
+    Ystartmin_objet_en_cours = maxOf(0, Ystart_objet_en_cours * (1 - duplicaterange));
+    Ystartmax_objet_en_cours = minOf(Heigth_objet_en_cours, Ystart_objet_en_cours * (1 + duplicaterange));
+
+    index_duplicate = 1;
+    while (index_duplicate <= nb_max_test_duplicate && (i - index_duplicate) >= 0) {
+        // ---------------------- Test --------------------------------
+        Area = parseInt - Area_green[i - index_duplicate]);
+    Xstart = parseInt(XSTART_green[i - index_duplicate]);
+    Ystart = parseInt(YSTART_green[i - index_duplicate]);
+    if (Xstart_min_objet_en_cours <= Xstart && Xstart_max_objet_en_cours >= Xstart && Ystart_min_objet_en_cours <= Ystart && Ystartmax_objet_en_cours >= Ystart && Area_min_objet_en_cours <= Area && Area_max_objet_en_cours >= Area) {
+        // ------------------------ Duplicate -------------------------
+        Tag[i - index_duplicate] = 2;
+        nb_removed_duplicates++;
+    }
+    index_duplicate++;
+}
+}
+} // for
 
 // ---------------- Enregistrement du log ------------------
 print("End of process");
 selectWindow("Log");
-run("Text...",sauvelog);
+run("Text...", sauvelog);
 
 // -------- Enregistrement des vignettes en fin -----------
-for (q = 0;q<vigindex;q++) {				
-	textesauv = vignettelist[q];
-	selectImage(textesauv);
-	saveAs("jpg", pathprocessed+textesauv);
-	close();
+for (q = 0; q < vigindex; q++) {
+    textesauv = vignettelist[q];
+    selectImage(textesauv);
+    saveAs("jpg", pathprocessed + textesauv);
+    close();
 } // for
 
 // ----------------------- Fermeture des fonds ------------------------
-if (isOpen("Fond_R"))	selectImage("Fond_R");	close();
-if (isOpen("Fond_G"))	selectImage("Fond_G");	close();
-if (isOpen("Fond_B"))	selectImage("Fond_B");	close();
+if (isOpen("Fond_R")) selectImage("Fond_R");
+close();
+if (isOpen("Fond_G")) selectImage("Fond_G");
+close();
+if (isOpen("Fond_B")) selectImage("Fond_B");
+close();
 
 // ----------------------- Feremture Resulst --------------------------
-if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
+if (isOpen("Results")) {
+    selectWindow("Results");
+    run("Close");
+} // if
 
 //====================  creer le tableau RESULTS =======================================================
 //----------Mettre les bons resultats dans le tableau ------------------
-for (i=0; i<nb_objets ; i++) {	
-	setResult("Label", i,profileprocessed);
-	setResult("Vignette_index",i,Vignette_index[i]);
-	setResult("Raw_img_index",i,Image_no[i]);
-	
-	// -------------------- BACKGROUND --------------------
-	setResult("Back_R_median",i,Back_R_median[i]);
-	setResult("Back_G_median",i,Back_G_median[i]);
-	setResult("Back_B_median",i,Back_B_median[i]);
-	
-	// --------------------- IMAGE -------------------------
-	setResult("Img_raw_no",i,Image_no[i]);
-	setResult("Img_R_median",i,Img_R_median[i]);
-	setResult("Img_G_median",i,Img_G_median[i]);
-	setResult("Img_B_median",i,Img_B_median[i]);
-	
-	// -------------------- GREEN -------------------------
-	setResult("Area",i,Area_green[i]);
-	setResult("%Area",i,Area_frac_green[i]);
-	area_exc = Area_green[i] * Area_frac_green[i]/100;
-	setResult("Area_exc",i,area_exc);
-	setResult("Major",i,Major_green[i]);
-	setResult("Minor",i,Minor_green[i]);
-	setResult("Perim",i,PERIM_green[i]);
-	setResult("Feret",i,FERET_green[i]);
-	setResult("X",i,X_green[i]);
-	setResult("Y",i,Y_green[i]);
-	setResult("XM",i,XM_green[i]);
-	setResult("YM",i,YM_green[i]);	
-	setResult("Mean",i,Mean_green[i]);
-	setResult("StdDev",i,StdDev_green[i]);
-	setResult("Skelarea",i,Skelarea[i]); 
-	setResult("Convperim ",i,Convperim[i]);
-	setResult("Convarea",i,Convarea[i]);
-	setResult("Fractal",i,Fractal[i]);
-	setResult("Slope",i,Slope[i]);
-	setResult("Histcum1",i,Histcum1[i]);
-	setResult("Histcum2",i,Histcum2[i]);
-	setResult("Histcum3",i,Histcum3[i]);
-	setResult("Fcons",i,Fcons[i]);
-	
-	setResult("Mean_green",i,Mean_green[i]);
-	setResult("StdDev_green",i,StdDev_green[i]);
-	setResult("Min",i,Min_green[i]);
-	setResult("Max",i,Max_green[i]);
-	setResult("Min_green",i,Min_green[i]);
-	setResult("Max_green",i,Max_green[i]);	
-	setResult("Mode_green",i,Mode_green[i]);
-	setResult("BX_green",i, BX_green[i]);
-	setResult("BY_green",i, BY_green[i]);
-	setResult("Width_green",i, WIDTH_green[i]);
-	setResult("Height_green",i,HEIGTH_green[i]);
-	setResult("Angle_green",i,Angle_green[i]);
-	setResult("Circ._green",i,CIRC_green[i]);
-	setResult("IntDen_green",i,IntDen_green[i]);
-	setResult("Median_green",i,Median_green[i]);
-	setResult("Skew_green",i,Skew_green[i]);
-	setResult("Kurt_green",i,Kurt_green[i]);
-	setResult("XStart_green",i,XSTART_green[i]);
-	setResult("YStart_green",i,YSTART_green[i]);
-	
-	// -------------------- RED -------------------------
-	setResult("Mean_red",i,Mean_red[i]);
-	setResult("StdDev_red",i,StdDev_red[i]);
-	setResult("Mode_red",i,Mode_red[i]);
-	setResult("Min_red",i,Min_red[i]);
-	setResult("Max_red",i,Max_red[i]);
-	setResult("XM_red",i,XM_red[i]);
-	setResult("YM_red",i,YM_red[i]);
-	setResult("IntDen_red",i,IntDen_red[i]);
-	setResult("Median_red",i,Median_red[i]);
-	setResult("Skew_red",i,Skew_red[i]);
-	setResult("Kurt_red",i,Kurt_red[i]);
-	
-	// -------------------- BLUE -------------------------
-	setResult("Mean_blue",i,Mean_blue[i]);
-	setResult("StdDev_blue",i,StdDev_blue[i]);
-	setResult("Mode_blue",i,Mode_blue[i]);
-	setResult("Min_blue",i,Min_blue[i]);
-	setResult("Max_blue",i,Max_blue[i]);
-	setResult("XM_blue",i,XM_blue[i]);
-	setResult("YM_blue",i,YM_blue[i]);
-	setResult("IntDen_blue",i,IntDen_blue[i]);
-	setResult("Median_blue",i,Median_blue[i]);
-	setResult("Skew_blue",i,Skew_blue[i]);
-	setResult("Kurt_blue",i,Kurt_blue[i]);
-	
-	// --------------------- TAG ----------------------
-	setResult("Tag",i,Tag[i]);
-	
-	/*		
-	setResult("XMg5",i,XMg5[i]);
-	setResult("YMg5",i,YMg5[i]);
-	setResult("Nb1",i,nbA[i]);
-	setResult("Nb2",i,nbB[i]);
-	setResult("Nb3",i,nbC[i]);
-	setResult("Compentropy",i,compentropy[i]);
-	setResult("Compmean",i,compmean[i]);
-	setResult("Compslope",i,compslope[i]);
-	setResult("CompM1",i,compm1[i]);
-	setResult("CompM2",i,compm2[i]);
-	setResult("CompM3",i,compm3[i]);
-	setResult("Symetrieh",i,symetrieh[i]); 
-	setResult("Symetriev",i,symetriev[i]); 
-	setResult("Symetriehc",i,symetriehc[i]);
-	setResult("Symetrievc",i,symetrievc[i]); 
-	if (isNaN(ratio[i])) ratio[i] = 1;
-	setResult("ThickR",i,ratio[i]); 
-	*/	
+for (i = 0; i < nb_objets; i++) {
+    setResult("Label", i, profileprocessed);
+    setResult("Vignette_index", i, Vignette_index[i]);
+    setResult("Raw_img_index", i, Image_no[i]);
+
+    // -------------------- BACKGROUND --------------------
+    setResult("Back_R_median", i, Back_R_median[i]);
+    setResult("Back_G_median", i, Back_G_median[i]);
+    setResult("Back_B_median", i, Back_B_median[i]);
+
+    // --------------------- IMAGE -------------------------
+    setResult("Img_raw_no", i, Image_no[i]);
+    setResult("Img_R_median", i, Img_R_median[i]);
+    setResult("Img_G_median", i, Img_G_median[i]);
+    setResult("Img_B_median", i, Img_B_median[i]);
+
+    // -------------------- GREEN -------------------------
+    setResult("Area", i, Area_green[i]);
+    setResult("%Area", i, Area_frac_green[i]);
+    area_exc = Area_green[i] * Area_frac_green[i] / 100;
+    setResult("Area_exc", i, area_exc);
+    setResult("Major", i, Major_green[i]);
+    setResult("Minor", i, Minor_green[i]);
+    setResult("Perim", i, PERIM_green[i]);
+    setResult("Feret", i, FERET_green[i]);
+    setResult("X", i, X_green[i]);
+    setResult("Y", i, Y_green[i]);
+    setResult("XM", i, XM_green[i]);
+    setResult("YM", i, YM_green[i]);
+    setResult("Mean", i, Mean_green[i]);
+    setResult("StdDev", i, StdDev_green[i]);
+    setResult("Skelarea", i, Skelarea[i]);
+    setResult("Convperim ", i, Convperim[i]);
+    setResult("Convarea", i, Convarea[i]);
+    setResult("Fractal", i, Fractal[i]);
+    setResult("Slope", i, Slope[i]);
+    setResult("Histcum1", i, Histcum1[i]);
+    setResult("Histcum2", i, Histcum2[i]);
+    setResult("Histcum3", i, Histcum3[i]);
+    setResult("Fcons", i, Fcons[i]);
+
+    setResult("Mean_green", i, Mean_green[i]);
+    setResult("StdDev_green", i, StdDev_green[i]);
+    setResult("Min", i, Min_green[i]);
+    setResult("Max", i, Max_green[i]);
+    setResult("Min_green", i, Min_green[i]);
+    setResult("Max_green", i, Max_green[i]);
+    setResult("Mode_green", i, Mode_green[i]);
+    setResult("BX_green", i, BX_green[i]);
+    setResult("BY_green", i, BY_green[i]);
+    setResult("Width_green", i, WIDTH_green[i]);
+    setResult("Height_green", i, HEIGTH_green[i]);
+    setResult("Angle_green", i, Angle_green[i]);
+    setResult("Circ._green", i, CIRC_green[i]);
+    setResult("IntDen_green", i, IntDen_green[i]);
+    setResult("Median_green", i, Median_green[i]);
+    setResult("Skew_green", i, Skew_green[i]);
+    setResult("Kurt_green", i, Kurt_green[i]);
+    setResult("XStart_green", i, XSTART_green[i]);
+    setResult("YStart_green", i, YSTART_green[i]);
+
+    // -------------------- RED -------------------------
+    setResult("Mean_red", i, Mean_red[i]);
+    setResult("StdDev_red", i, StdDev_red[i]);
+    setResult("Mode_red", i, Mode_red[i]);
+    setResult("Min_red", i, Min_red[i]);
+    setResult("Max_red", i, Max_red[i]);
+    setResult("XM_red", i, XM_red[i]);
+    setResult("YM_red", i, YM_red[i]);
+    setResult("IntDen_red", i, IntDen_red[i]);
+    setResult("Median_red", i, Median_red[i]);
+    setResult("Skew_red", i, Skew_red[i]);
+    setResult("Kurt_red", i, Kurt_red[i]);
+
+    // -------------------- BLUE -------------------------
+    setResult("Mean_blue", i, Mean_blue[i]);
+    setResult("StdDev_blue", i, StdDev_blue[i]);
+    setResult("Mode_blue", i, Mode_blue[i]);
+    setResult("Min_blue", i, Min_blue[i]);
+    setResult("Max_blue", i, Max_blue[i]);
+    setResult("XM_blue", i, XM_blue[i]);
+    setResult("YM_blue", i, YM_blue[i]);
+    setResult("IntDen_blue", i, IntDen_blue[i]);
+    setResult("Median_blue", i, Median_blue[i]);
+    setResult("Skew_blue", i, Skew_blue[i]);
+    setResult("Kurt_blue", i, Kurt_blue[i]);
+
+    // --------------------- TAG ----------------------
+    setResult("Tag", i, Tag[i]);
+
+    /*		
+    setResult("XMg5",i,XMg5[i]);
+    setResult("YMg5",i,YMg5[i]);
+    setResult("Nb1",i,nbA[i]);
+    setResult("Nb2",i,nbB[i]);
+    setResult("Nb3",i,nbC[i]);
+    setResult("Compentropy",i,compentropy[i]);
+    setResult("Compmean",i,compmean[i]);
+    setResult("Compslope",i,compslope[i]);
+    setResult("CompM1",i,compm1[i]);
+    setResult("CompM2",i,compm2[i]);
+    setResult("CompM3",i,compm3[i]);
+    setResult("Symetrieh",i,symetrieh[i]); 
+    setResult("Symetriev",i,symetriev[i]); 
+    setResult("Symetriehc",i,symetriehc[i]);
+    setResult("Symetrievc",i,symetrievc[i]); 
+    if (isNaN(ratio[i])) ratio[i] = 1;
+    setResult("ThickR",i,ratio[i]); 
+    */
 } // for
 // -------------------- Enregistrement RESULTS ----------------------------------
 updateResults();
-selectWindow("Results");  	
-saveAs("measurements",pathprocessed+profileraw+"_measurements.txt");
+selectWindow("Results");
+saveAs("measurements", pathprocessed + profileraw + "_measurements.txt");
 
 // --------------------- Lecture METADATA ---------------------------------------
-open(pathprocessed+profileprocessed+"_meta.txt");
+open(pathprocessed + profileprocessed + "_meta.txt");
 wait(100);
 config = getInfo();
 run("Close");
-conf  = split(config,"\n");
+conf = split(config, "\n");
 field = conf[0];
 data = conf[1];
-field = replace(field,";"," ");
-data = replace(data,";"," ");
-field = split(field," ");
-data = split(data," ");
+field = replace(field, ";", " ");
+data = replace(data, ";", " ");
+field = split(field, " ");
+data = split(data, " ");
 size = field.length;
 
 // -------------------- ECRITURE PID -----------------------------------------------
-if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
+if (isOpen("Log")) {
+    selectWindow("Log");
+    run("Close");
+} // if
 print("PID");
 print(" ");
 
 // ---------------- Print Metatdata ---------------------------------------------------------
 print("[Metadata]");
-for (t=0;t<size;t++) {	print(field[t]+"= "+data[t]);	} // for
+for (t = 0; t < size; t++) {
+    print(field[t] + "= " + data[t]);
+} // for
 print(" ");
 
 // ---------------- Print Run Summary ---------------------------------------------------------
 print("[Run_Summary]");
-summary = replace(summary,"	","");
-summary = replace(summary,": ","= ");
+summary = replace(summary, "	", "");
+summary = replace(summary, ": ", "= ");
 print(summary);
 print(" ");
 
 // ----------------- Print Flowcam settings (ctx) ---------------------------------------------------
-print("ctx_filename= "+ctxfile);
+print("ctx_filename= " + ctxfile);
 print(ctx_settings);
 print(" ");
 
 // --------------- Print Config --------------------------------------------------------------
 print("[Process]");
-print("version_no= "+version);
-print("version_date= "+date);
-print("background_method= "+background_method);		// average_image/rolling
-print("rolling= "+rolling);
-print("pixel= "+pixel);
-print("upper= "+threshold_green);
-print("echelle_µm= "+echelle_micro);
-print("esdmin= "+esdmin);
-print("spmin= "+Spmin);
-print("esdmax= "+esdmax);
-print("spmax= "+Spmax);
-print("Stop_after_n_images= "+stop_after_n_images);
-print("scale= "+scale);
-print("remove_objects_on_sides= "+remove_objects_on_sides);
-print("Stop_after_m_objects= "+stop_after_m_objects);
-print("Nb_of_rawfile_images_in_folder= "+nb_rawfiles);
-print("Image_processed= "+nbimage);
+print("version_no= " + version);
+print("version_date= " + date);
+print("background_method= " + background_method); // average_image/rolling
+print("rolling= " + rolling);
+print("pixel= " + pixel);
+print("upper= " + threshold_green);
+print("echelle_ï¿½m= " + echelle_micro);
+print("esdmin= " + esdmin);
+print("spmin= " + Spmin);
+print("esdmax= " + esdmax);
+print("spmax= " + Spmax);
+print("Stop_after_n_images= " + stop_after_n_images);
+print("scale= " + scale);
+print("remove_objects_on_sides= " + remove_objects_on_sides);
+print("Stop_after_m_objects= " + stop_after_m_objects);
+print("Nb_of_rawfile_images_in_folder= " + nb_rawfiles);
+print("Image_processed= " + nbimage);
 if (flowcam_1200x1920 == true) {
-	print("Crop_raw_image= yes");
-	print("left_lim= "+left_lim);
-	print("right_lim= "+right_lim);
+    print("Crop_raw_image= yes");
+    print("left_lim= " + left_lim);
+    print("right_lim= " + right_lim);
 }
-print("Objects_processed= "+nb_objets-1);
-if (removeduplicates== "yes" ){ 
-	print("Remove_duplicates= true");
-	print("Duplicate_range= "+duplicaterange);	
-	print("Duplicates_removed= "+nb_removed_duplicates);	
-}// if
-else {	print("Remove_duplicates = false");		 }// else
-print("Starting_time= ",dateheurestart);
-dateheure =	runMacro("Zooscan_get_time_5");
-print("Ending_time= ",dateheure);
-if (remove_objects_on_sides == "yes") { print("First_analysis_settings= "+first_analysis_settings_exclude);	}
-else {	print("First_analysis_settings= "+first_analysis_settings_include);	}
-print("Parametre_red= "+parametres_std_red);
-print("Parametre_green= "+parametres_std_green);
-print("Parametre_blue= "+parametres_std_blue);
-print("Exceptions= "+except);
+print("Objects_processed= " + nb_objets - 1);
+if (removeduplicates == "yes") {
+    print("Remove_duplicates= true");
+    print("Duplicate_range= " + duplicaterange);
+    print("Duplicates_removed= " + nb_removed_duplicates);
+} // if
+else {
+    print("Remove_duplicates = false");
+} // else
+print("Starting_time= ", dateheurestart);
+dateheure = runMacro("Zooscan_get_time_5");
+print("Ending_time= ", dateheure);
+if (remove_objects_on_sides == "yes") {
+    print("First_analysis_settings= " + first_analysis_settings_exclude);
+} else {
+    print("First_analysis_settings= " + first_analysis_settings_include);
+}
+print("Parametre_red= " + parametres_std_red);
+print("Parametre_green= " + parametres_std_green);
+print("Parametre_blue= " + parametres_std_blue);
+print("Exceptions= " + except);
 
 // ------------- Print Measurements ----------------------------
 print(" ");
 print("[Data]");
-open(pathprocessed+profileraw+"_measurements.txt");
+open(pathprocessed + profileraw + "_measurements.txt");
 wait(100);
 measurements = getInfo();
 run("Close");
-measurements = split(measurements,"\n");
-for (i = 0 ; i < measurements.length ; i++) {
-	line = measurements[i];
-	if (i == 0) { line = "!Item" + line;		}
-	line = replace(line," \t","\t");
-	line = replace(line,"\t",";");
-	print(line);
+measurements = split(measurements, "\n");
+for (i = 0; i < measurements.length; i++) {
+    line = measurements[i];
+    if (i == 0) {
+        line = "!Item" + line;
+    }
+    line = replace(line, " \t", "\t");
+    line = replace(line, "\t", ";");
+    print(line);
 }
 
 // ---------------- Enregistrement dans le repertoire du profile -------------
-selectWindow("Log");	
-sauvepid = "save=" + pathprocessed+profileprocessed +"_dat1.pid";			
-run("Text...",sauvepid);
+selectWindow("Log");
+sauvepid = "save=" + pathprocessed + profileprocessed + "_dat1.pid";
+run("Text...", sauvepid);
 // ----------------- Enregistrement dans pid_results de la mission ---------
-sauvepid = "save=" + pathpidresults+profileprocessed +"_dat1.pid";			
-run("Text...",sauvepid);
+sauvepid = "save=" + pathpidresults + profileprocessed + "_dat1.pid";
+run("Text...", sauvepid);
 // ----------------- PID to Ecotaxa ----------------------------------------
 link = "http://piqv.imev-mer.fr//";
-ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathprocessed+" "+profileprocessed+"_dat1.pid pid false true new "+link);
+ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic", path + " " + pathprocessed + " " + profileprocessed + "_dat1.pid pid false true new " + link);
 flag = toString(ret);
-if (lengthOf(flag)==1)  { 	showMessage("Error message : ''Zooprocess_pid_to_ecotaxa'' process aborted for "+profileprocessed+".                       "); 	} // if
+if (lengthOf(flag) == 1) {
+    showMessage("Error message : ''Zooprocess_pid_to_ecotaxa'' process aborted for " + profileprocessed + ".                       ");
+} // if
 
 // --------------------- Fermeture RESULTS ------------------------------
-selectWindow("Results");  	run("Close");
+selectWindow("Results");
+run("Close");
 
 // ----------------------------- FIN ----------------------------------------------
 ret = "OK";
 return ret;
-
-

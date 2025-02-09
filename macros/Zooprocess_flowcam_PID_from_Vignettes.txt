@@ -7,24 +7,24 @@ date = "2024/06/14";
 //args = "C:\\flowcam_tara_oceans_polar_circle_leg01_lorient_tromso 20130603_stn158_b20_a 20130603_stn158_B20_A";
 
 
-args = 	getArgument();
-arg = 	split(args," ");
+args = getArgument();
+arg = split(args, " ");
 
-path = 			arg[0];
-SampleId = 		arg[1];
-Filename = 		arg[2];
+path = arg[0];
+SampleId = arg[1];
+Filename = arg[2];
 
-configfile = 	"process_install_config.txt";
-pidfile = 	SampleId+"_dat1.pid";
-dat1file = 	SampleId+"_dat1.txt";
-pathprocessed = 	path+"\\work\\"+SampleId+"\\";
-profileraw =		"FlowCam_"+Filename;
-pathraw =		path+"\\raw\\";
-pathresults = 		path+"\\"+"\\results";
-pathpidresults = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\";
-pathpidpredicted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Pid_predicted\\";
-pathdat1validatted = 	path+"\\"+"\\PID_process\\"+"\\Pid_results\\"+"\\Dat1_validated\\";
-pathconfig = 		path+"\\config\\";
+configfile = "process_install_config.txt";
+pidfile = SampleId + "_dat1.pid";
+dat1file = SampleId + "_dat1.txt";
+pathprocessed = path + "\\work\\" + SampleId + "\\";
+profileraw = "FlowCam_" + Filename;
+pathraw = path + "\\raw\\";
+pathresults = path + "\\" + "\\results";
+pathpidresults = path + "\\" + "\\PID_process\\" + "\\Pid_results\\";
+pathpidpredicted = path + "\\" + "\\PID_process\\" + "\\Pid_results\\" + "\\Pid_predicted\\";
+pathdat1validatted = path + "\\" + "\\PID_process\\" + "\\Pid_results\\" + "\\Dat1_validated\\";
+pathconfig = path + "\\config\\";
 
 /*
 print(args);
@@ -32,592 +32,662 @@ sauvetxt = "save=" + pathprocessed+SampleId +"_log.txt";
 selectWindow("Log");
 run("Text...",sauvetxt);
 */
-while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while
+while (nImages() > 0) {
+    selectImage(nImages());
+    run("Close");
+} // while
 threshold = 0;
 
 // ---------------- Detection du fichier archive ------------------------------------
 search_file = true;
 skip_process = false;
 k = 0;
-filelist_raw  = 	getFileList(pathprocessed);
+filelist_raw = getFileList(pathprocessed);
 while (search_file == true && k < filelist_raw.length) {
-	if (indexOf(filelist_raw[k],"_archive_") >1) {
-		search_file = false;
-		skip_process = true;
-	}
-	k++;
+    if (indexOf(filelist_raw[k], "_archive_") > 1) {
+        search_file = false;
+        skip_process = true;
+    }
+    k++;
 }
 
 // ------------------------ Presence du PID -----------------------
-exist_pid = File.exists(path+"\\work\\"+SampleId+"\\"+SampleId+"_dat1.pid");
+exist_pid = File.exists(path + "\\work\\" + SampleId + "\\" + SampleId + "_dat1.pid");
 pid_pb = false;
 item_01 = false;
 item_02 = false;
 remove_line = 0;
 if (exist_pid == false) { // ------------------------- Pas de PID -------------------
-	aa = getBoolean("The file "+path+"\\work\\"+SampleId+"\\"+SampleId+"_dat1.pid \ndoes not exist. \n \nPress Cancel to abort !");	
-}
-else {	// ----------------- Ouverture/lecture du PID ---------------------
-	if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
-	open(pathprocessed+pidfile);
-	wait(200);
-	//	aa = getBoolean("OK");
-	
-	pid_all_text = getInfo();
-	run("Close");
-	pid_data = split(pid_all_text,"\n");
-	
-	// ----------------- Data section -------------------------------
-	p = 0;
-	data_line = 0;
-	header_lines_to_remove = 0;
-	while (p < pid_data.length) {
-		datatxt = pid_data[p];
-		if (startsWith(datatxt,"Processed_from_vignette")) header_lines_to_remove++;
-		if (startsWith(datatxt,"Missing_vignettes")) header_lines_to_remove++;
-		if (startsWith(datatxt,"Unprocessed_vignettes")) header_lines_to_remove++;
-		if (startsWith(datatxt,"Unprocessed_vignettes_other")) header_lines_to_remove++;
-//		if (startsWith(datatxt,"Vignette_from_pid_threshold")) header_lines_to_remove++;		
-		if (datatxt == "[Data]") {	data_line = p; p = pid_data.length;	}
-		p++;
-	} // for
+    aa = getBoolean("The file " + path + "\\work\\" + SampleId + "\\" + SampleId + "_dat1.pid \ndoes not exist. \n \nPress Cancel to abort !");
+} else { // ----------------- Ouverture/lecture du PID ---------------------
+    if (isOpen("Log")) {
+        selectWindow("Log");
+        run("Close");
+    } // if
+    open(pathprocessed + pidfile);
+    wait(200);
+    //	aa = getBoolean("OK");
+
+    pid_all_text = getInfo();
+    run("Close");
+    pid_data = split(pid_all_text, "\n");
+
+    // ----------------- Data section -------------------------------
+    p = 0;
+    data_line = 0;
+    header_lines_to_remove = 0;
+    while (p < pid_data.length) {
+        datatxt = pid_data[p];
+        if (startsWith(datatxt, "Processed_from_vignette")) header_lines_to_remove++;
+        if (startsWith(datatxt, "Missing_vignettes")) header_lines_to_remove++;
+        if (startsWith(datatxt, "Unprocessed_vignettes")) header_lines_to_remove++;
+        if (startsWith(datatxt, "Unprocessed_vignettes_other")) header_lines_to_remove++;
+        //		if (startsWith(datatxt,"Vignette_from_pid_threshold")) header_lines_to_remove++;		
+        if (datatxt == "[Data]") {
+            data_line = p;
+            p = pid_data.length;
+        }
+        p++;
+    } // for
 }
 
-// --------------------- Vérification doubles lignes erronées pour forcer le process --------------------
+// --------------------- Vï¿½rification doubles lignes erronï¿½es pour forcer le process --------------------
 detected_line = 0;
-for (p = data_line; p < data_line + 10 ; p++ ) {
-	if (startsWith(pid_data[p],"1;") && indexOf(pid_data[p],";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
-	if (startsWith(pid_data[p],"2;") && indexOf(pid_data[p],";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
-	if (startsWith(pid_data[p],"3;") && indexOf(pid_data[p],";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
+for (p = data_line; p < data_line + 10; p++) {
+    if (startsWith(pid_data[p], "1;") && indexOf(pid_data[p], ";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
+    if (startsWith(pid_data[p], "2;") && indexOf(pid_data[p], ";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
+    if (startsWith(pid_data[p], "3;") && indexOf(pid_data[p], ";NaN;0;0;0;0;0;0;0") > 0) detected_line++;
 }
-if (detected_line > 0)	skip_process = false;
+if (detected_line > 0) skip_process = false;
 
 // ------------------- Test existence des vignettes -----------------
 remove_line = 0;
-for (i = 0; i < 4 ; i++) {
-	cc = split(pid_data[pid_data.length - i - 1],";");
-	vig_name = SampleId + "_" + cc[0] + ".jpg";
-	if (File.exists(pathprocessed + vig_name) == false) { remove_line++;	}	
+for (i = 0; i < 4; i++) {
+    cc = split(pid_data[pid_data.length - i - 1], ";");
+    vig_name = SampleId + "_" + cc[0] + ".jpg";
+    if (File.exists(pathprocessed + vig_name) == false) {
+        remove_line++;
+    }
 }
-if (detected_line > 0 && remove_line > 0)	skip_process = false;
+if (detected_line > 0 && remove_line > 0) skip_process = false;
 
 // ------------------------ Presence de TSV splited -----------------------
-tsv_low = 	path+"\\work\\"+SampleId+"\\ecotaxa_"+SampleId+"_low.tsv";
-tsv_high = 	path+"\\work\\"+SampleId+"\\ecotaxa_"+SampleId+"_high.tsv";
-if (File.exists(tsv_low) || File.exists(tsv_high)) { aa = getBoolean("WARNING : \n \nThe file "+path+"\\work\\"+SampleId+"\\"+SampleId+".tsv \nhas already been splited. \n\nDO NOT reprocess it ! \n \nPress Cancel to abort !");	}
+tsv_low = path + "\\work\\" + SampleId + "\\ecotaxa_" + SampleId + "_low.tsv";
+tsv_high = path + "\\work\\" + SampleId + "\\ecotaxa_" + SampleId + "_high.tsv";
+if (File.exists(tsv_low) || File.exists(tsv_high)) {
+    aa = getBoolean("WARNING : \n \nThe file " + path + "\\work\\" + SampleId + "\\" + SampleId + ".tsv \nhas already been splited. \n\nDO NOT reprocess it ! \n \nPress Cancel to abort !");
+}
 
 // ----------------- Parametres CONFIG -----------------
-openconfig = pathconfig +"\\"+configfile;
+openconfig = pathconfig + "\\" + configfile;
 open(openconfig);
 wait(100);
 config = getInfo();
 run("Close");
-conf  = split(config,"\n");
+conf = split(config, "\n");
 size = conf.length;
 array = newArray(size);
-for (i=0; i<conf.length; i++)	{ texte = conf[i];	ssarray = split(texte," ");	array[i] = ssarray[1];		} // for
-gamma= 		array[7];
-upperimage= 	parseInt(array[6]);
+for (i = 0; i < conf.length; i++) {
+    texte = conf[i];
+    ssarray = split(texte, " ");
+    array[i] = ssarray[1];
+} // for
+gamma = array[7];
+upperimage = parseInt(array[6]);
 
 unprocessed_vignette = 0;
 unprocessed_vignette_other = 0;
-added_footer = 31;	
+added_footer = 31;
 processed_obj = 0;
 missing_vig = 0;
 
 // +++++++++++++++++++++++++++++++++++ On traite le fichier +++++++++++++++++++++++++++++++++++
 if (skip_process == false) {
-	// ========================== Settings ==========================
-	setBatchMode(true);
-	
-	parametres_nb = 	"area area_fraction redirect=[msk] decimal=2";
-	parametres_std = 	"area mean standard modal min centroid center perimeter bounding fit circularity feret's integrated median skewness kurtosis area_fraction limit redirect=Source decimal=2";
-	
-	// ----------------------- OK pour reprocess images sans coins ----------------------------------------------
-	first_analysis_settings =  "size=3-100000000 circularity=0.00-1.00 show=Nothing include include record";
-	
-	// ----------------------- Pour images avec coins -----------------------------------------------------------
-	first_analysis_settings_corner =  "size=3-Infinity circularity=0.00-1.00 show=Masks include include record";
-	
-	// ========================== Liste des vignettes à partir du PID ==========================
-	// ========================== Vecteurs ==========================
-	nb_blobs = pid_data.length - data_line - 2 - remove_line;
-	
-	//	aa = getBoolean("remove_line= "+remove_line+"\nnb_blobs= "+nb_blobs+"\ndata_line= "+data_line);
-	
-	XSTART = 	newArray(nb_blobs);
-	YSTART = 	newArray(nb_blobs);
-	BX = 		newArray(nb_blobs);
-	BY = 		newArray(nb_blobs);
-	WIDTH = 	newArray(nb_blobs);
-	HEIGTH = 	newArray(nb_blobs);
-	CIRC = 		newArray(nb_blobs);
-	FERET = 	newArray(nb_blobs);
-	Area = 		newArray(nb_blobs);
-	Mean =		newArray(nb_blobs);
-	StdDev = 	newArray(nb_blobs);
-	Mode = 		newArray(nb_blobs);
-	Min = 		newArray(nb_blobs);
-	Max = 		newArray(nb_blobs);
-	X = 		newArray(nb_blobs);
-	Y = 		newArray(nb_blobs);
-	XM = 		newArray(nb_blobs);
-	YM = 		newArray(nb_blobs);
-	PERIM = 	newArray(nb_blobs);
-	Major = 	newArray(nb_blobs);
-	Minor = 	newArray(nb_blobs);
-	Angle = 	newArray(nb_blobs);
-	CIRC = 		newArray(nb_blobs);
-	IntDen = 	newArray(nb_blobs);
-	Median = 	newArray(nb_blobs);
-	Skew = 		newArray(nb_blobs);
-	Kurt = 		newArray(nb_blobs);
-	Area_frac = 	newArray(nb_blobs);
-	Area_exc = 	newArray(nb_blobs);
-	
-	Fractal = 	newArray(nb_blobs);
-	Histcum1 =	newArray(nb_blobs);		
-	Histcum2 =	newArray(nb_blobs);
-	Histcum3 =	newArray(nb_blobs);
-	Fcons =		newArray(nb_blobs);
-	Skelarea = 	newArray(nb_blobs);
-	Convarea =	newArray(nb_blobs);
-	Convperim =	newArray(nb_blobs);
-	Slope = 	newArray(nb_blobs);
-	
-	Back_median = 	newArray(nb_blobs);
-	Img_median = 	newArray(nb_blobs);
-	Tag = 		newArray(nb_blobs);
-	No_raw_image = 	newArray(nb_blobs);
-	Vignette_index = newArray(nb_blobs);
-	Corner_threshold = newArray(nb_blobs);
-	
-	// ========================== Test existence de toutes vignettes ==========================
-	missing_vig = 0;
-	for (p = data_line + 2; p < pid_data.length - remove_line ; p++) {
-		cc = split(pid_data[p],";");
-		vig_name = SampleId + "_" + cc[0] + ".jpg";
-		if (File.exists(pathprocessed + vig_name) == false) { missing_vig++;	}	
-	}
-	
-	// ----------------- Si vignette(s) manquantes ---------------------------
-	if (missing_vig > 0) {
-		//		aa = getBoolean("Somme vignettes are missing for "+SampleId+" ! \n \nDo you anyhow want to process the sample anyhow ? \n \nPress YES to Continue \nPress Cancel to abort.");
-	}
-	
-	// ========================== Boucle sur les vignettes si existent ==========================
-	vig_nb = 0;
-	corner_detection = true;
-	corner_to_remove = false;
-	
-	print("----------- START PROCESS "+SampleId+" -----------");
-	for (p = data_line + 2; p < pid_data.length - remove_line ; p++) {
-		cc = split(pid_data[p],";");
-		vig_name = SampleId + "_" + cc[0] + ".jpg";
-		corner_threshold = 0;
-		print(SampleId + "_" + cc[0] +" / " +nb_blobs);
-		// ----------------- Existence vignette -----------------
-		if (File.exists(pathprocessed + vig_name)) {	
-			// ----------------- Ouverture --------------------------
-			open(pathprocessed + vig_name);
-			rename("Source");
-			width_vignette = getWidth();
-			heigth_vignette = getHeight();	
-			process_vignette = false;
-			
-			if (corner_detection == true) {			
-				// ----------------- Detection si coins ----------------
-				selectImage("Source");
-				crop_vignette_height = heigth_vignette - added_footer;
-				// -------------- On retire le bas ------------------
-				makeRectangle(0, 0, width_vignette, crop_vignette_height);	
-				if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-				selectImage("Source");
-				run("Set Measurements...", "  min area_fraction redirect=None decimal=0");
-				run("Measure");
-				updateResults();
-				min_grey = 	getResult("Min", 0);
-				if (min_grey == 0) corner_to_remove = true;
-				selectWindow("Results");	run('Close');
-				corner_detection = false;
-				selectImage("Source");
-				close();
-				open(pathprocessed + vig_name);
-				rename("Source");
-			}		
-			//	aa = getBoolean("vig_name= "+vig_name+"\nmin_grey= "+min_grey);
-			
-			if (corner_to_remove == true) {	// ----------------- Nettoyage coins et footer -------------------			
-				//				aa = getBoolean("vig_name= "+vig_name);
-				run("Set Measurements...", "area bounding redirect=Source decimal=0");
-				// ------------------- Boucle sur les valeurs de corner_threshold --------------------
-				corner_threshold = 0;					
-				while (corner_threshold < 255 && process_vignette == false) {			
-					corner_threshold = corner_threshold +10;
-					selectImage("Source");
-					run("Duplicate...", "title=msk");
-					setThreshold(0, corner_threshold);
-					if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-					run("Convert to Mask");
-					run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing display include include record");
-					// ------------------- Recherche des limites -----------------
-					updateResults();
-					nbobj = nResults;
-					
-					// ------------------- cas nominal (2 coins entiers) --------------------
-					// le cas où les coins ne sont pas entiers n'est pas trait = > objet trop petit !
-					first_corner = false;
-					second_corner = false;
-					third_corner = false;
-					corner_nb = 0;
-					i_first_corner_3 = 99999;
-					i_second_corner_3 = 99999;
-					i = 0;
-					while (corner_nb < 4 && i < nbobj) {
-			//		for (i = 0; i < nbobj; i++) {
-						area = 	getResult("Area",i);
-						bx = 	getResult("BX",i);   
-						by = 	getResult("BY",i);
-						width = getResult("Width",i);
-						height = getResult("Height",i);
-						area_flag = 0;
-						width_flag = 0;
-						height_flag = 0;
-						if (area == 21) area_flag = 1;
-						if (width == 11) width_flag = 1;
-						if (height == 11) height_flag = 1;
-						// ------------------- Top left ---------------------
-						if (first_corner == false && (area_flag + width_flag + height_flag) == 3) {		first_corner = true; 	i_first_corner_3 = i;	corner_nb++;	}
-						// ------------------- Second right ---------------------
-						else if (first_corner == true && (area_flag + width_flag + height_flag) == 3 ) {	second_corner = true;	i_second_corner_3 = i;	corner_nb++;	}
-						else if (second_corner == true && (area_flag + width_flag + height_flag) == 3 ) {	third_corner = true;	corner_nb++;	}
-						i++;
-					}
-					// --------------------- Si trois coins possibles ! ------------------
-					if (corner_nb > 2) { process_vignette = false;	}
-				//	if (third_corner == true) aa = getBoolean("More than 2 possible corners for the vignette "+pathprocessed + vig_name+" ! \n \nPress Cancel to abort and check the vignette (trash it !)");
-				//	else if (i_first_corner_3 < 99999 && i_second_corner_3 < 99999) {
-					else if (corner_nb == 2) {	
-						x0 = getResult("XStart",i_first_corner_3); y0 = getResult("YStart",i_first_corner_3); w0 = getResult("Width",i_first_corner_3); h0 = getResult("Height",i_first_corner_3);
-						x1 = getResult("XStart",i_second_corner_3); y1 = getResult("YStart",i_second_corner_3); w1 = getResult("Width",i_second_corner_3); h1 = getResult("Height",i_second_corner_3);
-						
-						//	showMessage("YES : \ncorner_0_i = "+corner_0_i+"\ncorner_1_i= "+corner_1_i);
-						// ------------------- qui est le gauche / droit CROP ----------
-						if (x1 >= x0 && y1 >= y0 ) {
-							Crop_width = x1 - x0 +1;
-							Crop_heigth = y1+h1 - y0;	
-						}
-						else if (x1 < x0 && y1 > y0 ) {	
-							Crop_width = x0+1 - x1;
-							Crop_heigth = y0+h0 - y1;	
-						}
-						process_vignette = true;
-						threshold = corner_threshold;
-						corner_threshold = 255;
-					}
-					else {	process_vignette = false;		}
-					
-					selectImage("msk");
-					close();
-					selectImage("Source");
-				}
-			}
-			else {	// ------------------------ Nettoyage footer -----------------------------
-				crop_vignette_height = heigth_vignette - added_footer;
-				Crop_width = width_vignette;
-				Crop_heigth = crop_vignette_height;
-				selectImage("Source");
-				process_vignette = true;
-			}
-			
-			// --------------------- Nettoyage Results ----------------------
-			if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-			
-			// --------------------- Test si traitable ----------------------
-			//			aa = getBoolean(vig_name + "\n Crop_width=  " +Crop_width+"\n Crop_heigth=  "+Crop_heigth);
-			if (process_vignette == true) {
-				makeRectangle(0,0,Crop_width,Crop_heigth);
-				run("Crop");
-				//	aa = getBoolean(vig_name + "  OK");
-				// ---------------------- sauvegarde pour contrôle ----------------------
-				/*			selectImage("Source");
-				saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_source.jpg");			
-				rename("Source");
-				*/			
-				selectImage("Source");
-				run("Duplicate...", "title=msk");
-				
-				// ----------------- Gamma compensation -----------------
-				gamma_inv = 1 / gamma;
-				selectImage("Source");
-				run("Gamma...", "value="+gamma_inv);			
-				
-				// ---------------------- sauvegarde pour contrôle ----------------------
-				/*			selectImage("Source");
-				saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_gamma.jpg");			
-				rename("Source");	
-				*/			
-				// ----------------- Segmentation sur image avant gamma -----------------------			
-				selectImage("msk");			
-				if (corner_to_remove == true) {	
-					th_a = 17;
-					th_b = 250;			
-				}
-				else {	th_a = 0;
-					th_b = upperimage-2;		
-				}
-				setThreshold(th_a,th_b);			
-				run("Convert to Mask");				
-				
-				// ++++++++++++++++++++++ Analyse ++++++++++++++++++++++
-				
-				// --------------------------- Area et %Area sur image MSK ------------------------------
-				if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-				
-				run("Set Measurements...", parametres_nb);
-				if (corner_to_remove == true) {	run("Analyze Particles...",first_analysis_settings_corner);	}
-				else {				run("Analyze Particles...",first_analysis_settings);		}
-				updateResults();
-				nbobj = nResults;
-				
-				if (corner_to_remove == true) {
-					selectImage("msk");
-					close();				
-					selectImage("Mask of msk");
-					rename("msk");
-				}
-				
-				// ---------------------- sauvegarde pour contrôle ----------------------
-				/*			selectImage("msk");
-				saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_mask.jpg");			
-				rename("msk");
-				*/		
-				
-				// --------------------------- On ne traite que si c'est possible -----------------
-				if (nbobj > 0) {
-					//		aa = getBoolean(vig_name+" cannot be processed");
-					// ---------------- Recherche du plus gros objet --------
-					i = 0;
-					g = 0;
-					areainit = 	getResult("Area", 0);
-					while (g < nbobj) {		
-						area = 		getResult("Area", g);	
-						if (area > areainit ) i = g;
-						areainit = 	maxOf(area,areainit);
-						g++;
-					} // for
-					
-					// ------------------------ Analyse complète ---------------------------------
-					if (isOpen("Results")) { selectWindow("Results");	run('Close'); 	} // if	
-					
-					run("Set Measurements...", parametres_std);
-					if (corner_to_remove == true) {	run("Analyze Particles...",first_analysis_settings_corner);	}
-					else {				run("Analyze Particles...",first_analysis_settings);		}	
-					updateResults();
-					
-					// ---------------- Mise en vecteur -------------------
-					Area[vig_nb] = 		getResult("Area", i);
-					Area_frac[vig_nb] =	getResult("%Area", i);
-					XSTART[vig_nb] = getResult("XStart",i);
-					YSTART[vig_nb] = getResult("YStart",i);
-					BX[vig_nb] = 	getResult("BX", i);
-					BY[vig_nb] = 	getResult("BY", i);
-					WIDTH[vig_nb] = 	getResult("Width", i);
-					HEIGTH[vig_nb] = getResult("Height", i);
-					PERIM[vig_nb] = 	getResult("Perim.",i);
-					CIRC[vig_nb] = 	getResult("Circ.", i);
-					FERET[vig_nb] = 	getResult("Feret", i);				
-					Mean[vig_nb] =	getResult("Mean", i);
-					StdDev[vig_nb] = getResult("StdDev", i);
-					Mode[vig_nb] = 	getResult("Mode", i);
-					Min[vig_nb] = 	getResult("Min", i);
-					Max[vig_nb] = 	getResult("Max", i);
-					X[vig_nb] = 	getResult("X", i);
-					Y[vig_nb] = 	getResult("Y", i);
-					XM[vig_nb] = 	getResult("XM", i);
-					YM[vig_nb] = 	getResult("YM", i);
-					Major[vig_nb] = 	getResult("Major",i);
-					Minor[vig_nb] = 	getResult("Minor",i);
-					Angle[vig_nb] = 	getResult("Angle",i);
-					IntDen[vig_nb] = getResult("IntDen", i);
-					Median[vig_nb] = getResult("Median",i);
-					Skew[vig_nb] = 	getResult("Skew", i);
-					Kurt[vig_nb] = 	getResult("Kurt", i);
-					
-					Corner_threshold[vig_nb] = threshold;
-					
-					// ----------------- Calcul autres mesures -----------------------------
-					//		texte = runMacro("Zooprocess_other_measurements_on_vignette.txt","msk Source "+width_vignette+" "+heigth_vignette+" msk Source "+pathprocessed+SampleId + "_" + cc[0] + "_cleaned.jpg");
-					texte = runMacro("Zooprocess_other_measurements_on_vignette.txt","msk Source "+width_vignette+" "+heigth_vignette+" msk Source "+pathprocessed+SampleId);
-					texte = toString(texte);
-					if (lengthOf(texte) > 1 )  {
-						other_data = split(texte," ");
-						Fractal[vig_nb] = 	parseFloat(other_data[1]);
-						Histcum1[vig_nb] = 	parseInt(other_data[2]);
-						Histcum2[vig_nb] = 	parseInt(other_data[3]);
-						Histcum3[vig_nb] = 	parseInt(other_data[4]);				
-						Fcons[vig_nb] = 	parseFloat(other_data[5]);
-						Skelarea[vig_nb] = 	parseInt(other_data[6]);
-						Convarea[vig_nb] = 	parseInt(other_data[7]);
-						Convperim[vig_nb] = 	parseInt(other_data[8]);
-						Slope[vig_nb] = 	parseFloat(other_data[9]);
-						if (Slope[vig_nb] == 0 && Skelarea[vig_nb] == 0) {
-							//						showMessage("WARNING : \n \nThe ''other measurements'' on vignette "+vig_name+" could not be processed. \nThe object must be very small and light grey. \n \nPress OK to continue");
-						}
-					}
-					//				else { 	aa = getBoolean(" Zooprocess_other_measurements_on_vignette.txt failed on image \n \n "+vig_name+"\n \nPress Cancel to abort the process.");	}			
-				}
-				else {	// ---------------- Vignette ne peut être traitée ----------
-					unprocessed_vignette_other++;
-				}
-				
-				// ----------------- Increment nombre objets traités -----------------------
-				processed_obj++;
-			}
-			else {	// ---------------- Vignette ne peut être traitée ----------
-				unprocessed_vignette++;	
-				/*
-				// ---------------------- sauvegarde pour contrôle ----------------------
-				selectImage("Source");
-				saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_unprocessed_"+Crop_width+"_"+Crop_heigth+".jpg");			
-				rename("Source");	*/	
-			}
-			// ---------------------- Fermeture des images -----------------------------
-			while (nImages()>0) {	selectImage(nImages());  		run("Close");	} // while		
-		}
-		else {	// ----------------- Vignette manquante -------------------
-			missing_vig++;
-		}
-		vig_nb++;
-	}
-	
-	//====================  creer le tableau RESULTS =======================================================
-	// ----------------------- Fermeture Resulst --------------------------
-	if (isOpen("Results")) { selectWindow("Results");	run("Close"); 	} // if
-	
-	//----------Mettre les bons resultats dans le tableau de nouveau------------------
-	for (i=0; i < nb_blobs ; i++) {	
-		setResult("Label", i,SampleId);
-//		setResult("Back_median",i,Back_median[i]);
-		setResult("Corner_threshold",i,Corner_threshold[i]);
-//		setResult("Img_median",i,Img_median[i]);
-//		setResult("No_raw_image",i,No_raw_image[i]);
-		setResult("Area",i,Area[i]);	
-		setResult("%Area", i, Area_frac[i]);
-		area_exc = Area[i] * Area_frac[i]/100;
-		setResult("Area_exc",i,area_exc);
-		setResult("Mean",i,Mean[i]);
-		setResult("StdDev",i,StdDev[i]);
-		setResult("Mode",i,Mode[i]);
-		setResult("Min",i,Min[i]);
-		setResult("Max",i,Max[i]);
-		setResult("X",i,X[i]);
-		setResult("Y",i,Y[i]);
-		setResult("XM",i,XM[i]);
-		setResult("YM",i,YM[i]);
-		setResult("Perim.",i,PERIM[i]);
-		setResult("BX", i, BX[i]);
-		setResult("BY", i, BY[i]);
-		setResult("Width", i, WIDTH[i]);
-		setResult("Height", i,HEIGTH[i]);
-		setResult("Major",i,Major[i]);
-		setResult("Minor",i,Minor[i]);
-		setResult("Angle",i,Angle[i]);
-		setResult("Circ.",i,CIRC[i]);
-		setResult("Feret",i,FERET[i]);
-		setResult("IntDen",i,IntDen[i]);
-		setResult("Median",i,Median[i]);
-		setResult("Skew",i,Skew[i]);
-		setResult("Kurt",i,Kurt[i]);
-		setResult("XStart", i,XSTART[i]);
-		setResult("YStart", i,YSTART[i]);
-		setResult("Fractal",i,Fractal[i]);
-		setResult("Histcum1",i,Histcum1[i]);
-		setResult("Histcum2",i,Histcum2[i]);
-		setResult("Histcum3",i,Histcum3[i]);
-		setResult("Fcons",i,Fcons[i]);
-		setResult("Skelarea",i,Skelarea[i]);
-		setResult("Convarea",i,Convarea[i]); 
-		setResult("Convperim",i,Convperim[i]);
-		setResult("Slope",i,Slope[i]);		
-	} // for
-	
-	// -------------------- Enregistrement RESULTS ----------------------------------
-	updateResults();
-	selectWindow("Results");  	
-	saveAs("measurements",pathprocessed+SampleId+"_measurements.txt");
-	
-	// ---------------- Enregistrement dans le repertoire du profile -------------
-	if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if
-	print(pid_all_text);
-	dateheurestart =	runMacro("Zooscan_get_time_5");
-	sauvetxt = "save=" + pathprocessed+SampleId +"_archive_"+dateheurestart+"_pid.txt";	
-	selectWindow("Log");
-	run("Text...",sauvetxt);
-	
-	// ========================== Ecriture du PID ==========================
-	if (isOpen("Log")) {	selectWindow("Log");	run("Close"); 	} // if       
-	
-	// ------------------ Section LOG ---------------------------
-	for (p = 0; p < data_line  - header_lines_to_remove ; p++) {
-		to_print = replace(pid_data[p],"=  ","= ");
-		to_print = replace(pid_data[p],"Fluid Volume Imaged","Fluid_Volume_Imaged");
-		print(to_print);	
-	}
-	print("Processed_from_vignette= true");
-	print("Missing_vignettes= "+missing_vig);
-	print("Unprocessed_vignettes= "+unprocessed_vignette);
-	print("Unprocessed_vignettes_other= "+unprocessed_vignette_other);
-//	print("Vignette_from_pid_threshold= "+threshold);
-	
-	// ------------------ Section DATA ---------------------------
-/*	argpid = "flowcam "+nb_blobs+" 0 "+SampleId;
-	argpid = 	runMacro("Zooscan_print_pid_5",argpid);
-	flag =		toString(argpid);
-	l= 		lengthOf(flag);
-	if (l==1)  { getBoolean("Error message : Print_pid_5 process aborted !    \n \nPress Cancel to abort !                   "); } // if
-	selectWindow("Log");	
-	*/
-	
-	// ------------- Print Measurements ----------------------------
-	print(" ");
-	print("[Data]");
-	open(pathprocessed+SampleId+"_measurements.txt");
-	wait(100);
-	measurements = getInfo();
-	run("Close");
-	measurements = split(measurements,"\n");
-	for (i = 0 ; i < measurements.length ; i++) {
-		line = measurements[i];
-		if (i == 0) { line = "!Item" + line;		}
-		line = replace(line," \t","\t");
-		line = replace(line,"\t",";");
-		print(line);
-	}	
-	
-	// ---------------- Enregistrement dans le repertoire du profile -------------
-	selectWindow("Log");
-	sauvepid = "save=" + pathprocessed+SampleId +"_dat1.pid";			
-	run("Text...",sauvepid);
-	// ----------------- Enregistrement dans pid_results de la mission ---------
-	sauvepid = "save=" + pathpidresults+SampleId +"_dat1.pid";			
-	run("Text...",sauvepid);
-	// ----------------- PID to Ecotaxa ----------------------------------------
-	link = "http://piqv.imev-mer.fr//";
-	ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic",path+" "+pathprocessed+" "+SampleId+"_dat1.pid pid false true new "+link);
-	flag=toString(ret);
-	l= lengthOf(flag);
-	if (l==1)  { 	showMessage("Error message : ''Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic'' process aborted for "+SampleId+".                       "); 	} // if
-	
-	// --------------------- Fermeture RESULTS ------------------------------
-	selectWindow("Results");  	run("Close");
-	
-	// --------------------- Warnings ---------------------------------------
-	//	if (missing_vig > 0 || unprocessed_vignette > 0 || unprocessed_vignette_other > 0 ) {
-	//		showMessage("WARNING for sample "+SampleId+" : \n \n"+missing_vig+" vignettes were not found \n"+unprocessed_vignette+" vignettes could not be processed \n"+unprocessed_vignette_other+" vignettes could not be completely processed. \n \nThe features of these vignettes are set to O in the recorded PID and TSV files.");
-	//	}
+    // ========================== Settings ==========================
+    setBatchMode(true);
+
+    parametres_nb = "area area_fraction redirect=[msk] decimal=2";
+    parametres_std = "area mean standard modal min centroid center perimeter bounding fit circularity feret's integrated median skewness kurtosis area_fraction limit redirect=Source decimal=2";
+
+    // ----------------------- OK pour reprocess images sans coins ----------------------------------------------
+    first_analysis_settings = "size=3-100000000 circularity=0.00-1.00 show=Nothing include include record";
+
+    // ----------------------- Pour images avec coins -----------------------------------------------------------
+    first_analysis_settings_corner = "size=3-Infinity circularity=0.00-1.00 show=Masks include include record";
+
+    // ========================== Liste des vignettes ï¿½ partir du PID ==========================
+    // ========================== Vecteurs ==========================
+    nb_blobs = pid_data.length - data_line - 2 - remove_line;
+
+    //	aa = getBoolean("remove_line= "+remove_line+"\nnb_blobs= "+nb_blobs+"\ndata_line= "+data_line);
+
+    XSTART = newArray(nb_blobs);
+    YSTART = newArray(nb_blobs);
+    BX = newArray(nb_blobs);
+    BY = newArray(nb_blobs);
+    WIDTH = newArray(nb_blobs);
+    HEIGTH = newArray(nb_blobs);
+    CIRC = newArray(nb_blobs);
+    FERET = newArray(nb_blobs);
+    Area = newArray(nb_blobs);
+    Mean = newArray(nb_blobs);
+    StdDev = newArray(nb_blobs);
+    Mode = newArray(nb_blobs);
+    Min = newArray(nb_blobs);
+    Max = newArray(nb_blobs);
+    X = newArray(nb_blobs);
+    Y = newArray(nb_blobs);
+    XM = newArray(nb_blobs);
+    YM = newArray(nb_blobs);
+    PERIM = newArray(nb_blobs);
+    Major = newArray(nb_blobs);
+    Minor = newArray(nb_blobs);
+    Angle = newArray(nb_blobs);
+    CIRC = newArray(nb_blobs);
+    IntDen = newArray(nb_blobs);
+    Median = newArray(nb_blobs);
+    Skew = newArray(nb_blobs);
+    Kurt = newArray(nb_blobs);
+    Area_frac = newArray(nb_blobs);
+    Area_exc = newArray(nb_blobs);
+
+    Fractal = newArray(nb_blobs);
+    Histcum1 = newArray(nb_blobs);
+    Histcum2 = newArray(nb_blobs);
+    Histcum3 = newArray(nb_blobs);
+    Fcons = newArray(nb_blobs);
+    Skelarea = newArray(nb_blobs);
+    Convarea = newArray(nb_blobs);
+    Convperim = newArray(nb_blobs);
+    Slope = newArray(nb_blobs);
+
+    Back_median = newArray(nb_blobs);
+    Img_median = newArray(nb_blobs);
+    Tag = newArray(nb_blobs);
+    No_raw_image = newArray(nb_blobs);
+    Vignette_index = newArray(nb_blobs);
+    Corner_threshold = newArray(nb_blobs);
+
+    // ========================== Test existence de toutes vignettes ==========================
+    missing_vig = 0;
+    for (p = data_line + 2; p < pid_data.length - remove_line; p++) {
+        cc = split(pid_data[p], ";");
+        vig_name = SampleId + "_" + cc[0] + ".jpg";
+        if (File.exists(pathprocessed + vig_name) == false) {
+            missing_vig++;
+        }
+    }
+
+    // ----------------- Si vignette(s) manquantes ---------------------------
+    if (missing_vig > 0) {
+        //		aa = getBoolean("Somme vignettes are missing for "+SampleId+" ! \n \nDo you anyhow want to process the sample anyhow ? \n \nPress YES to Continue \nPress Cancel to abort.");
+    }
+
+    // ========================== Boucle sur les vignettes si existent ==========================
+    vig_nb = 0;
+    corner_detection = true;
+    corner_to_remove = false;
+
+    print("----------- START PROCESS " + SampleId + " -----------");
+    for (p = data_line + 2; p < pid_data.length - remove_line; p++) {
+        cc = split(pid_data[p], ";");
+        vig_name = SampleId + "_" + cc[0] + ".jpg";
+        corner_threshold = 0;
+        print(SampleId + "_" + cc[0] + " / " + nb_blobs);
+        // ----------------- Existence vignette -----------------
+        if (File.exists(pathprocessed + vig_name)) {
+            // ----------------- Ouverture --------------------------
+            open(pathprocessed + vig_name);
+            rename("Source");
+            width_vignette = getWidth();
+            heigth_vignette = getHeight();
+            process_vignette = false;
+
+            if (corner_detection == true) {
+                // ----------------- Detection si coins ----------------
+                selectImage("Source");
+                crop_vignette_height = heigth_vignette - added_footer;
+                // -------------- On retire le bas ------------------
+                makeRectangle(0, 0, width_vignette, crop_vignette_height);
+                if (isOpen("Results")) {
+                    selectWindow("Results");
+                    run('Close');
+                } // if	
+                selectImage("Source");
+                run("Set Measurements...", "  min area_fraction redirect=None decimal=0");
+                run("Measure");
+                updateResults();
+                min_grey = getResult("Min", 0);
+                if (min_grey == 0) corner_to_remove = true;
+                selectWindow("Results");
+                run('Close');
+                corner_detection = false;
+                selectImage("Source");
+                close();
+                open(pathprocessed + vig_name);
+                rename("Source");
+            }
+            //	aa = getBoolean("vig_name= "+vig_name+"\nmin_grey= "+min_grey);
+
+            if (corner_to_remove == true) { // ----------------- Nettoyage coins et footer -------------------			
+                //				aa = getBoolean("vig_name= "+vig_name);
+                run("Set Measurements...", "area bounding redirect=Source decimal=0");
+                // ------------------- Boucle sur les valeurs de corner_threshold --------------------
+                corner_threshold = 0;
+                while (corner_threshold < 255 && process_vignette == false) {
+                    corner_threshold = corner_threshold + 10;
+                    selectImage("Source");
+                    run("Duplicate...", "title=msk");
+                    setThreshold(0, corner_threshold);
+                    if (isOpen("Results")) {
+                        selectWindow("Results");
+                        run('Close');
+                    } // if	
+                    run("Convert to Mask");
+                    run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Nothing display include include record");
+                    // ------------------- Recherche des limites -----------------
+                    updateResults();
+                    nbobj = nResults;
+
+                    // ------------------- cas nominal (2 coins entiers) --------------------
+                    // le cas oï¿½ les coins ne sont pas entiers n'est pas trait = > objet trop petit !
+                    first_corner = false;
+                    second_corner = false;
+                    third_corner = false;
+                    corner_nb = 0;
+                    i_first_corner_3 = 99999;
+                    i_second_corner_3 = 99999;
+                    i = 0;
+                    while (corner_nb < 4 && i < nbobj) {
+                        //		for (i = 0; i < nbobj; i++) {
+                        area = getResult("Area", i);
+                        bx = getResult("BX", i);
+                        by = getResult("BY", i);
+                        width = getResult("Width", i);
+                        height = getResult("Height", i);
+                        area_flag = 0;
+                        width_flag = 0;
+                        height_flag = 0;
+                        if (area == 21) area_flag = 1;
+                        if (width == 11) width_flag = 1;
+                        if (height == 11) height_flag = 1;
+                        // ------------------- Top left ---------------------
+                        if (first_corner == false && (area_flag + width_flag + height_flag) == 3) {
+                            first_corner = true;
+                            i_first_corner_3 = i;
+                            corner_nb++;
+                        }
+                        // ------------------- Second right ---------------------
+                        else if (first_corner == true && (area_flag + width_flag + height_flag) == 3) {
+                            second_corner = true;
+                            i_second_corner_3 = i;
+                            corner_nb++;
+                        } else if (second_corner == true && (area_flag + width_flag + height_flag) == 3) {
+                            third_corner = true;
+                            corner_nb++;
+                        }
+                        i++;
+                    }
+                    // --------------------- Si trois coins possibles ! ------------------
+                    if (corner_nb > 2) {
+                        process_vignette = false;
+                    }
+                    //	if (third_corner == true) aa = getBoolean("More than 2 possible corners for the vignette "+pathprocessed + vig_name+" ! \n \nPress Cancel to abort and check the vignette (trash it !)");
+                    //	else if (i_first_corner_3 < 99999 && i_second_corner_3 < 99999) {
+                    else if (corner_nb == 2) {
+                        x0 = getResult("XStart", i_first_corner_3);
+                        y0 = getResult("YStart", i_first_corner_3);
+                        w0 = getResult("Width", i_first_corner_3);
+                        h0 = getResult("Height", i_first_corner_3);
+                        x1 = getResult("XStart", i_second_corner_3);
+                        y1 = getResult("YStart", i_second_corner_3);
+                        w1 = getResult("Width", i_second_corner_3);
+                        h1 = getResult("Height", i_second_corner_3);
+
+                        //	showMessage("YES : \ncorner_0_i = "+corner_0_i+"\ncorner_1_i= "+corner_1_i);
+                        // ------------------- qui est le gauche / droit CROP ----------
+                        if (x1 >= x0 && y1 >= y0) {
+                            Crop_width = x1 - x0 + 1;
+                            Crop_heigth = y1 + h1 - y0;
+                        } else if (x1 < x0 && y1 > y0) {
+                            Crop_width = x0 + 1 - x1;
+                            Crop_heigth = y0 + h0 - y1;
+                        }
+                        process_vignette = true;
+                        threshold = corner_threshold;
+                        corner_threshold = 255;
+                    } else {
+                        process_vignette = false;
+                    }
+
+                    selectImage("msk");
+                    close();
+                    selectImage("Source");
+                }
+            } else { // ------------------------ Nettoyage footer -----------------------------
+                crop_vignette_height = heigth_vignette - added_footer;
+                Crop_width = width_vignette;
+                Crop_heigth = crop_vignette_height;
+                selectImage("Source");
+                process_vignette = true;
+            }
+
+            // --------------------- Nettoyage Results ----------------------
+            if (isOpen("Results")) {
+                selectWindow("Results");
+                run('Close');
+            } // if	
+
+            // --------------------- Test si traitable ----------------------
+            //			aa = getBoolean(vig_name + "\n Crop_width=  " +Crop_width+"\n Crop_heigth=  "+Crop_heigth);
+            if (process_vignette == true) {
+                makeRectangle(0, 0, Crop_width, Crop_heigth);
+                run("Crop");
+                //	aa = getBoolean(vig_name + "  OK");
+                // ---------------------- sauvegarde pour contrï¿½le ----------------------
+                /*			selectImage("Source");
+                saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_source.jpg");			
+                rename("Source");
+                */
+                selectImage("Source");
+                run("Duplicate...", "title=msk");
+
+                // ----------------- Gamma compensation -----------------
+                gamma_inv = 1 / gamma;
+                selectImage("Source");
+                run("Gamma...", "value=" + gamma_inv);
+
+                // ---------------------- sauvegarde pour contrï¿½le ----------------------
+                /*			selectImage("Source");
+                saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_gamma.jpg");			
+                rename("Source");	
+                */
+                // ----------------- Segmentation sur image avant gamma -----------------------			
+                selectImage("msk");
+                if (corner_to_remove == true) {
+                    th_a = 17;
+                    th_b = 250;
+                } else {
+                    th_a = 0;
+                    th_b = upperimage - 2;
+                }
+                setThreshold(th_a, th_b);
+                run("Convert to Mask");
+
+                // ++++++++++++++++++++++ Analyse ++++++++++++++++++++++
+
+                // --------------------------- Area et %Area sur image MSK ------------------------------
+                if (isOpen("Results")) {
+                    selectWindow("Results");
+                    run('Close');
+                } // if	
+
+                run("Set Measurements...", parametres_nb);
+                if (corner_to_remove == true) {
+                    run("Analyze Particles...", first_analysis_settings_corner);
+                } else {
+                    run("Analyze Particles...", first_analysis_settings);
+                }
+                updateResults();
+                nbobj = nResults;
+
+                if (corner_to_remove == true) {
+                    selectImage("msk");
+                    close();
+                    selectImage("Mask of msk");
+                    rename("msk");
+                }
+
+                // ---------------------- sauvegarde pour contrï¿½le ----------------------
+                /*			selectImage("msk");
+                saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_mask.jpg");			
+                rename("msk");
+                */
+
+                // --------------------------- On ne traite que si c'est possible -----------------
+                if (nbobj > 0) {
+                    //		aa = getBoolean(vig_name+" cannot be processed");
+                    // ---------------- Recherche du plus gros objet --------
+                    i = 0;
+                    g = 0;
+                    areainit = getResult("Area", 0);
+                    while (g < nbobj) {
+                        area = getResult("Area", g);
+                        if (area > areainit) i = g;
+                        areainit = maxOf(area, areainit);
+                        g++;
+                    } // for
+
+                    // ------------------------ Analyse complï¿½te ---------------------------------
+                    if (isOpen("Results")) {
+                        selectWindow("Results");
+                        run('Close');
+                    } // if	
+
+                    run("Set Measurements...", parametres_std);
+                    if (corner_to_remove == true) {
+                        run("Analyze Particles...", first_analysis_settings_corner);
+                    } else {
+                        run("Analyze Particles...", first_analysis_settings);
+                    }
+                    updateResults();
+
+                    // ---------------- Mise en vecteur -------------------
+                    Area[vig_nb] = getResult("Area", i);
+                    Area_frac[vig_nb] = getResult("%Area", i);
+                    XSTART[vig_nb] = getResult("XStart", i);
+                    YSTART[vig_nb] = getResult("YStart", i);
+                    BX[vig_nb] = getResult("BX", i);
+                    BY[vig_nb] = getResult("BY", i);
+                    WIDTH[vig_nb] = getResult("Width", i);
+                    HEIGTH[vig_nb] = getResult("Height", i);
+                    PERIM[vig_nb] = getResult("Perim.", i);
+                    CIRC[vig_nb] = getResult("Circ.", i);
+                    FERET[vig_nb] = getResult("Feret", i);
+                    Mean[vig_nb] = getResult("Mean", i);
+                    StdDev[vig_nb] = getResult("StdDev", i);
+                    Mode[vig_nb] = getResult("Mode", i);
+                    Min[vig_nb] = getResult("Min", i);
+                    Max[vig_nb] = getResult("Max", i);
+                    X[vig_nb] = getResult("X", i);
+                    Y[vig_nb] = getResult("Y", i);
+                    XM[vig_nb] = getResult("XM", i);
+                    YM[vig_nb] = getResult("YM", i);
+                    Major[vig_nb] = getResult("Major", i);
+                    Minor[vig_nb] = getResult("Minor", i);
+                    Angle[vig_nb] = getResult("Angle", i);
+                    IntDen[vig_nb] = getResult("IntDen", i);
+                    Median[vig_nb] = getResult("Median", i);
+                    Skew[vig_nb] = getResult("Skew", i);
+                    Kurt[vig_nb] = getResult("Kurt", i);
+
+                    Corner_threshold[vig_nb] = threshold;
+
+                    // ----------------- Calcul autres mesures -----------------------------
+                    //		texte = runMacro("Zooprocess_other_measurements_on_vignette.txt","msk Source "+width_vignette+" "+heigth_vignette+" msk Source "+pathprocessed+SampleId + "_" + cc[0] + "_cleaned.jpg");
+                    texte = runMacro("Zooprocess_other_measurements_on_vignette.txt", "msk Source " + width_vignette + " " + heigth_vignette + " msk Source " + pathprocessed + SampleId);
+                    texte = toString(texte);
+                    if (lengthOf(texte) > 1) {
+                        other_data = split(texte, " ");
+                        Fractal[vig_nb] = parseFloat(other_data[1]);
+                        Histcum1[vig_nb] = parseInt(other_data[2]);
+                        Histcum2[vig_nb] = parseInt(other_data[3]);
+                        Histcum3[vig_nb] = parseInt(other_data[4]);
+                        Fcons[vig_nb] = parseFloat(other_data[5]);
+                        Skelarea[vig_nb] = parseInt(other_data[6]);
+                        Convarea[vig_nb] = parseInt(other_data[7]);
+                        Convperim[vig_nb] = parseInt(other_data[8]);
+                        Slope[vig_nb] = parseFloat(other_data[9]);
+                        if (Slope[vig_nb] == 0 && Skelarea[vig_nb] == 0) {
+                            //						showMessage("WARNING : \n \nThe ''other measurements'' on vignette "+vig_name+" could not be processed. \nThe object must be very small and light grey. \n \nPress OK to continue");
+                        }
+                    }
+                    //				else { 	aa = getBoolean(" Zooprocess_other_measurements_on_vignette.txt failed on image \n \n "+vig_name+"\n \nPress Cancel to abort the process.");	}			
+                } else { // ---------------- Vignette ne peut ï¿½tre traitï¿½e ----------
+                    unprocessed_vignette_other++;
+                }
+
+                // ----------------- Increment nombre objets traitï¿½s -----------------------
+                processed_obj++;
+            } else { // ---------------- Vignette ne peut ï¿½tre traitï¿½e ----------
+                unprocessed_vignette++;
+                /*
+                // ---------------------- sauvegarde pour contrï¿½le ----------------------
+                selectImage("Source");
+                saveAs("jpg", pathprocessed+SampleId + "_" + cc[0] + "_unprocessed_"+Crop_width+"_"+Crop_heigth+".jpg");			
+                rename("Source");	*/
+            }
+            // ---------------------- Fermeture des images -----------------------------
+            while (nImages() > 0) {
+                selectImage(nImages());
+                run("Close");
+            } // while		
+        } else { // ----------------- Vignette manquante -------------------
+            missing_vig++;
+        }
+        vig_nb++;
+    }
+
+    //====================  creer le tableau RESULTS =======================================================
+    // ----------------------- Fermeture Resulst --------------------------
+    if (isOpen("Results")) {
+        selectWindow("Results");
+        run("Close");
+    } // if
+
+    //----------Mettre les bons resultats dans le tableau de nouveau------------------
+    for (i = 0; i < nb_blobs; i++) {
+        setResult("Label", i, SampleId);
+        //		setResult("Back_median",i,Back_median[i]);
+        setResult("Corner_threshold", i, Corner_threshold[i]);
+        //		setResult("Img_median",i,Img_median[i]);
+        //		setResult("No_raw_image",i,No_raw_image[i]);
+        setResult("Area", i, Area[i]);
+        setResult("%Area", i, Area_frac[i]);
+        area_exc = Area[i] * Area_frac[i] / 100;
+        setResult("Area_exc", i, area_exc);
+        setResult("Mean", i, Mean[i]);
+        setResult("StdDev", i, StdDev[i]);
+        setResult("Mode", i, Mode[i]);
+        setResult("Min", i, Min[i]);
+        setResult("Max", i, Max[i]);
+        setResult("X", i, X[i]);
+        setResult("Y", i, Y[i]);
+        setResult("XM", i, XM[i]);
+        setResult("YM", i, YM[i]);
+        setResult("Perim.", i, PERIM[i]);
+        setResult("BX", i, BX[i]);
+        setResult("BY", i, BY[i]);
+        setResult("Width", i, WIDTH[i]);
+        setResult("Height", i, HEIGTH[i]);
+        setResult("Major", i, Major[i]);
+        setResult("Minor", i, Minor[i]);
+        setResult("Angle", i, Angle[i]);
+        setResult("Circ.", i, CIRC[i]);
+        setResult("Feret", i, FERET[i]);
+        setResult("IntDen", i, IntDen[i]);
+        setResult("Median", i, Median[i]);
+        setResult("Skew", i, Skew[i]);
+        setResult("Kurt", i, Kurt[i]);
+        setResult("XStart", i, XSTART[i]);
+        setResult("YStart", i, YSTART[i]);
+        setResult("Fractal", i, Fractal[i]);
+        setResult("Histcum1", i, Histcum1[i]);
+        setResult("Histcum2", i, Histcum2[i]);
+        setResult("Histcum3", i, Histcum3[i]);
+        setResult("Fcons", i, Fcons[i]);
+        setResult("Skelarea", i, Skelarea[i]);
+        setResult("Convarea", i, Convarea[i]);
+        setResult("Convperim", i, Convperim[i]);
+        setResult("Slope", i, Slope[i]);
+    } // for
+
+    // -------------------- Enregistrement RESULTS ----------------------------------
+    updateResults();
+    selectWindow("Results");
+    saveAs("measurements", pathprocessed + SampleId + "_measurements.txt");
+
+    // ---------------- Enregistrement dans le repertoire du profile -------------
+    if (isOpen("Log")) {
+        selectWindow("Log");
+        run("Close");
+    } // if
+    print(pid_all_text);
+    dateheurestart = runMacro("Zooscan_get_time_5");
+    sauvetxt = "save=" + pathprocessed + SampleId + "_archive_" + dateheurestart + "_pid.txt";
+    selectWindow("Log");
+    run("Text...", sauvetxt);
+
+    // ========================== Ecriture du PID ==========================
+    if (isOpen("Log")) {
+        selectWindow("Log");
+        run("Close");
+    } // if       
+
+    // ------------------ Section LOG ---------------------------
+    for (p = 0; p < data_line - header_lines_to_remove; p++) {
+        to_print = replace(pid_data[p], "=  ", "= ");
+        to_print = replace(pid_data[p], "Fluid Volume Imaged", "Fluid_Volume_Imaged");
+        print(to_print);
+    }
+    print("Processed_from_vignette= true");
+    print("Missing_vignettes= " + missing_vig);
+    print("Unprocessed_vignettes= " + unprocessed_vignette);
+    print("Unprocessed_vignettes_other= " + unprocessed_vignette_other);
+    //	print("Vignette_from_pid_threshold= "+threshold);
+
+    // ------------------ Section DATA ---------------------------
+    /*	argpid = "flowcam "+nb_blobs+" 0 "+SampleId;
+    	argpid = 	runMacro("Zooscan_print_pid_5",argpid);
+    	flag =		toString(argpid);
+    	l= 		lengthOf(flag);
+    	if (l==1)  { getBoolean("Error message : Print_pid_5 process aborted !    \n \nPress Cancel to abort !                   "); } // if
+    	selectWindow("Log");	
+    	*/
+
+    // ------------- Print Measurements ----------------------------
+    print(" ");
+    print("[Data]");
+    open(pathprocessed + SampleId + "_measurements.txt");
+    wait(100);
+    measurements = getInfo();
+    run("Close");
+    measurements = split(measurements, "\n");
+    for (i = 0; i < measurements.length; i++) {
+        line = measurements[i];
+        if (i == 0) {
+            line = "!Item" + line;
+        }
+        line = replace(line, " \t", "\t");
+        line = replace(line, "\t", ";");
+        print(line);
+    }
+
+    // ---------------- Enregistrement dans le repertoire du profile -------------
+    selectWindow("Log");
+    sauvepid = "save=" + pathprocessed + SampleId + "_dat1.pid";
+    run("Text...", sauvepid);
+    // ----------------- Enregistrement dans pid_results de la mission ---------
+    sauvepid = "save=" + pathpidresults + SampleId + "_dat1.pid";
+    run("Text...", sauvepid);
+    // ----------------- PID to Ecotaxa ----------------------------------------
+    link = "http://piqv.imev-mer.fr//";
+    ret = runMacro("Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic", path + " " + pathprocessed + " " + SampleId + "_dat1.pid pid false true new " + link);
+    flag = toString(ret);
+    l = lengthOf(flag);
+    if (l == 1) {
+        showMessage("Error message : ''Zooprocess_pid_to_ecotaxa_flowcam_uvp5_generic'' process aborted for " + SampleId + ".                       ");
+    } // if
+
+    // --------------------- Fermeture RESULTS ------------------------------
+    selectWindow("Results");
+    run("Close");
+
+    // --------------------- Warnings ---------------------------------------
+    //	if (missing_vig > 0 || unprocessed_vignette > 0 || unprocessed_vignette_other > 0 ) {
+    //		showMessage("WARNING for sample "+SampleId+" : \n \n"+missing_vig+" vignettes were not found \n"+unprocessed_vignette+" vignettes could not be processed \n"+unprocessed_vignette_other+" vignettes could not be completely processed. \n \nThe features of these vignettes are set to O in the recorded PID and TSV files.");
+    //	}
 }
 // ----------------------------- FIN ----------------------------------------------
 ret = "OK";
 return ret;
-
